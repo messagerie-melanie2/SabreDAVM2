@@ -3,7 +3,7 @@
  * Fichier de gestion du backend Auth pour l'application SabreDAVM2
  * Utilise l'ORM M2 pour l'accès aux données Mélanie2
  *
- * SabreDAVM2 Copyright (C) 2015  PNE Annuaire et Messagerie/MEDDE
+ * SabreDAVM2 Copyright © 2017  PNE Annuaire et Messagerie/MEDDE
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,42 +28,86 @@ namespace Sabre\DAV\Auth\Backend;
  * @license http://sabre.io/license/ Modified BSD License
  */
 class LibM2 extends AbstractBasic {
-
-    /**
-     * Creates the backend object.
-     *
-     * If the filename argument is passed in, it will parse out the specified file fist.
-     */
-    function __construct() {
+	/**
+	 * 
+	 * @var boolean
+	 */
+	protected $noauth;
+	
+  /**
+   * Creates the backend object.
+   *
+   * If the filename argument is passed in, it will parse out the specified file fist.
+   */
+  public function __construct() {
+  	$this->noauth = false;
+  }
+  /**
+   * Défini si on est dans le cas d'une method REPORT sans authentification (webdav sync)
+   * @param boolean $noAuth
+   */
+  public function setNoAuthReportMethod($noAuth = false) {
+  	$this->noauth = $noAuth;
+  }
+  
+  /**
+   * Validates a username and password
+   *
+   * This method should return true or false depending on if login
+   * succeeded.
+   *
+   * @param string $username
+   * @param string $password
+   * @return bool
+   */
+  protected function validateUserPass($username, $password) {
+    if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[AuthBackend] LibM2.validateUserPass($username) noauth = " . $this->noauth);
+    // Si c'est une boite partagée, on s'authentifie sur l'utilisateur pas sur la bal
+    if (strpos($username, '.-.') !== false) {
+      // MANTIS 3791: Gestion de l'authentification via des boites partagées
+      $tmp = explode('.-.', $username, 2);
+      $username = $tmp[0];
+      if (isset($tmp[1])) {
+        // TODO: Valider que la bali a bien les droits emission sur la balp
+        if (!$this->checkBalfPrivileges($username, $tmp[1])) {
+          return false;
+        }
+      }
     }
-
-    /**
-     * Returns the digest hash for a user.
-     *
-     * @param string $realm
-     * @param string $username
-     * @return string|null
-     */
-    function getDigestHash($realm,$username) {
-
-        $stmt = $this->pdo->prepare('SELECT digesta1 FROM '.$this->tableName.' WHERE username = ?');
-        $stmt->execute([$username]);
-        return $stmt->fetchColumn() ?: null;
-
+    // Gestion de l'authentification via l'ORM M2
+    if ($this->noauth || \LibMelanie\Ldap\Ldap::Authentification($username, $password)) {
+      return true;
     }
-
-    /**
-     * Validates a username and password
-     *
-     * This method should return true or false depending on if login
-     * succeeded.
-     *
-     * @param string $username
-     * @param string $password
-     * @return bool
-     */
-    protected function validateUserPass($username, $password) {
-      return \LibMelanie\Ldap\Ldap::Authentification($username, $password);
+    else {
+      // MANTIS 1709: Quand un utilisateur à un probleme de connexion sur le LDAP, l'authentification CalDAV boucle
+      sleep(2);
+      return false;
     }
-
+  }
+  /**
+   * Permet de valider qu'un utilisateur à bien les droits d'écriture sur une balf
+   * Nécessaire pour les droits sur les agendas
+   * @param string $username
+   * @param string $balf
+   * @return boolean
+   */
+  private function checkBalfPrivileges($username, $balf) {
+    if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[AuthBackend] LibM2.checkBalfPrivileges($username, $balf)");
+    // Liste des droits pour l'écriture
+    $droits = ['C','G'];
+    // Récupère le champ mineqmelpartages pour les partages de boites dans le LDAP
+    $infos = \LibMelanie\Ldap\Ldap::GetUserInfos($balf, null, ["mineqmelpartages"]);
+    if ($infos !== false) {
+      foreach ($infos['mineqmelpartages'] as $melPartage) {
+        foreach ($droits as $droit) {
+          // Si le droit matche, c'est bon
+          if ($melPartage == "$username:$droit") {
+            return true;
+          }
+        }
+      }
+    }
+    // Pas de droit trouvé, l'utilisateur n'a pas les droits sur la balf
+    return false;
+  }
 }

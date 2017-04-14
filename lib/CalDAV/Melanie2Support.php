@@ -2,7 +2,7 @@
 /**
  * Classe personnalisée pour Melanie2
  *
- * SabreDAVM2 Copyright (C) 2015  PNE Annuaire et Messagerie/MEDDE
+ * SabreDAVM2 Copyright © 2017  PNE Annuaire et Messagerie/MEDDE
  */
 namespace Sabre\CalDAV\Backend;
 
@@ -31,7 +31,7 @@ interface Melanie2Support extends BackendInterface {
    * Many clients also require:
    * {urn:ietf:params:xml:ns:caldav}supported-calendar-component-set
    * For this property, you can just return an instance of
-   * Sabre\CalDAV\Property\SupportedCalendarComponentSet.
+   * Sabre\CalDAV\Xml\Property\SupportedCalendarComponentSet.
    *
    * If you return {http://sabredav.org/ns}read-only and set the value to 1,
    * ACL will automatically be put in read-only mode.

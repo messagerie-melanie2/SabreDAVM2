@@ -4,6 +4,8 @@ namespace Sabre\DAV\PropertyStorage\Backend;
 
 use Sabre\DAV\PropFind;
 use Sabre\DAV\PropPatch;
+use Sabre\DAV\Xml\Property\Complex;
+use Sabre\DAV\Xml\Property\Href;
 
 abstract class AbstractPDOTest extends \PHPUnit_Framework_TestCase {
 
@@ -57,6 +59,47 @@ abstract class AbstractPDOTest extends \PHPUnit_Framework_TestCase {
         $backend->propFind('dir', $propFind);
 
         $this->assertEquals('bar', $propFind->get('{DAV:}displayname'));
+
+    }
+
+    /**
+     * @depends testPropPatchUpdate
+     */
+    function testPropPatchComplex() {
+
+        $backend = $this->getBackend();
+
+        $complex = new Complex('<foo xmlns="DAV:">somevalue</foo>');
+
+        $propPatch = new PropPatch(['{DAV:}complex' => $complex]);
+        $backend->propPatch('dir', $propPatch);
+        $propPatch->commit();
+
+        $propFind = new PropFind('dir', ['{DAV:}complex']);
+        $backend->propFind('dir', $propFind);
+
+        $this->assertEquals($complex, $propFind->get('{DAV:}complex'));
+
+    }
+
+
+    /**
+     * @depends testPropPatchComplex
+     */
+    function testPropPatchCustom() {
+
+        $backend = $this->getBackend();
+
+        $custom = new Href('/foo/bar/');
+
+        $propPatch = new PropPatch(['{DAV:}custom' => $custom]);
+        $backend->propPatch('dir', $propPatch);
+        $propPatch->commit();
+
+        $propFind = new PropFind('dir', ['{DAV:}custom']);
+        $backend->propFind('dir', $propFind);
+
+        $this->assertEquals($custom, $propFind->get('{DAV:}custom'));
 
     }
 
@@ -127,4 +170,21 @@ abstract class AbstractPDOTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('child', $propFind->get('{DAV:}displayname'));
     }
 
+    /**
+     * @depends testPropFind
+     */
+    function testDeepDelete() {
+
+        $backend = $this->getBackend();
+        $propPatch = new PropPatch(['{DAV:}displayname' => 'child']);
+        $backend->propPatch('dir/child', $propPatch);
+        $propPatch->commit();
+        $backend->delete('dir');
+
+        $propFind = new PropFind('dir/child', ['{DAV:}displayname']);
+        $backend->propFind('dir/child', $propFind);
+
+        $this->assertEquals(null, $propFind->get('{DAV:}displayname'));
+
+    }
 }

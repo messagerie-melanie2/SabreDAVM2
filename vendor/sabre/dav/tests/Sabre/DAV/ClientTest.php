@@ -9,6 +9,14 @@ require_once 'Sabre/DAV/ClientMock.php';
 
 class ClientTest extends \PHPUnit_Framework_TestCase {
 
+    function setUp() {
+
+        if (!function_exists('curl_init')) {
+            $this->markTestSkipped('CURL must be installed to test the client');
+        }
+
+    }
+
     function testConstruct() {
 
         $client = new ClientMock(array(
@@ -68,6 +76,19 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
 
     }
 
+    function testNTLMAuth() {
+
+        $client = new ClientMock([
+            'baseUri' => '/',
+            'userName' => 'foo',
+            'password' => 'bar',
+            'authType' => Client::AUTH_NTLM
+        ]);
+
+        $this->assertEquals("foo:bar", $client->curlSettings[CURLOPT_USERPWD]);
+        $this->assertEquals(CURLAUTH_NTLM, $client->curlSettings[CURLOPT_HTTPAUTH]);
+
+    }
 
     function testProxy() {
 
@@ -88,28 +109,6 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
         ]);
 
         $this->assertEquals("identity,deflate,gzip", $client->curlSettings[CURLOPT_ENCODING]);
-
-    }
-
-
-    function testCAInfo() {
-
-        $client = new ClientMock([
-            'baseUri' => '/',
-        ]);
-        $client->addTrustedCertificates('foo.txt');
-        $this->assertEquals("foo.txt", $client->curlSettings[CURLOPT_CAINFO]);
-
-    }
-
-
-    function testSetVerifyPeer() {
-
-        $client = new ClientMock([
-            'baseUri' => '/',
-        ]);
-        $client->setVerifyPeer(false);
-        $this->assertEquals(false, $client->curlSettings[CURLOPT_SSL_VERIFYPEER]);
 
     }
 

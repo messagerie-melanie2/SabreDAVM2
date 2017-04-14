@@ -9,36 +9,48 @@ class BasicTest extends \PHPUnit_Framework_TestCase {
 
     function testGetCredentials() {
 
-        $request = new Request('GET','/',array(
+        $request = new Request('GET', '/', [
             'Authorization' => 'Basic ' . base64_encode('user:pass:bla')
-        ));
+        ]);
 
         $basic = new Basic('Dagger', $request, new Response());
 
-        $this->assertEquals(array(
+        $this->assertEquals([
             'user',
             'pass:bla',
-        ), $basic->getCredentials($request));
+        ], $basic->getCredentials());
+
+    }
+
+    function testGetInvalidCredentialsColonMissing() {
+
+        $request = new Request('GET', '/', [
+            'Authorization' => 'Basic ' . base64_encode('userpass')
+        ]);
+
+        $basic = new Basic('Dagger', $request, new Response());
+
+        $this->assertNull($basic->getCredentials());
 
     }
 
     function testGetCredentialsNoheader() {
 
-        $request = new Request('GET','/',array());
+        $request = new Request('GET', '/', []);
         $basic = new Basic('Dagger', $request, new Response());
 
-        $this->assertNull($basic->getCredentials($request));
+        $this->assertNull($basic->getCredentials());
 
     }
 
     function testGetCredentialsNotBasic() {
 
-        $request = new Request('GET','/',array(
+        $request = new Request('GET', '/', [
             'Authorization' => 'QBasic ' . base64_encode('user:pass:bla')
-        ));
+        ]);
         $basic = new Basic('Dagger', $request, new Response());
 
-        $this->assertNull($basic->getCredentials($request));
+        $this->assertNull($basic->getCredentials());
 
     }
 

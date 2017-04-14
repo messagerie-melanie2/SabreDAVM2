@@ -7,7 +7,7 @@ namespace Sabre\HTTP;
  *
  * This class exists to make the transition to sabre/http easier.
  *
- * @copyright Copyright (C) 2007-2014 fruux GmbH. All rights reserved.
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
@@ -20,7 +20,7 @@ class SapiMock extends Sapi {
      *
      * @return void
      */
-    static function sendResponse(\Sabre\HTTP\ResponseInterface $r) {
+    static function sendResponse(ResponseInterface $response) {
 
         self::$sent++;
 

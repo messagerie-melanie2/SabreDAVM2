@@ -2,7 +2,7 @@
 /**
  * CalDAV/PluginM2 pour surcharger le plugin CalDAV de SabreDAV
  *
- * SabreDAVM2 Copyright (C) 2015  PNE Annuaire et Messagerie/MEDDE
+ * SabreDAVM2 Copyright © 2017  PNE Annuaire et Messagerie/MEDDE
  */
 namespace Sabre\CalDAV;
 

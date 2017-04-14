@@ -2,7 +2,7 @@
 /**
  * CalendarHomeM2 pour surcharger le CalendarHome de SabreDAV
  *
- * SabreDAVM2 Copyright (C) 2015  PNE Annuaire et Messagerie/MEDDE
+ * SabreDAVM2 Copyright © 2017  PNE Annuaire et Messagerie/MEDDE
  */
 namespace Sabre\CalDAV;
 
@@ -51,7 +51,7 @@ class CalendarHomeM2 extends CalendarHome {
    * @return Calendar
    */
   function getChild($name) {
-    error_log("CalendarHomeM2.getChild($name)");
+    if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CalDAV] CalendarHomeM2.getChild($name)");
     if (isset($this->cache[$name])) {
       return $this->cache[$name];
     }
@@ -114,7 +114,7 @@ class CalendarHomeM2 extends CalendarHome {
    * @return bool
    */
   function childExists($name) {
-
+    if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CalDAV] CalendarHomeM2.childExists($name)");
     try {
       // Gestion du cache
       if (isset($this->cache[$name])) {

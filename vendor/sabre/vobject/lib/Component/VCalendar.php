@@ -7,13 +7,14 @@ use DateTimeZone;
 use Sabre\VObject;
 use Sabre\VObject\Component;
 use Sabre\VObject\Recur\EventIterator;
+use Sabre\VObject\Recur\NoInstancesException;
 
 /**
  * The VCalendar component
  *
  * This component adds functionality to a component, specific for a VCALENDAR.
  *
- * @copyright Copyright (C) 2007-2014 fruux GmbH (https://fruux.com/).
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
@@ -26,20 +27,22 @@ class VCalendar extends VObject\Document {
      *
      * @var string
      */
-    static public $defaultName = 'VCALENDAR';
+    static $defaultName = 'VCALENDAR';
 
     /**
      * This is a list of components, and which classes they should map to.
      *
      * @var array
      */
-    static public $componentMap = array(
-        'VALARM'    => 'Sabre\\VObject\\Component\\VAlarm',
-        'VEVENT'    => 'Sabre\\VObject\\Component\\VEvent',
-        'VFREEBUSY' => 'Sabre\\VObject\\Component\\VFreeBusy',
-        'VJOURNAL'  => 'Sabre\\VObject\\Component\\VJournal',
-        'VTIMEZONE' => 'Sabre\\VObject\\Component\\VTimeZone',
-        'VTODO'     => 'Sabre\\VObject\\Component\\VTodo',
+    static $componentMap = array(
+        'VALARM'        => 'Sabre\\VObject\\Component\\VAlarm',
+        'VEVENT'        => 'Sabre\\VObject\\Component\\VEvent',
+        'VFREEBUSY'     => 'Sabre\\VObject\\Component\\VFreeBusy',
+        'VAVAILABILITY' => 'Sabre\\VObject\\Component\\VAvailability',
+        'AVAILABLE'     => 'Sabre\\VObject\\Component\\Available',
+        'VJOURNAL'      => 'Sabre\\VObject\\Component\\VJournal',
+        'VTIMEZONE'     => 'Sabre\\VObject\\Component\\VTimeZone',
+        'VTODO'         => 'Sabre\\VObject\\Component\\VTodo',
     );
 
     /**
@@ -47,15 +50,15 @@ class VCalendar extends VObject\Document {
      *
      * @var array
      */
-    static public $valueMap = array(
+    static $valueMap = array(
         'BINARY'           => 'Sabre\\VObject\\Property\\Binary',
         'BOOLEAN'          => 'Sabre\\VObject\\Property\\Boolean',
         'CAL-ADDRESS'      => 'Sabre\\VObject\\Property\\ICalendar\\CalAddress',
         'DATE'             => 'Sabre\\VObject\\Property\\ICalendar\\Date',
         'DATE-TIME'        => 'Sabre\\VObject\\Property\\ICalendar\\DateTime',
         'DURATION'         => 'Sabre\\VObject\\Property\\ICalendar\\Duration',
-        'FLOAT'            => 'Sabre\\VObject\\Property\\Float',
-        'INTEGER'          => 'Sabre\\VObject\\Property\\Integer',
+        'FLOAT'            => 'Sabre\\VObject\\Property\\FloatValue',
+        'INTEGER'          => 'Sabre\\VObject\\Property\\IntegerValue',
         'PERIOD'           => 'Sabre\\VObject\\Property\\ICalendar\\Period',
         'RECUR'            => 'Sabre\\VObject\\Property\\ICalendar\\Recur',
         'TEXT'             => 'Sabre\\VObject\\Property\\Text',
@@ -70,7 +73,7 @@ class VCalendar extends VObject\Document {
      *
      * @var array
      */
-    static public $propertyMap = array(
+    static $propertyMap = array(
         // Calendar properties
         'CALSCALE'      => 'Sabre\\VObject\\Property\\FlatText',
         'METHOD'        => 'Sabre\\VObject\\Property\\FlatText',
@@ -83,10 +86,10 @@ class VCalendar extends VObject\Document {
         'CLASS'             => 'Sabre\\VObject\\Property\\FlatText',
         'COMMENT'           => 'Sabre\\VObject\\Property\\FlatText',
         'DESCRIPTION'       => 'Sabre\\VObject\\Property\\FlatText',
-        'GEO'               => 'Sabre\\VObject\\Property\\Float',
+        'GEO'               => 'Sabre\\VObject\\Property\\FloatValue',
         'LOCATION'          => 'Sabre\\VObject\\Property\\FlatText',
-        'PERCENT-COMPLETE'  => 'Sabre\\VObject\\Property\\Integer',
-        'PRIORITY'          => 'Sabre\\VObject\\Property\\Integer',
+        'PERCENT-COMPLETE'  => 'Sabre\\VObject\\Property\\IntegerValue',
+        'PRIORITY'          => 'Sabre\\VObject\\Property\\IntegerValue',
         'RESOURCES'         => 'Sabre\\VObject\\Property\\Text',
         'STATUS'            => 'Sabre\\VObject\\Property\\FlatText',
         'SUMMARY'           => 'Sabre\\VObject\\Property\\FlatText',
@@ -124,14 +127,14 @@ class VCalendar extends VObject\Document {
 
         // Alarm Component Properties
         'ACTION'        => 'Sabre\\VObject\\Property\\FlatText',
-        'REPEAT'        => 'Sabre\\VObject\\Property\\Integer',
+        'REPEAT'        => 'Sabre\\VObject\\Property\\IntegerValue',
         'TRIGGER'       => 'Sabre\\VObject\\Property\\ICalendar\\Duration',
 
         // Change Management Component Properties
         'CREATED'       => 'Sabre\\VObject\\Property\\ICalendar\\DateTime',
         'DTSTAMP'       => 'Sabre\\VObject\\Property\\ICalendar\\DateTime',
         'LAST-MODIFIED' => 'Sabre\\VObject\\Property\\ICalendar\\DateTime',
-        'SEQUENCE'      => 'Sabre\\VObject\\Property\\Integer',
+        'SEQUENCE'      => 'Sabre\\VObject\\Property\\IntegerValue',
 
         // Request Status
         'REQUEST-STATUS' => 'Sabre\\VObject\\Property\\Text',
@@ -142,6 +145,9 @@ class VCalendar extends VObject\Document {
         'PROXIMITY'      => 'Sabre\\VObject\\Property\\Text',
         'DEFAULT-ALARM'  => 'Sabre\\VObject\\Property\\Boolean',
 
+        // Additions from draft-daboo-calendar-availability-05
+        'BUSYTYPE'       => 'Sabre\\VObject\\Property\\Text',
+
     );
 
     /**
@@ -149,7 +155,7 @@ class VCalendar extends VObject\Document {
      *
      * @return void
      */
-    public function getDocumentType() {
+    function getDocumentType() {
 
         return self::ICALENDAR20;
 
@@ -165,7 +171,7 @@ class VCalendar extends VObject\Document {
      * @param string $componentName filter by component name
      * @return VObject\Component[]
      */
-    public function getBaseComponents($componentName = null) {
+    function getBaseComponents($componentName = null) {
 
         $components = array();
         foreach($this->children as $component) {
@@ -199,7 +205,7 @@ class VCalendar extends VObject\Document {
      * @param string $componentName filter by component name
      * @return VObject\Component|null
      */
-    public function getBaseComponent($componentName = null) {
+    function getBaseComponent($componentName = null) {
 
         foreach($this->children as $component) {
 
@@ -244,7 +250,7 @@ class VCalendar extends VObject\Document {
      *                     times.
      * @return void
      */
-    public function expand(DateTime $start, DateTime $end, DateTimeZone $timeZone = null) {
+    function expand(DateTime $start, DateTime $end, DateTimeZone $timeZone = null) {
 
         $newEvents = array();
 
@@ -252,28 +258,46 @@ class VCalendar extends VObject\Document {
             $timeZone = new DateTimeZone('UTC');
         }
 
+        // An array of events. Events are indexed by UID. Each item in this
+        // array is a list of one or more events that match the UID.
+        $recurringEvents = array();
+
         foreach($this->select('VEVENT') as $key=>$vevent) {
 
-            if (isset($vevent->{'RECURRENCE-ID'})) {
-                unset($this->children[$key]);
+            $uid = (string)$vevent->UID;
+            if (!$uid) {
+                throw new \LogicException('Event did not have a UID!');
+            }
+
+            if (isset($vevent->{'RECURRENCE-ID'}) || isset($vevent->RRULE)) {
+                if (isset($recurringEvents[$uid])) {
+                    $recurringEvents[$uid][] = $vevent;
+                } else {
+                    $recurringEvents[$uid] = array($vevent);
+                }
                 continue;
             }
 
-
-            if (!$vevent->rrule) {
-                unset($this->children[$key]);
+            if (!isset($vevent->RRULE)) {
                 if ($vevent->isInTimeRange($start, $end)) {
                     $newEvents[] = $vevent;
                 }
                 continue;
             }
 
-            $uid = (string)$vevent->uid;
-            if (!$uid) {
-                throw new \LogicException('Event did not have a UID!');
-            }
+        }
 
-            $it = new EventIterator($this, $vevent->uid, $timeZone);
+        foreach($recurringEvents as $events) {
+
+            try {
+                $it = new EventIterator($events, $timeZone);
+
+            } catch (NoInstancesException $e) {
+                // This event is recurring, but it doesn't have a single
+                // instance. We are skipping this event from the output
+                // entirely.
+                continue;
+            }
             $it->fastForward($start);
 
             while($it->valid() && $it->getDTStart() < $end) {
@@ -286,9 +310,11 @@ class VCalendar extends VObject\Document {
                 $it->next();
 
             }
-            unset($this->children[$key]);
 
         }
+
+        // Wiping out all old VEVENT objects
+        unset($this->VEVENT);
 
         // Setting all properties to UTC time.
         foreach($newEvents as $newEvent) {
@@ -304,7 +330,6 @@ class VCalendar extends VObject\Document {
                 }
 
             }
-
             $this->add($newEvent);
 
         }
@@ -340,10 +365,11 @@ class VCalendar extends VObject\Document {
      *   * 1 - Must appear exactly once.
      *   * + - Must appear at least once.
      *   * * - Can appear any number of times.
+     *   * ? - May appear, but not more than once.
      *
      * @var array
      */
-    public function getValidationRules() {
+    function getValidationRules() {
 
         return array(
             'PRODID' => 1,
@@ -357,16 +383,28 @@ class VCalendar extends VObject\Document {
 
     /**
      * Validates the node for correctness.
-     * An array is returned with warnings.
      *
-     * Every item in the array has the following properties:
-     *    * level - (number between 1 and 3 with severity information)
-     *    * message - (human readable message)
-     *    * node - (reference to the offending node)
+     * The following options are supported:
+     *   Node::REPAIR - May attempt to automatically repair the problem.
+     *   Node::PROFILE_CARDDAV - Validate the vCard for CardDAV purposes.
+     *   Node::PROFILE_CALDAV - Validate the iCalendar for CalDAV purposes.
      *
+     * This method returns an array with detected problems.
+     * Every element has the following properties:
+     *
+     *  * level - problem level.
+     *  * message - A human-readable string describing the issue.
+     *  * node - A reference to the problematic node.
+     *
+     * The level means:
+     *   1 - The issue was repaired (only happens if REPAIR was turned on).
+     *   2 - A warning.
+     *   3 - An error.
+     *
+     * @param int $options
      * @return array
      */
-    public function validate($options = 0) {
+    function validate($options = 0) {
 
         $warnings = parent::validate($options);
 
@@ -384,6 +422,9 @@ class VCalendar extends VObject\Document {
         $uidList = array();
 
         $componentsFound = 0;
+
+        $componentTypes = array();
+
         foreach($this->children as $child) {
             if($child instanceof Component) {
                 $componentsFound++;
@@ -391,6 +432,7 @@ class VCalendar extends VObject\Document {
                 if (!in_array($child->name, array('VEVENT', 'VTODO', 'VJOURNAL'))) {
                     continue;
                 }
+                $componentTypes[] = $child->name;
 
                 $uid = (string)$child->UID;
                 $isMaster = isset($child->{'RECURRENCE-ID'})?0:1;
@@ -422,9 +464,63 @@ class VCalendar extends VObject\Document {
             );
         }
 
+        if ($options & self::PROFILE_CALDAV) {
+            if (count($uidList)>1) {
+                $warnings[] = array(
+                    'level' => 3,
+                    'message' => 'A calendar object on a CalDAV server may only have components with the same UID.',
+                    'node' => $this,
+                );
+            }
+            if (count(array_unique($componentTypes))===0) {
+                $warnings[] = array(
+                    'level' => 3,
+                    'message' => 'A calendar object on a CalDAV server must have at least 1 component (VTODO, VEVENT, VJOURNAL).',
+                    'node' => $this,
+                );
+            }
+            if (count(array_unique($componentTypes))>1) {
+                $warnings[] = array(
+                    'level' => 3,
+                    'message' => 'A calendar object on a CalDAV server may only have 1 type of component (VEVENT, VTODO or VJOURNAL).',
+                    'node' => $this,
+                );
+            }
+
+            if (isset($this->METHOD)) {
+                $warnings[] = array(
+                    'level' => 3,
+                    'message' => 'A calendar object on a CalDAV server MUST NOT have a METHOD property.',
+                    'node' => $this,
+                );
+            }
+        }
+
         return $warnings;
 
     }
 
-}
+    /**
+     * Returns all components with a specific UID value.
+     *
+     * @return array
+     */
+    function getByUID($uid) {
 
+        return array_filter($this->children, function($item) use ($uid) {
+
+            if (!$item instanceof Component) {
+                return false;
+            }
+            if (!$itemUid = $item->select('UID')) {
+                return false;
+            }
+            $itemUid = current($itemUid)->getValue();
+            return $uid === $itemUid;
+
+        });
+
+    }
+
+
+}

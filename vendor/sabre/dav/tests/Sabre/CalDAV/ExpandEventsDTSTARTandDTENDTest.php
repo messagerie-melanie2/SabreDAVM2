@@ -8,7 +8,7 @@ use Sabre\VObject;
  * This unittests is created to find out why recurring events have wrong DTSTART value
  *
  *
- * @copyright Copyright (C) 2007-2014 fruux GmbH (https://fruux.com/).
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
@@ -87,7 +87,11 @@ END:VCALENDAR
         );
         $body = str_replace('&#13;','',$body);
 
-        $vObject = VObject\Reader::read($body);
+        try {
+            $vObject = VObject\Reader::read($body);
+        } catch (VObject\ParseException $e) {
+            $this->fail('Could not parse object. Error:' . $e->getMessage(). ' full object: ' . $response->getBodyAsString());
+        }
 
         // check if DTSTARTs and DTENDs are correct
         foreach ($vObject->VEVENT as $vevent) {

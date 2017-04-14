@@ -3,10 +3,10 @@ SabreDAVM2
 
 Développé par le PNE Annuaire et Messagerie/MEDDE
 
-ATTENTION
----------
 
-La version de SabreDAVM2 sur git est une version en développement, **elle ne doit pas être utilisée en production**.
+Version
+-------
+
 Pour récupérer les versions de production veuillez vous adresser au PNE Annuaire et Messagerie du MEDDE.
 
 
@@ -17,18 +17,19 @@ SabreDAV est un framework WebDAV en PHP. Il permet de créer des serveurs WebDAV
 La documentation de SabreDAV est disponible ici : http://sabre.io/
 La version SabreDAVM2 est un serveur CalDAV implémentant un backend utilisant l'ORM M2
 
+
 Installation
 ------------
 
-L'installation se fait comme un site web PHP classique.
-Le serveur SabreDAVM2 nécessite l'ORM M2 pour fonctionner. Se repporter au manuel d'installation de l'ORM M2 pour plus d'informations.
+L'installation de SabreDAV est expliquée dans le fichier INSTALL.md disponible dans le même projet.
+
 
 LICENCE
 -------
 
 La partie backend du serveur SabreDAVM2 est distribuée sous licence GPLv3 (http://www.gnu.org/licenses/gpl.html)
 
-SabreDAVM2 Copyright (C) 2015  PNE Annuaire et Messagerie/MEDDE
+SabreDAVM2 Copyright © 2017  PNE Annuaire et Messagerie/MEDDE
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

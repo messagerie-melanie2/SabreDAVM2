@@ -2,7 +2,7 @@
 /**
  * CalendarRootM2 pour surcharger le CalendarRoot de SabreDAV
  *
- * SabreDAVM2 Copyright (C) 2015  PNE Annuaire et Messagerie/MEDDE
+ * SabreDAVM2 Copyright © 2017  PNE Annuaire et Messagerie/MEDDE
  */
 namespace Sabre\CalDAV;
 
@@ -22,21 +22,19 @@ use Sabre\DAVACL\PrincipalBackend;
  * @license http://sabre.io/license/ Modified BSD License
  */
 class CalendarRootM2 extends CalendarRoot {
+  /**
+   * This method returns a node for a principal.
+   *
+   * The passed array contains principal information, and is guaranteed to
+   * at least contain a uri item. Other properties may or may not be
+   * supplied by the authentication backend.
+   *
+   * @param array $principal
+   * @return \Sabre\DAV\INode
+   */
+  function getChildForPrincipal(array $principal) {
 
-    /**
-     * This method returns a node for a principal.
-     *
-     * The passed array contains principal information, and is guaranteed to
-     * at least contain a uri item. Other properties may or may not be
-     * supplied by the authentication backend.
-     *
-     * @param array $principal
-     * @return \Sabre\DAV\INode
-     */
-    function getChildForPrincipal(array $principal) {
+      return new CalendarHomeM2($this->caldavBackend, $principal);
 
-        return new CalendarHomeM2($this->caldavBackend, $principal);
-
-    }
-
+  }
 }

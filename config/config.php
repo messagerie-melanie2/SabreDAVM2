@@ -2,7 +2,7 @@
 /**
  * Fichier de configuration de l'application SabreDAVM2
  *
- * SabreDAVM2 Copyright (C) 2015  PNE Annuaire et Messagerie/MEDDE
+ * SabreDAVM2 Copyright © 2017  PNE Annuaire et Messagerie/MEDDE
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,14 +17,62 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-$config = [];
+namespace Config;
 
-// If you want to run the SabreDAV server in a custom location (using mod_rewrite for instance)
-// You can override the baseUri here.
-// @var string
-$config['baseUri'] = '/caldav.php';
+/**
+ * Classe de configuration de l'applications
+ *
+ * @package Config
+ */
+class Config {
+  /**
+   * If you want to run the SabreDAV server in a custom location (using mod_rewrite for instance)
+   * You can override the baseUri here.
+   * @var string
+   */
+  const baseUri = '/caldav.php';
+  /**
+   * If you want to run the SabreDAV server in a custom location (using mod_rewrite for instance)
+   * You can override the baseUri here.
+   * For CalDAV server
+   * @var string
+   */
+  const caldavBaseUri = '/caldav.php';  
+  /**
+   * If you want to run the SabreDAV server in a custom location (using mod_rewrite for instance)
+   * You can override the baseUri here.
+   * For CardDAV server
+   * @var string
+   */
+  const carddavBaseUri = '/carddav.php';
+  /**
+   * This is a flag that allow or not showing file, line and code
+   * of the exception in the returned XML
+   * @var boolean
+   */
+  const debugExceptions = true;
 
-// This is a flag that allow or not showing file, line and code
-// of the exception in the returned XML
-// @var bool
-$config['debugExceptions'] = false;
+  /**
+   * Implement the web browser in SabreDAV
+   * Can be usefull in assistance
+   * @var boolean
+   */
+  const useBrowser = true;
+  
+  /**
+   * Use WebDav Sync to CalDAV synchronisation
+   * @var boolean
+   */
+  const enableWebDavSync = true;
+  /**
+   * Date limite maximum pour l'ancienneté des évènements retournés
+   * @var string
+   */
+  const DATE_MAX = "-18 months";
+
+  /**
+   * Version de Sabre/DAV utilisé
+   * @var string
+   */
+  const SabreDAV_Version = "3.0.9";
+}

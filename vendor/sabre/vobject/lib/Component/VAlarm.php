@@ -8,7 +8,7 @@ use Sabre\VObject;
  *
  * This component contains some additional functionality specific for VALARMs.
  *
- * @copyright Copyright (C) 2007-2014 fruux GmbH (https://fruux.com/).
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
@@ -30,14 +30,10 @@ class VAlarm extends VObject\Component {
 
             $parentComponent = $this->parent;
             if ($related === 'START') {
-
-                if ($parentComponent->name === 'VTODO') {
-                    $propName = 'DUE';
-                } else {
-                    $propName = 'DTSTART';
-                }
-
-                $effectiveTrigger = clone $parentComponent->$propName->getDateTime();
+	            	if (!isset($parentComponent->DTSTART)) {
+	            			throw new \ParseException('DTSTART property MUST exist if a VALARM is related to the start time');
+	            	}
+                $effectiveTrigger = clone $parentComponent->DTSTART->getDateTime();
                 $effectiveTrigger->add($triggerDuration);
             } else {
                 if ($parentComponent->name === 'VTODO') {
@@ -116,6 +112,7 @@ class VAlarm extends VObject\Component {
      *   * 1 - Must appear exactly once.
      *   * + - Must appear at least once.
      *   * * - Can appear any number of times.
+     *   * ? - May appear, but not more than once.
      *
      * @var array
      */
