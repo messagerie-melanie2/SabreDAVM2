@@ -57,7 +57,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
   protected $taskslist;
   /**
    * Est-ce que la liste des tâches M2 de l'utilisateur est chargée (donc existe)
-   * 
+   *
    * @var boolean
    */
   protected $taskslist_loaded;
@@ -118,7 +118,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
    * @var string
    */
   const SHORT_DB_DATE_FORMAT = 'Y-m-d';
-  
+
   /**
    * Délimiteur pour le syncToken entre les événements et les tâches
    * @var string
@@ -213,7 +213,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
   }
   /**
    * Charge la liste des calendriers de l'utilisateur connecté
-   * 
+   *
    * @param string $user Utilisateur pour les calendriers
    *
    * @return \LibMelanie\Api\Melanie2\Calendar[]
@@ -230,30 +230,30 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
   	}
   	else {
   		$this->setCurrentUser();
-  		
+
   		if (!isset($this->calendars)
   				|| count($this->calendars) === 0) {
   			$this->calendars = $this->user_melanie->getSharedCalendars();
   		}
   	}
-  	
+
     return $this->calendars;
   }
   /**
    * Charge la liste de tâches principale de l'utilisateur connecté
-   * 
+   *
    * @return \LibMelanie\Api\Melanie2\Taskslist
    */
   protected function loadUserTaskslist() {
   	$this->setCurrentUser();
-  	
+
   	if (!isset($this->taskslist)) {
   		$this->taskslist = new \LibMelanie\Api\Melanie2\Taskslist($this->user_melanie);
   		$this->taskslist->id = $this->user_melanie->uid;
   		$this->taskslist_loaded = $this->taskslist->load();
   	}
-  	
-  	return $this->taskslist;  		  
+
+  	return $this->taskslist;
   }
   /**
    * Returns a list of calendars for a principal.
@@ -687,7 +687,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
     		// MANTIS 0004469: Générer des messages d'erreur quand l'utilisateur n'a pas les droits
     		throw new \Sabre\DAV\Exception\Forbidden();
     	}
-      $event_uid = str_replace('.ics', '', $objectUri);
+      $event_uid = urldecode(str_replace('.ics', '', $objectUri));
       // Cherche si l'évènement n'est pas déjà dans le cache
       if (!isset($this->cache_events[$event_uid.$calendarId])) {
         $event = new \LibMelanie\Api\Melanie2\Event($this->user_melanie, $this->calendars[$calendarId]);
@@ -765,7 +765,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
     $list_event_uid = [];
     // Remove .ics from the uri
     foreach ($uris as $uri) {
-        $list_event_uid[] = str_replace('.ics', '', $uri);
+        $list_event_uid[] = urldecode(str_replace('.ics', '', $uri));
     }
 
     // Cherche si le calendrier est présent en mémoire
@@ -809,6 +809,10 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
             if ($this->server->httpRequest->getMethod() != 'PROPFIND') {
             	$event['calendardata'] = $_event->ics;
             	$event['size'] = strlen($event['calendardata']);
+            	// MANTIS 0004631: Nettoyer les données des pièces jointes après leur lecture
+              foreach ($_event->attachments as $attachment) {
+                unset($attachment->data);
+              }
             }
             $result[] = $event;
             // Vide la liste des uid
@@ -975,6 +979,10 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
           $event->owner = $this->current_user;
         }
         $event->ics = $calendarData;
+        // MANTIS 0004663: Problème de création d'une exception d'une récurrence non présente
+        if (!isset($event->end) && count($event->exceptions) > 0) {
+          $event->deleted = true;
+        }
         $event->modified = time();
         $res = $event->save();
         if (!is_null($res)) {
@@ -1068,6 +1076,9 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
           $event->uid = $event_uid;
         }
         if ($event->load()) {
+          if (!isset($event->owner)) {
+            $event->owner = $this->user_melanie->uid;
+          }
           $event->ics = $calendarData;
           $event->modified = time();
           $res = $event->save();
@@ -1337,7 +1348,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
     }
     return null;
   }
-  
+
   /**
    * The getChanges method returns all the changes that have happened, since
    * the specified syncToken in the specified calendar.
@@ -1446,20 +1457,20 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
   			if ($this->taskslist_loaded) {
   				if (!isset($syncTokenTasks) || intval($this->taskslist->synctoken) !== intval($syncTokenTasks)) {
   					$syncsTasks = new \LibMelanie\Api\Melanie2\TaskslistSync($this->taskslist);
-  					$syncsTasks->token = $syncTokenTasks;
+  					$syncsTasks->token = isset($syncTokenTasks) ? $syncTokenTasks : null;
   					$resultsTasks = $syncsTasks->listTaskslistSync($limit);
   					$results['added'] = array_merge($results['added'], $resultsTasks['added']);
   					$results['modified'] = array_merge($results['modified'], $resultsTasks['modified']);
   					$results['deleted'] = array_merge($results['deleted'], $resultsTasks['deleted']);
   				}
   				$results['syncToken'] = $results['syncToken'] . self::WEBSYNC_DELIMITER . $this->taskslist->synctoken;
-  			}				
+  			}
   		}
   	}
   	if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CalDAVBackend] LibM2.getChangesForCalendar() results: " . var_export($results, true));
   	return $results;
   }
-  
+
   /**
    * Returns a list of subscriptions for a principal.
    *

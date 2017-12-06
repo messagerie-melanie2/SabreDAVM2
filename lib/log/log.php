@@ -135,6 +135,7 @@ class Log {
 		// Définition du fichier de log pour les erreurs (ajout de la date du jour si besoin)
 		if (self::$errorlog_file === "") {
 			self::$errorlog_file = \Config\Log::$path_log.'/'.str_replace("{date}", $date, \Config\Log::$file_errors_log);
+			ini_set('error_log', self::$errorlog_file);
 		}
 		// Ecriture des logs dans le/les fichier(s) en fonction du niveau de log configuré
 		if ($level === self::ERROR) {

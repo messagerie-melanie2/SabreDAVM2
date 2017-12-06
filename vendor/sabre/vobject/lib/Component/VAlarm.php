@@ -30,10 +30,14 @@ class VAlarm extends VObject\Component {
 
             $parentComponent = $this->parent;
             if ($related === 'START') {
-	            	if (!isset($parentComponent->DTSTART)) {
-	            			throw new \ParseException('DTSTART property MUST exist if a VALARM is related to the start time');
-	            	}
-                $effectiveTrigger = clone $parentComponent->DTSTART->getDateTime();
+
+                if ($parentComponent->name === 'VTODO') {
+                    $propName = 'DUE';
+                } else {
+                    $propName = 'DTSTART';
+                }
+
+                $effectiveTrigger = clone $parentComponent->$propName->getDateTime();
                 $effectiveTrigger->add($triggerDuration);
             } else {
                 if ($parentComponent->name === 'VTODO') {

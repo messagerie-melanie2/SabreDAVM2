@@ -22,7 +22,7 @@ if (!defined('CONFIGURATION_APP_LIBM2')) {
 	define('CONFIGURATION_APP_LIBM2', 'sabredav');
 }
 // Inclusion de l'ORM
-require_once 'includes/libm2.php';
+@include_once 'includes/libm2.php';
 // Inclusion de la configuration de l'application
 require_once 'config/includes.php';
 // Includes
