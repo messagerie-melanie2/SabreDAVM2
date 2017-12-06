@@ -24,11 +24,28 @@ A faire
 CalDAV - Liste des changements
 ==============================
 
-CalDAV - 0.5.4 (Pas encore publiée) [ Afficher les bogues ]
+
+CalDAV - 0.5.5 (Pas encore publiée) [ Afficher les bogues ]
 ---
+- 0004732: [SabreDAV] Filtrer les exceptions d'authentification (thomas.payen) - résolu.
+- 0004727: [SabreDAV] Ne pas retourner les occurrences sans date (thomas.payen) - résolu.
+- 0004728: [SabreDAV] Problème de génération du recurrence id (thomas.payen) - résolu.
+
+[3 bogues]
+
+CalDAV - 0.5.4 (Publiée 02/11/2017) [ Afficher les bogues ]
+---
+- 0004720: [SabreDAV] Problème de conversion d'une alarme supérieure à 1 semaine (thomas.payen) - résolu.
+- 0004704: [SabreDAV] Le s'inviter en déclinant ne fonctionne pas (thomas.payen) - résolu.
+- 0004707: [SabreDAV] Bug dans la lib Sabre/VObject lors d'une conversion de DateTime (thomas.payen) - résolu.
+- 0004705: [SabreDAV] Le trombonne de la pièce jointe n'apparait pas (thomas.payen) - résolu.
+- 0004703: [SabreDAV] Log des exceptions SabreDAV (thomas.payen) - résolu.
+- 0004694: [SabreDAV] Forcer le Timezone quand il est différent de celui enregistré (thomas.payen) - résolu.
+- 0004685: [SabreDAV] [SyncToken] Problème lorsque l'on supprime puis reaccepte l'événement d'une invitation (thomas.payen) - résolu.
+- 0004691: [SabreDAV] Ajouter un shutdown pour catcher les erreurs (thomas.payen) - résolu.
 - 0004681: [SabreDAV] Améliorer le If-Match ETag (thomas.payen) - résolu.
 
-[1 bogue]
+[9 bogues]
 
 CalDAV - 0.5.3 (Publiée 02/10/2017) [ Afficher les bogues ]
 ---

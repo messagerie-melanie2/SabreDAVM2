@@ -190,11 +190,13 @@ class CalDAV {
   private static function InitEvents() {
     // MANTIS 0004703: Log des exceptions SabreDAV
     self::$server->on('exception', function($ex) {
-      \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "Exception: " . $ex->getMessage());
-      \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "File: " . $ex->getFile());
-      \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "Line: " . $ex->getLine());
-      \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "Code: " . $ex->getCode());
-      \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "Trace: " . $ex->getTraceAsString());
+      if (strpos($ex->getMessage(), 'Authorization: Basic') === false) {
+        \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "Exception: " . $ex->getMessage());
+        \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "File: " . $ex->getFile());
+        \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "Line: " . $ex->getLine());
+        \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "Code: " . $ex->getCode());
+        \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "Trace: " . $ex->getTraceAsString());
+      }      
     });
   }
   /**

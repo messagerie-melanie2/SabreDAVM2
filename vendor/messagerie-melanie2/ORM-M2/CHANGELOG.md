@@ -1,3 +1,15 @@
+ORM M2 - 0.3.0.24
+------
+- 0004740: Considérer l'événement supprimé si start = 1970-01-01
+- 0004744: Une exception doit récupérer l'organisateur de l'événement maitre s'il existe
+- 0004746: Potentiel problème dans la recherche de l'organisateur
+
+ORM M2 - 0.3.0.23
+------
+- 0004730: [ICS] Problème de génération du recurrence id
+- 0004731: [ICS] Ne pas retourner les occurrences sans date
+- 0004721: [ICS] La conversion d'une alarme en semaine ne doit se faire que si elle tombe juste
+
 ORM M2 - 0.3.0.22
 ------
 - 0004708: Lors d'un "s'inviter" utiliser les informations de l'ICS

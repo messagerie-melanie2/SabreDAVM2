@@ -380,17 +380,17 @@
     },
     {
         "name": "messagerie-melanie2/ORM-M2",
-        "version": "0.3.0.22",
-        "version_normalized": "0.3.0.22",
+        "version": "0.3.0.24",
+        "version_normalized": "0.3.0.24",
         "source": {
             "type": "git",
             "url": "https://github.com/messagerie-melanie2/ORM-M2.git",
-            "reference": "2c8dbb470637b2f2ac824bd358f394215f0fa3b4"
+            "reference": "dc9c982d0bb99650934c18e59df5b0422cecd932"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/messagerie-melanie2/ORM-M2/zipball/2c8dbb470637b2f2ac824bd358f394215f0fa3b4",
-            "reference": "2c8dbb470637b2f2ac824bd358f394215f0fa3b4",
+            "url": "https://api.github.com/repos/messagerie-melanie2/ORM-M2/zipball/dc9c982d0bb99650934c18e59df5b0422cecd932",
+            "reference": "dc9c982d0bb99650934c18e59df5b0422cecd932",
             "shasum": ""
         },
         "require": {
@@ -401,7 +401,7 @@
         "require-dev": {
             "composer/composer": "*"
         },
-        "time": "2017-10-18T14:35:18+00:00",
+        "time": "2017-11-22T16:28:12+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -432,7 +432,7 @@
             "Tasks"
         ],
         "support": {
-            "source": "https://github.com/messagerie-melanie2/ORM-M2/tree/0.3.0.22",
+            "source": "https://github.com/messagerie-melanie2/ORM-M2/tree/0.3.0.24",
             "issues": "https://github.com/messagerie-melanie2/ORM-M2/issues"
         }
     }
