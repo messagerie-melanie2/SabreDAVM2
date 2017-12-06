@@ -1,3 +1,26 @@
+ORM M2 - 0.3.0.22
+------
+- 0004708: Lors d'un "s'inviter" utiliser les informations de l'ICS
+- 0004706: L'enregistrement d'une pièce jointe depuis l'ICS ne se fait pas dans le bon dossier vfs
+
+ORM M2 - 0.3.0.21
+------
+- 0004694: Forcer le Timezone quand il est différent de celui enregistré
+- 0004695: Enregistrer le timezone lors de la conversion depuis l'ICS
+
+ORM M2 - 0.3.0.20
+------
+- Problème de typage pour l'Exception
+- 0004692: Enregistrer la derniere requete SQL + ses parametres
+
+ORM M2 - 0.3.0.19
+------
+- 0004689: Mauvaise optimisation du chargement des pièces jointes
+
+ORM M2 - 0.3.0.18
+------
+- Suppression des appels au garbage collector suite à un problème de charge sur SabreDAV
+
 ORM M2 - 0.3.0.17
 ------
 - Ajouter l'email dans les logs de l'organisateur

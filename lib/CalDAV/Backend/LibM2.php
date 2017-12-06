@@ -743,7 +743,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
         }
       }
     }
-    //if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CalDAVBackend] LibM2.getCalendarObject($calendarId,$objectUri) : " . var_export($result, true));
+    if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CalDAVBackend] LibM2.getCalendarObject($calendarId,$objectUri) : " . var_export($result, true));
     return $result;
   }
   /**

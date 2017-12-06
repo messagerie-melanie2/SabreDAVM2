@@ -25,6 +25,7 @@ require_once 'vendor/autoload.php';
 require_once 'lib/log/log.php';
 require_once 'lib/log/logging.php';
 require_once 'lib/log/Plugin.php';
+require_once 'lib/DAV/ServerM2.php';
 require_once 'lib/DAV/Auth/Backend/LibM2.php';
 require_once 'lib/CalDAV/Melanie2Support.php';
 require_once 'lib/CalDAV/Backend/LibM2.php';

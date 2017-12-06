@@ -80,7 +80,7 @@ class CalDAV {
       new Sabre\CalDAV\CalendarRootM2(self::$principalBackend, self::$calendarBackend),
     ];
     // Création du serveur CalDAV
-    self::$server = new Sabre\DAV\Server($tree);
+    self::$server = new Sabre\DAV\ServerM2($tree);
     // Configuration de la baseUri
     self::$server->setBaseUri(\Config\Config::caldavBaseUri);
     // Configuration du mode debug pour le serveur
@@ -90,6 +90,9 @@ class CalDAV {
     self::$principalBackend->setServer(self::$server);    
     // Initialisation des logs
     self::InitLogs();
+    // Initialisation du shutdown
+    register_shutdown_function(array('CalDAV', 'InitShutdown'));
+    
 
     // PAMELA 10/09/10 Traitement des PROPFIND
     // optimiser les PROPFIND qui ne demandent que le getctag
@@ -112,7 +115,10 @@ class CalDAV {
       }
     }
     // Initialisation des plugins
-    self::InitPlugins();
+    self::InitPlugins();    
+    // Initialisation des événements serveur
+    self::InitEvents();
+    
     // Démarrage du serveur
     self::$server->exec();
   }
@@ -175,6 +181,43 @@ class CalDAV {
       self::$server->addPlugin(
         new Sabre\DAV\Browser\Plugin()
       );
+    }
+  }
+  /**
+   * Gestion des Events server
+   * Pour logger les exceptions notamment
+   */
+  private static function InitEvents() {
+    // MANTIS 0004703: Log des exceptions SabreDAV
+    self::$server->on('exception', function($ex) {
+      \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "Exception: " . $ex->getMessage());
+      \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "File: " . $ex->getFile());
+      \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "Line: " . $ex->getLine());
+      \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "Code: " . $ex->getCode());
+      \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "Trace: " . $ex->getTraceAsString());
+    });
+  }
+  /**
+   * Initialisation du shutdown pour logger les erreurs
+   */
+  public static function InitShutdown() {
+    $last_error = error_get_last();
+    if (isset($last_error)) {
+      $path = $_SERVER['PATH_INFO'];
+      $req = $_SERVER['REQUEST_METHOD'];
+      $error = "";
+      if (isset($last_error['type']) && ($last_error['type'] === E_ERROR)) {
+        if (isset($last_error['message'])) {
+          $error .= ' Message:"' . $last_error['message'] . '"';
+        }
+        if (isset($last_error['file'])) {
+          $error .= ' File:"' . $last_error['file'] . '"';
+        }
+        if (isset($last_error['line'])) {
+          $error .= ' Line:' . $last_error['line'];
+        }
+        \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "$req $path [Shutdown] $error / Last request : " . var_export(\LibMelanie\Sql\Sql::getLastRequest(), true));
+      }
     }
   }
 }

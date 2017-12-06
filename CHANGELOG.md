@@ -24,15 +24,21 @@ A faire
 CalDAV - Liste des changements
 ==============================
 
-
-CalDAV - 0.5.3 (Pas encore publiée) [ Afficher les bogues ]
+CalDAV - 0.5.4 (Pas encore publiée) [ Afficher les bogues ]
 ---
+- 0004681: [SabreDAV] Améliorer le If-Match ETag (thomas.payen) - résolu.
+
+[1 bogue]
+
+CalDAV - 0.5.3 (Publiée 02/10/2017) [ Afficher les bogues ]
+---
+- 0004676: [SabreDAV] Les exceptions d'un FAKED MASTER n'ont pas de owner (thomas.payen) - résolu.
 - 0004599: [SabreDAV] Problème de décodage de l'UID dans la méthode REPORT (thomas.payen) - résolu.
 - 0004663: [SabreDAV] Problème de création d'une exception d'une récurrence non présente (thomas.payen) - résolu.
 - 0004664: [SabreDAV] La recherche If-Match ne marche pas pour un Faked-Master (thomas.payen) - résolu.
 - 0004666: [SabreDAV] SyncToken modifier les uid en RECURRENCE-ID (thomas.payen) - résolu.
 
-[4 bogues]
+[5 bogues]
 
 CalDAV - 0.5.2 (Publiée 17/04/2017) [ Afficher les bogues ]
 ---

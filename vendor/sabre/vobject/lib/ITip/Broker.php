@@ -750,7 +750,8 @@ class Broker {
                 } elseif ($summary) {
                     $event->add('SUMMARY', $summary);
                 }
-            } else {
+                // PAMELA - MANTIS 0004707: Bug dans la lib Sabre/VObject lors d'une conversion de DateTime
+            } else if ($instance['id'] !== 'master') {
                 // This branch of the code is reached, when a reply is
                 // generated for an instance of a recurring event, through the
                 // fact that the instance has disappeared by showing up in

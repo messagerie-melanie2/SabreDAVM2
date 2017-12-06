@@ -442,6 +442,9 @@ class Event extends Melanie2Object {
         foreach ($this->attendees as $attendee) {
           if (strtolower($attendee->uid) == strtolower($this->usermelanie->uid)) {
             $response = $attendee->response;
+            // MANTIS 0004708: Lors d'un "s'inviter" utiliser les informations de l'ICS
+            $att_email = $attendee->email;
+            $att_name = $attendee->name;
             break;
           }
         }
@@ -468,8 +471,9 @@ class Event extends Melanie2Object {
           // S'inviter dans la réunion
           if ($invite && ConfigMelanie::SELF_INVITE) {
             $attendee = new Attendee($organizer_event);
-            $attendee->email = $this->usermelanie->email;
-            $attendee->name = '';
+            // MANTIS 0004708: Lors d'un "s'inviter" utiliser les informations de l'ICS
+            $attendee->email = isset($att_email) ? $att_email : $this->usermelanie->email;
+            $attendee->name = isset($att_name) ? $att_name : '';
             $attendee->response = $response;
             $attendee->role = Attendee::ROLE_REQ_PARTICIPANT;
             $organizer_attendees[] = $attendee;
@@ -560,7 +564,7 @@ class Event extends Melanie2Object {
       }
     }
     // TODO: Test - Nettoyage mémoire
-    gc_collect_cycles();
+    //gc_collect_cycles();
     return true;
   }
   
@@ -698,7 +702,7 @@ class Event extends Melanie2Object {
       return true;
     }
     // TODO: Test - Nettoyage mémoire
-    gc_collect_cycles();
+    //gc_collect_cycles();
     return false;
   }
   
@@ -768,7 +772,7 @@ class Event extends Melanie2Object {
         return $insert;
     }
     // TODO: Test - Nettoyage mémoire
-    gc_collect_cycles();
+    //gc_collect_cycles();
     M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->save() Rien a sauvegarder: return null");
     return null;
   }
@@ -809,7 +813,7 @@ class Event extends Melanie2Object {
         return true;
     }
     // TODO: Test - Nettoyage mémoire
-    gc_collect_cycles();
+    //gc_collect_cycles();
     M2Log::Log(M2Log::LEVEL_ERROR, $this->get_class . "->delete() Error: return false");
     return false;
   }
@@ -829,7 +833,7 @@ class Event extends Melanie2Object {
     else
       $this->deleted = false;
     // TODO: Test - Nettoyage mémoire
-    gc_collect_cycles();
+    //gc_collect_cycles();
     return $ret;
   }
   
@@ -943,7 +947,7 @@ class Event extends Melanie2Object {
     // Détruit les variables pour libérer le plus rapidement de la mémoire
     unset($exceptions);
     // TODO: Test - Nettoyage mémoire
-    gc_collect_cycles();
+    //gc_collect_cycles();
     return $events;
   }
   
@@ -1319,7 +1323,9 @@ class Event extends Melanie2Object {
       $path = str_replace('%e', $this->objectmelanie->uid, $path);
       $attachment->path = $path;
       M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapAttachments() path : " . $attachment->path);
-      $this->attachments = $attachment->getList();
+      // MANTIS 0004689: Mauvaise optimisation du chargement des pièces jointes
+      $fields = ["id", "type", "path", "name", "modified", "owner"];
+      $this->attachments = $attachment->getList($fields);
       
       // Récupération des pièces jointes URL
       $attach_uri = $this->getAttribute('ATTACH-URI');
