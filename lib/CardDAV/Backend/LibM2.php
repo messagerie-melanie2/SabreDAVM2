@@ -354,7 +354,7 @@ class LibM2 extends AbstractBackend implements Melanie2Support {
 			foreach ( $this->cache_contacts as $_contact ) {
 				$contact = [
 						'id' => $_contact->uid,
-						'uri' => $_contact->uid . '.ics',
+						'uri' => urlencode($_contact->uid) . '.vcf',
 						'lastmodified' => $_contact->modified,
 						'etag' => '"' . md5($_contact->modified) . '"'
 				];
@@ -402,7 +402,7 @@ class LibM2 extends AbstractBackend implements Melanie2Support {
 				// MANTIS 0004469: Générer des messages d'erreur quand l'utilisateur n'a pas les droits
 				throw new \Sabre\DAV\Exception\Forbidden();
 			}
-			$contact_uid = str_replace('.ics', '', $cardUri);
+			$contact_uid = str_replace('.vcf', '', urldecode($cardUri));
 			// Cherche si l'évènement n'est pas déjà dans le cache
 			if (! isset($this->cache_contacts[$contact_uid . $addressBookId])) {
 				$contact = new \LibMelanie\Api\Melanie2\Contact($this->user_melanie, $this->addressbooks[$addressBookId]);
@@ -415,7 +415,7 @@ class LibM2 extends AbstractBackend implements Melanie2Support {
 			if (isset($this->cache_contacts[$contact_uid . $addressBookId]) && $this->cache_contacts[$contact_uid . $addressBookId]->exists()) {
 				$result = [
 						'id' => $this->cache_contacts[$contact_uid . $addressBookId]->uid,
-						'uri' => $this->cache_contacts[$contact_uid . $addressBookId]->uid . '.ics',
+						'uri' => urlencode($this->cache_contacts[$contact_uid . $addressBookId]->uid) . '.vcf',
 						'lastmodified' => $this->cache_contacts[$contact_uid . $addressBookId]->modified,
 						'etag' => '"' . md5($this->cache_contacts[$contact_uid . $addressBookId]->modified) . '"',
 				];

@@ -68,7 +68,12 @@ class Config {
    * Date limite maximum pour l'ancienneté des évènements retournés
    * @var string
    */
-  const DATE_MAX = "-18 months";
+  const DATE_MAX = "-18 months"; 
+  /**
+   * Ajouter au Sync Token pour retourner plus d'enregistrement
+   * @var integer
+   */
+  const addToSyncToken = 10;
 
   /**
    * Version de Sabre/DAV utilisé

@@ -24,7 +24,14 @@ A faire
 CalDAV - Liste des changements
 ==============================
 
-CalDAV - 0.5.6 (Pas encore publiée) [ Afficher les bogues ]
+CalDAV - 0.5.7 (Publiée 18/12/2017) [ Afficher les bogues ]
+---
+- 0004761: [SabreDAV] Le serveur sabredav ne retourne pas les bonnes valeurs de privilèges (thomas.payen) - résolu.
+- 0004775: [SabreDAV] Augmenter la plage de retour du WebDAVSync (thomas.payen) - résolu.
+
+[2 bogues]
+
+CalDAV - 0.5.6 (Publiée 05/12/2017) [ Afficher les bogues ]
 ---
 - 0004763: [SabreDAV] Utilisation de l'ORM v0.4 (thomas.payen) - résolu.
 
