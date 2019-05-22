@@ -108,10 +108,10 @@ class CalDAV {
         exit;
       }
       elseif (self::$server->httpRequest->getMethod() == 'REPORT' 
-      		&& strpos($v, "<sync-collection xmlns=\"DAV:\"><sync-token>") !== false
-      		&& strpos($v, "</sync-token><sync-level>1</sync-level><prop><getcontenttype/><getetag/></prop></sync-collection>") !== false) {
+      		&& strpos($v, '<sync-collection xmlns="DAV:"><sync-token/><sync-level>1</sync-level><prop><getcontenttype/><getetag/></prop></sync-collection>') !== false) {
       	self::$authBackend->setNoAuthReportMethod(true);
       	self::$principalBackend->setNoPrincipalSearch(true);
+      	self::$calendarBackend->setIsSync(true);
       }
     }
     // Initialisation des plugins

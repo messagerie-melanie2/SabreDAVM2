@@ -109,6 +109,11 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
    */
   protected $server;
   /**
+   * Est-ce que l'on est dans un mode Sync
+   * @var boolean
+   */
+  protected $isSync;
+  /**
    * Format de datetime pour la base de données
    * @var string
    */
@@ -166,6 +171,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
     $this->cache_events = [];
     $this->taskslist = null;
     $this->taskslist_loaded = false;
+    $this->isSync = false;
     if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CalDAVBackend] LibM2.__construct() current_user : " . $this->current_user);
   }
   /**
@@ -175,6 +181,15 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
    */
   public function setServer(\Sabre\DAV\Server $server) {
     $this->server = $server;
+  }
+  /**
+   * Défini si l'on est en mode Sync ou non (pour les optimisations)
+   * 
+   * @param boolean $isSync
+   */
+  public function setIsSync($isSync) {
+    if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CalDAVBackend] LibM2.setIsSync($isSync)");
+    $this->isSync = $isSync;
   }
   /**
    * Définition du user courant
@@ -618,7 +633,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
         	// MANTIS 0004477: Gérer le droit afficher
         	$_event->ics_freebusy = true;
         }
-        if ($this->server->httpRequest->getMethod() != 'PROPFIND') {
+        if ($this->server->httpRequest->getMethod() != 'PROPFIND' && !$this->isSync) {
           $event['calendardata'] = $_event->ics;
           $event['size'] = strlen($event['calendardata']);
         }
@@ -639,7 +654,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
             'calendarid'   => $_task->taskslist,
             'component'    => 'vtodo',
           ];
-          if ($this->server->httpRequest->getMethod() != 'PROPFIND') {
+          if ($this->server->httpRequest->getMethod() != 'PROPFIND' && !$this->isSync) {
             $task['calendardata'] = $_task->ics;
             $task['size'] = strlen($task['calendardata']);
           }
@@ -728,7 +743,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
         	// MANTIS 0004477: Gérer le droit afficher
         	$this->cache_events[$event_uid.$calendarId]->ics_freebusy = true;
         }
-        if ($this->server->httpRequest->getMethod() != 'PROPFIND') {
+        if ($this->server->httpRequest->getMethod() != 'PROPFIND' && !$this->isSync) {
           $result['calendardata'] = $this->cache_events[$event_uid.$calendarId]->ics;
           $result['size'] = strlen($result['calendardata']);
         }
@@ -743,7 +758,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
           'calendarid'    => $this->cache_tasks[$event_uid.$calendarId]->taskslist,
           'component'     => 'vtodo',
         ];
-        if ($this->server->httpRequest->getMethod() != 'PROPFIND') {
+        if ($this->server->httpRequest->getMethod() != 'PROPFIND' && !$this->isSync) {
           $result['calendardata'] = $this->cache_tasks[$event_uid.$calendarId]->ics;
           $result['size'] = strlen($result['calendardata']);
         }
@@ -812,7 +827,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
               'calendarid'   => $_event->calendar,
               'component'    => 'vevent',
             ];
-            if ($this->server->httpRequest->getMethod() != 'PROPFIND') {
+            if ($this->server->httpRequest->getMethod() != 'PROPFIND' && !$this->isSync) {
             	$event['calendardata'] = $_event->ics;
             	$event['size'] = strlen($event['calendardata']);
             	// MANTIS 0004631: Nettoyer les données des pièces jointes après leur lecture
@@ -846,7 +861,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
               'calendarid'   => $_task->taskslist,
               'component'    => 'vtodo',
             ];
-            if ($this->server->httpRequest->getMethod() != 'PROPFIND') {
+            if ($this->server->httpRequest->getMethod() != 'PROPFIND' && !$this->isSync) {
             	$task['calendardata'] = $_task->ics;
             	$task['size'] = strlen($task['calendardata']);
             }
@@ -879,7 +894,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
               'calendarid'   => $_event->calendar,
               'component'    => 'vevent',
             ];
-            if ($this->server->httpRequest->getMethod() != 'PROPFIND') {
+            if ($this->server->httpRequest->getMethod() != 'PROPFIND' && !$this->isSync) {
             	$event['calendardata'] = $_event->ics;
             	$event['size'] = strlen($event['calendardata']);
             }
