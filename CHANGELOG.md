@@ -24,21 +24,24 @@ A faire
 CalDAV - Liste des changements
 ==============================
 
-CalDAV - 0.6.3 (Pas encore publiée) [ Afficher les bogues ]
+CalDAV - 0.6.4 (Pas encore publiée) [ Afficher les bogues ]
 ---
+- 0005067: [SabreDAV] Mettre en place le en attente (thomas.payen) - résolu.
+
+[1 bogue]
+
+CalDAV - 0.6.3 (Publiée 20/08/2018) [ Afficher les bogues ]
+---
+- 0005077: [SabreDAV] Mettre en place un mecanisme de blocage des URL par utilisateur (thomas.payen) - résolu.
+- 0005076: [SabreDAV] Ajouter le User Agent dans les logs debug (thomas.payen) - résolu.
+- 0005063: [SabreDAV] Une fois que l'organisateur est défini, ne plus permettre au client de le modifier (thomas.payen) - résolu.
 - 0005050: [SabreDAV] Problème avec l'ajout d'un participant dans une occurrence depuis l'agenda pool (thomas.payen) - résolu.
 - 0005030: [SabreDAV] La connexion via un objet de partage pose des problèmes sur les événements privés (thomas.payen) - résolu.
 - 0005006: [SabreDAV] La gestion des réponses aux invitations pour les pools de secrétaires n'est pas satisfaisante (thomas.payen) - résolu.
 - 0005008: [SabreDAV] Ajout d'un X-M2-ORG-MAIL dans le champ ORGANIZER (thomas.payen) - résolu.
 - 0005009: [SabreDAV] Optimiser la gestion des droits (thomas.payen) - résolu.
 
-[4 bogues]
-
-CalDAV - 0.6.2.1 (Pas encore publiée) [ Afficher les bogues ]
----
-- 0005004: [SabreDAV] Bloquer le mode allowUnauthenticatedAccess (thomas.payen) - résolu.
-
-[1 bogue]
+[8 bogues]
 
 CalDAV - 0.6.2 (Publiée 14/06/2018) [ Afficher les bogues ]
 ---

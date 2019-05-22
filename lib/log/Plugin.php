@@ -58,6 +58,7 @@ class Plugin extends DAV\ServerPlugin {
       if (\Lib\Log\Log::isLvl(\Lib\Log\Log::INFO))
         \Lib\Log\Log::l(\Lib\Log\Log::INFO, "REQ===> method =".$request->getMethod()."= =".$request->getAbsoluteUrl()."= =".$request->getPath()."=");
       if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) {
+        \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, 'User-Agent: ' . $request->getHeader('User-Agent'));
         $body = $request->getBodyAsString();
         // XXX: Erreur si on récupère le body et que ce n'est pas du FastPropfind
         // Surement lié à la ressource

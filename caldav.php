@@ -93,7 +93,21 @@ class CalDAV {
     // Initialisation du shutdown
     register_shutdown_function(array('CalDAV', 'InitShutdown'));
     
-
+    // MANTIS 0005077: Mettre en place un mecanisme de blocage des URL par utilisateur
+    \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[GetURL] " . self::$server->httpRequest->getUrl());
+    if (isset(Config\Config::$blockedUrl)
+        && isset($_SERVER['PHP_AUTH_USER'])) {
+      $currentUser = $_SERVER['PHP_AUTH_USER'];
+      if (isset(Config\Config::$blockedUrl[$currentUser])) {
+        if (is_array(Config\Config::$blockedUrl[$currentUser])
+            && in_array(self::$server->httpRequest->getUrl(), Config\Config::$blockedUrl[$currentUser])
+            || Config\Config::$blockedUrl[$currentUser] == self::$server->httpRequest->getUrl()) {
+          \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "[Blocked URL] " . self::$server->httpRequest->getUrl());
+          return;
+        }
+      }
+    }
+    
     // PAMELA 10/09/10 Traitement des PROPFIND
     // optimiser les PROPFIND qui ne demandent que le getctag
     if ( self::$server->httpRequest->getMethod() == 'PROPFIND' || self::$server->httpRequest->getMethod() == 'REPORT') {

@@ -849,7 +849,13 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
         }
         $_events = new \LibMelanie\Api\Melanie2\Event($this->user_melanie, $this->calendars[$calendarId]);
         $_events->uid = $list_event_uid;
-        $this->cache_events = $_events->getList();
+        // MANTIS 0005087: Optimisation des requêtes SQL
+        if ($this->server->httpRequest->getMethod() != 'PROPFIND' && !$this->isSync) {
+          $this->cache_events = $_events->getList();
+        }
+        else {
+          $this->cache_events = $_events->getList(['uid', 'modified', 'calendar']);
+        }
         foreach($this->cache_events as $_event) {
 	        	if (!$this->calendars[$calendarId]->asRight(\LibMelanie\Config\ConfigMelanie::READ)) {
 	        		// MANTIS 0004477: Gérer le droit afficher
@@ -886,8 +892,13 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
           $taskslist->id = $calendarId;
           $_tasks = new \LibMelanie\Api\Melanie2\Task($this->user_melanie, $taskslist);
           $_tasks->uid = $list_event_uid;
-          $this->cache_tasks = $_tasks->getList();
-          $itemsFound = 0;
+          // MANTIS 0005087: Optimisation des requêtes SQL
+          if ($this->server->httpRequest->getMethod() != 'PROPFIND' && !$this->isSync) {
+            $this->cache_tasks = $_tasks->getList();
+          }
+          else {
+            $this->cache_tasks = $_tasks->getList(['uid', 'modified', 'taskslist']);
+          }
           foreach($this->cache_tasks as $_task) {
             $task = [
               'id'           => $_task->uid,
@@ -921,7 +932,14 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
           $operators = [
             'uid' => \LibMelanie\Config\MappingMelanie::like,
             'calendar' => \LibMelanie\Config\MappingMelanie::eq ];
-          foreach ($_events->getList(null, null, $operators, 'start') as $_event) {
+          // MANTIS 0005087: Optimisation des requêtes SQL
+          if ($this->server->httpRequest->getMethod() != 'PROPFIND' && !$this->isSync) {
+            $fields = null;
+          }
+          else {
+            $fields = ['uid', 'modified', 'calendar'];
+          }
+          foreach ($_events->getList($fields, null, $operators, 'start') as $_event) {
             $event = [
               'id'           => $_event->uid,
               'uri'          => $this->uidencode($_event->uid).'.ics',

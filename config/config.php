@@ -73,5 +73,14 @@ class Config {
    * Ajouter au Sync Token pour retourner plus d'enregistrement
    * @var integer
    */
-  const addToSyncToken = 10;
+  const addToSyncToken = 0;
+  /**
+   * Liste des URL bloquées en fonction des utilisateurs
+   * Ex :  [
+   *         'utilisateur1' => ['url1', 'url2'],
+   *         'utilisateur2' => ['url3'],
+   *       ]
+   * @var array
+   */
+  static $blockedUrl = null;
 }
