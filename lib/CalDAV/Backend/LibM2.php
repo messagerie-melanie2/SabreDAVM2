@@ -763,6 +763,14 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
       // Si l'évènement existe on retourne le resultat
       if (isset($this->cache_events[$event_uid.$calendarId])
           && $this->cache_events[$event_uid.$calendarId]->exists()) {
+        if (!$this->calendars[$calendarId]->asRight(\LibMelanie\Config\ConfigMelanie::READ) || $this->server->httpRequest->getMethod() == 'POST') {
+          // 0005116: Mauvais affichage des disponibilités
+          if ($this->cache_events[$event_uid.$calendarId]->status == \LibMelanie\Api\Melanie2\Event::STATUS_NONE) {
+            $this->cache_events[$event_uid.$calendarId]->status = \LibMelanie\Api\Melanie2\Event::STATUS_CANCELLED;
+          }
+          // MANTIS 0004477: Gérer le droit afficher
+          $this->cache_events[$event_uid.$calendarId]->ics_freebusy = true;
+        }
         $result = [
           'id'            => $this->cache_events[$event_uid.$calendarId]->uid,
           'uri'           => $this->uidencode($this->cache_events[$event_uid.$calendarId]->uid).'.ics',
@@ -771,10 +779,6 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
           'calendarid'    => $this->cache_events[$event_uid.$calendarId]->calendar,
           'component'     => 'vevent',
         ];
-        if (!$this->calendars[$calendarId]->asRight(\LibMelanie\Config\ConfigMelanie::READ) || $this->server->httpRequest->getMethod() == 'POST') {
-        	// MANTIS 0004477: Gérer le droit afficher
-        	$this->cache_events[$event_uid.$calendarId]->ics_freebusy = true;
-        }
         if ($this->server->httpRequest->getMethod() != 'PROPFIND' && !$this->isSync) {
           $result['calendardata'] = $this->cache_events[$event_uid.$calendarId]->ics;
           $result['size'] = strlen($result['calendardata']);
@@ -858,6 +862,11 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
         }
         foreach($this->cache_events as $_event) {
 	        	if (!$this->calendars[$calendarId]->asRight(\LibMelanie\Config\ConfigMelanie::READ)) {
+	        	  // 0005116: Mauvais affichage des disponibilités
+	        	  if ($_event->status == \LibMelanie\Api\Melanie2\Event::STATUS_NONE
+	        	      || $_event->status == \LibMelanie\Api\Melanie2\Event::STATUS_CANCELLED) {
+	        	    continue;
+	        	  }
 	        		// MANTIS 0004477: Gérer le droit afficher
 	        		$_event->ics_freebusy = true;
 	        	}

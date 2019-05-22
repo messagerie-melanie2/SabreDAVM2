@@ -24,11 +24,18 @@ A faire
 CalDAV - Liste des changements
 ==============================
 
-CalDAV - 0.6.4 (Pas encore publiée) [ Afficher les bogues ]
+CalDAV - 0.6.5 (Pas encore publiée) [ Afficher les bogues ]
 ---
-- 0005067: [SabreDAV] Mettre en place le en attente (thomas.payen) - résolu.
+- 0005116: [SabreDAV] Mauvais affichage des disponibilités (thomas.payen) - résolu.
 
 [1 bogue]
+
+CalDAV - 0.6.4 (Publiée 25/09/2018) [ Afficher les bogues ]
+---
+- 0005087: [SabreDAV] Optimisation des requêtes SQL (thomas.payen) - résolu.
+- 0005067: [SabreDAV] Mettre en place le en attente (thomas.payen) - résolu.
+
+[2 bogues]
 
 CalDAV - 0.6.3 (Publiée 20/08/2018) [ Afficher les bogues ]
 ---
