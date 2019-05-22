@@ -305,28 +305,26 @@ class LibM2 extends AbstractBackend {
    * @return array
    */
   public function getGroupMembership($principal) {
-    if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG))
-      \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[PrincipalBackend] LibM2.getGroupMembership($principal)");
+    if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[PrincipalBackend] LibM2.getGroupMembership($principal)");
     $username = $this->calendarBackend->getCurrentUser();
     $result = [];
-    
-    // Get shared calendar
-    $calendars = $this->calendarBackend->loadUserCalendars();
-    $calendars_owners = [];
-    foreach ($calendars as $calendar) {
-      if (! in_array("principals/".$calendar->owner, $result)) {
-        $result[] = "principals/".$calendar->owner;
-      }
+    // Gestion du .-.
+    if (strpos($principal, '.-.') !== false) {
+      $principal = explode('.-.', $principal);
+      $principal = $principal[0];
     }
     
-    $infos = \LibMelanie\Ldap\Ldap::GetUserBalEmission($username);
-    if (is_array($infos) && count($infos) > 0) {
-      foreach ($infos as $info) {
-        if (isset($info['uid'][0])) {
-          $result[] = "principals/".$info['uid'][0];
+    if ($principal == "principals/".$username) {
+      // Get shared calendar
+      $calendars = $this->calendarBackend->loadUserCalendars();
+      $calendars_owners = [];
+      foreach ($calendars as $calendar) {
+        if (! in_array("principals/".$calendar->owner, $result)) {
+          $result[] = "principals/".$calendar->owner;
         }
       }
     }
+
     if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG))
       \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[PrincipalBackend] LibM2.getGroupMembership($principal) result: " . var_export($result, 1));
     return $result;

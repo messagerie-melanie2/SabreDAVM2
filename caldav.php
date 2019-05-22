@@ -155,7 +155,8 @@ class CalDAV {
         new Sabre\DAV\Auth\Plugin(self::$authBackend, 'SabreDAV')
     );
     self::$server->addPlugin(
-        new Sabre\DAVACL\Plugin()
+        //new Sabre\DAVACL\Plugin()
+        new Sabre\DAVACL\PluginM2()
     );
     /* CalDAV support */
     self::$server->addPlugin(

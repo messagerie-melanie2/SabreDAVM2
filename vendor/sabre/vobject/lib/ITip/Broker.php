@@ -858,8 +858,10 @@ class Broker {
                     $organizer = $vevent->ORGANIZER->getNormalizedValue();
                     $organizerName = isset($vevent->ORGANIZER['CN'])?$vevent->ORGANIZER['CN']:null;
                 } else {
-                    if ($organizer !== $vevent->ORGANIZER->getNormalizedValue()) {
-                        throw new SameOrganizerForAllComponentsException('Every instance of the event must have the same organizer.');
+                    // MANTIS 0005003: Problème d'exception avec un organizer avec majuscule
+                    if (strtolower($organizer) !== strtolower($vevent->ORGANIZER->getNormalizedValue())) {
+                      // MANTIS 0005050: Problème avec l'ajout d'un participant dans une occurrence depuis l'agenda pool
+                        //throw new SameOrganizerForAllComponentsException('Every instance of the event must have the same organizer.');
                     }
                 }
                 $organizerForceSend =

@@ -24,6 +24,16 @@ A faire
 CalDAV - Liste des changements
 ==============================
 
+CalDAV - 0.6.3 (Pas encore publiée) [ Afficher les bogues ]
+---
+- 0005050: [SabreDAV] Problème avec l'ajout d'un participant dans une occurrence depuis l'agenda pool (thomas.payen) - résolu.
+- 0005030: [SabreDAV] La connexion via un objet de partage pose des problèmes sur les événements privés (thomas.payen) - résolu.
+- 0005006: [SabreDAV] La gestion des réponses aux invitations pour les pools de secrétaires n'est pas satisfaisante (thomas.payen) - résolu.
+- 0005008: [SabreDAV] Ajout d'un X-M2-ORG-MAIL dans le champ ORGANIZER (thomas.payen) - résolu.
+- 0005009: [SabreDAV] Optimiser la gestion des droits (thomas.payen) - résolu.
+
+[4 bogues]
+
 CalDAV - 0.6.2.1 (Pas encore publiée) [ Afficher les bogues ]
 ---
 - 0005004: [SabreDAV] Bloquer le mode allowUnauthenticatedAccess (thomas.payen) - résolu.

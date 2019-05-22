@@ -376,7 +376,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
       $calendar = [
           'id' => $_calendar->id,
           'uri' => $_calendar->id,
-          'principaluri' => $this->calendars[$_calendar->id]->asRight(\LibMelanie\Config\ConfigMelanie::WRITE) ? $this->getRootFromPrincipalUri($principalUri) . '/' . $this->current_full_user : $principalUri,
+          'principaluri' => $principalUri,
           '{' . CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => '"'.$ctag.'"',
           '{' . CalDAV\Plugin::NS_CALDAV . '}supported-calendar-component-set' => new CalDAV\Xml\Property\SupportedCalendarComponentSet($components),
           '{' . CalDAV\Plugin::NS_CALDAV . '}schedule-calendar-transp' => new CalDAV\Xml\Property\ScheduleCalendarTransp($transp),
@@ -469,7 +469,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
       $result = [
         'id' => $this->calendars[$calendarId]->id,
         'uri' => $this->calendars[$calendarId]->id,
-        'principaluri' => $this->calendars[$calendarId]->asRight(\LibMelanie\Config\ConfigMelanie::WRITE) ? $this->getRootFromPrincipalUri($principalUri) . '/' . $this->current_full_user : $principalUri,
+        'principaluri' => $principalUri,
         '{' . CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => '"'.$ctag.'"',
         '{' . CalDAV\Plugin::NS_CALDAV . '}supported-calendar-component-set' => new CalDAV\Xml\Property\SupportedCalendarComponentSet($components),
         '{' . CalDAV\Plugin::NS_CALDAV . '}schedule-calendar-transp' =>  new CalDAV\Xml\Property\ScheduleCalendarTransp($transp),
