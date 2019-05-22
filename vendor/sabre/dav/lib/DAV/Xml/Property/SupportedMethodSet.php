@@ -32,11 +32,16 @@ class SupportedMethodSet implements XmlSerializable, HtmlOutput {
     /**
      * Creates the property
      *
-     * @param string[] $methods
+     * Any reports passed in the constructor
+     * should be valid report-types in clark-notation.
+     *
+     * Either a string or an array of strings must be passed.
+     *
+     * @param string|string[] $methods
      */
-    function __construct(array $methods) {
+    function __construct($methods = null) {
 
-        $this->methods = $methods;
+        $this->methods = (array)$methods;
 
     }
 
@@ -67,12 +72,12 @@ class SupportedMethodSet implements XmlSerializable, HtmlOutput {
     }
 
     /**
-     * The xmlSerialize method is called during xml writing.
+     * The xmlSerialize metod is called during xml writing.
      *
      * Use the $writer argument to write its own xml serialization.
      *
      * An important note: do _not_ create a parent element. Any element
-     * implementing XmlSerializable should only ever write what's considered
+     * implementing XmlSerializble should only ever write what's considered
      * its 'inner xml'.
      *
      * The parent of the current element is responsible for writing a

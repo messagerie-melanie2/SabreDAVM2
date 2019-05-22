@@ -5,15 +5,14 @@ namespace Sabre\CalDAV;
 use DateTimeZone;
 use Sabre\DAV;
 use Sabre\DAV\Exception\BadRequest;
-use Sabre\DAV\INode;
 use Sabre\DAV\MkCol;
-use Sabre\DAV\Xml\Property\LocalHref;
+use Sabre\DAV\Xml\Property\Href;
 use Sabre\DAVACL;
+use Sabre\VObject;
 use Sabre\HTTP;
+use Sabre\Uri;
 use Sabre\HTTP\RequestInterface;
 use Sabre\HTTP\ResponseInterface;
-use Sabre\Uri;
-use Sabre\VObject;
 
 /**
  * CalDAV plugin
@@ -90,26 +89,16 @@ class Plugin extends DAV\ServerPlugin {
      * Returns the path to a principal's calendar home.
      *
      * The return url must not end with a slash.
-     * This function should return null in case a principal did not have
-     * a calendar home.
      *
      * @param string $principalUrl
      * @return string
      */
     function getCalendarHomeForPrincipal($principalUrl) {
 
-        // The default behavior for most sabre/dav servers is that there is a
-        // principals root node, which contains users directly under it.
-        //
-        // This function assumes that there are two components in a principal
-        // path. If there's more, we don't return a calendar home. This
-        // excludes things like the calendar-proxy-read principal (which it
-        // should).
-        $parts = explode('/', trim($principalUrl, '/'));
-        if (count($parts) !== 2) return;
-        if ($parts[0] !== 'principals') return;
+        // The default is a bit naive, but it can be overwritten.
+        list(, $nodeName) = Uri\split($principalUrl);
 
-        return self::CALENDAR_ROOT . '/' . $parts[1];
+        return self::CALENDAR_ROOT . '/' . $nodeName;
 
     }
 
@@ -187,12 +176,10 @@ class Plugin extends DAV\ServerPlugin {
         $server->on('beforeCreateFile',    [$this, 'beforeCreateFile']);
         $server->on('beforeWriteContent',  [$this, 'beforeWriteContent']);
         $server->on('afterMethod:GET',     [$this, 'httpAfterGET']);
-        $server->on('getSupportedPrivilegeSet', [$this, 'getSupportedPrivilegeSet']);
 
         $server->xml->namespaceMap[self::NS_CALDAV] = 'cal';
         $server->xml->namespaceMap[self::NS_CALENDARSERVER] = 'cs';
 
-        $server->xml->elementMap['{' . self::NS_CALDAV . '}supported-calendar-component-set'] = 'Sabre\\CalDAV\\Xml\\Property\\SupportedCalendarComponentSet';
         $server->xml->elementMap['{' . self::NS_CALDAV . '}calendar-query'] = 'Sabre\\CalDAV\\Xml\\Request\\CalendarQueryReport';
         $server->xml->elementMap['{' . self::NS_CALDAV . '}calendar-multiget'] = 'Sabre\\CalDAV\\Xml\\Request\\CalendarMultiGetReport';
         $server->xml->elementMap['{' . self::NS_CALDAV . '}free-busy-query'] = 'Sabre\\CalDAV\\Xml\\Request\\FreeBusyQueryReport';
@@ -235,10 +222,9 @@ class Plugin extends DAV\ServerPlugin {
      *
      * @param string $reportName
      * @param mixed $report
-     * @param mixed $path
      * @return bool
      */
-    function report($reportName, $report, $path) {
+    function report($reportName, $report) {
 
         switch ($reportName) {
             case '{' . self::NS_CALDAV . '}calendar-multiget' :
@@ -302,8 +288,8 @@ class Plugin extends DAV\ServerPlugin {
 
         $this->server->createCollection($path, new MkCol($resourceType, $properties));
 
-        $response->setStatus(201);
-        $response->setHeader('Content-Length', 0);
+        $this->server->httpResponse->setStatus(201);
+        $this->server->httpResponse->setHeader('Content-Length', 0);
 
         // This breaks the method chain.
         return false;
@@ -342,9 +328,8 @@ class Plugin extends DAV\ServerPlugin {
 
             $propFind->handle('{' . self::NS_CALDAV . '}calendar-home-set', function() use ($principalUrl) {
 
-                $calendarHomePath = $this->getCalendarHomeForPrincipal($principalUrl);
-                if (is_null($calendarHomePath)) return null;
-                return new LocalHref($calendarHomePath . '/');
+                $calendarHomePath = $this->getCalendarHomeForPrincipal($principalUrl) . '/';
+                return new Href($calendarHomePath);
 
             });
             // The calendar-user-address-set property is basically mapped to
@@ -352,7 +337,7 @@ class Plugin extends DAV\ServerPlugin {
             $propFind->handle('{' . self::NS_CALDAV . '}calendar-user-address-set', function() use ($node) {
                 $addresses = $node->getAlternateUriSet();
                 $addresses[] = $this->server->getBaseUri() . $node->getPrincipalUrl() . '/';
-                return new LocalHref($addresses);
+                return new Href($addresses, false);
             });
             // For some reason somebody thought it was a good idea to add
             // another one of these properties. We're supporting it too.
@@ -397,8 +382,8 @@ class Plugin extends DAV\ServerPlugin {
 
                 }
 
-                $propFind->set($propRead, new LocalHref($readList));
-                $propFind->set($propWrite, new LocalHref($writeList));
+                $propFind->set($propRead, new Href($readList));
+                $propFind->set($propWrite, new Href($writeList));
 
             }
 
@@ -469,16 +454,13 @@ class Plugin extends DAV\ServerPlugin {
                         $timeZones[$calendarPath] = $timeZone;
                     }
 
-                    $vObject = $vObject->expand($report->expand['start'], $report->expand['end'], $timeZones[$calendarPath]);
+                    $vObject->expand($report->expand['start'], $report->expand['end'], $timeZones[$calendarPath]);
                 }
                 if ($needsJson) {
                     $objProps[200]['{' . self::NS_CALDAV . '}calendar-data'] = json_encode($vObject->jsonSerialize());
                 } else {
                     $objProps[200]['{' . self::NS_CALDAV . '}calendar-data'] = $vObject->serialize();
                 }
-                // Destroy circular references so PHP will garbage collect the
-                // object.
-                $vObject->destroy();
             }
 
             $propertyList[] = $objProps;
@@ -526,10 +508,7 @@ class Plugin extends DAV\ServerPlugin {
                 // VTIMEZONE.
                 $vtimezoneObj = VObject\Reader::read($tzResult[$tzProp]);
                 $calendarTimeZone = $vtimezoneObj->VTIMEZONE->getTimeZone();
-
-                // Destroy circular references so PHP will garbage collect the
-                // object.
-                $vtimezoneObj->destroy();
+                unset($vtimezoneObj);
             } else {
                 // Defaulting to UTC.
                 $calendarTimeZone = new DateTimeZone('UTC');
@@ -580,7 +559,7 @@ class Plugin extends DAV\ServerPlugin {
 
 
                         if ($report->expand) {
-                            $vObject = $vObject->expand($report->expand['start'], $report->expand['end'], $calendarTimeZone);
+                            $vObject->expand($report->expand['start'], $report->expand['end'], $calendarTimeZone);
                         }
                         if ($needsJson) {
                             $properties[200]['{' . self::NS_CALDAV . '}calendar-data'] = json_encode($vObject->jsonSerialize());
@@ -592,9 +571,6 @@ class Plugin extends DAV\ServerPlugin {
                     $result = [$properties];
 
                 }
-                // Destroy circular references so PHP will garbage collect the
-                // object.
-                $vObject->destroy();
 
             }
 
@@ -632,7 +608,7 @@ class Plugin extends DAV\ServerPlugin {
                     $vObject = VObject\Reader::read($properties[200]['{' . self::NS_CALDAV . '}calendar-data']);
 
                     if ($report->expand) {
-                        $vObject = $vObject->expand($report->expand['start'], $report->expand['end'], $calendarTimeZone);
+                        $vObject->expand($report->expand['start'], $report->expand['end'], $calendarTimeZone);
                     }
 
                     if ($needsJson) {
@@ -640,10 +616,6 @@ class Plugin extends DAV\ServerPlugin {
                     } else {
                         $properties[200]['{' . self::NS_CALDAV . '}calendar-data'] = $vObject->serialize();
                     }
-
-                    // Destroy circular references so PHP will garbage collect the
-                    // object.
-                    $vObject->destroy();
                 }
                 $result[] = $properties;
 
@@ -690,8 +662,6 @@ class Plugin extends DAV\ServerPlugin {
         if (isset($calendarProps[$tzProp])) {
             $vtimezoneObj = VObject\Reader::read($calendarProps[$tzProp]);
             $calendarTimeZone = $vtimezoneObj->VTIMEZONE->getTimeZone();
-            // Destroy circular references so PHP will garbage collect the object.
-            $vtimezoneObj->destroy();
         } else {
             $calendarTimeZone = new DateTimeZone('UTC');
         }
@@ -824,7 +794,11 @@ class Plugin extends DAV\ServerPlugin {
             $data = stream_get_contents($data);
         }
 
-        $before = $data;
+        $before = md5($data);
+        // Converting the data to unicode, if needed.
+        $data = DAV\StringUtil::ensureUTF8($data);
+
+        if ($before !== md5($data)) $modified = true;
 
         try {
 
@@ -864,7 +838,7 @@ class Plugin extends DAV\ServerPlugin {
         }
 
         $foundType = null;
-
+        $foundUID = null;
         foreach ($vobj->getComponents() as $component) {
             switch ($component->name) {
                 case 'VTIMEZONE' :
@@ -872,61 +846,33 @@ class Plugin extends DAV\ServerPlugin {
                 case 'VEVENT' :
                 case 'VTODO' :
                 case 'VJOURNAL' :
-                    $foundType = $component->name;
+                    if (is_null($foundType)) {
+                        $foundType = $component->name;
+                        if (!in_array($foundType, $supportedComponents)) {
+                            throw new Exception\InvalidComponentType('This calendar only supports ' . implode(', ', $supportedComponents) . '. We found a ' . $foundType);
+                        }
+                        if (!isset($component->UID)) {
+                            throw new DAV\Exception\BadRequest('Every ' . $component->name . ' component must have an UID');
+                        }
+                        $foundUID = (string)$component->UID;
+                    } else {
+                        if ($foundType !== $component->name) {
+                            throw new DAV\Exception\BadRequest('A calendar object must only contain 1 component. We found a ' . $component->name . ' as well as a ' . $foundType);
+                        }
+                        if ($foundUID !== (string)$component->UID) {
+                            throw new DAV\Exception\BadRequest('Every ' . $component->name . ' in this object must have identical UIDs');
+                        }
+                    }
                     break;
-            }
-
-        }
-
-        if (!$foundType || !in_array($foundType, $supportedComponents)) {
-            throw new Exception\InvalidComponentType('iCalendar objects must at least have a component of type ' . implode(', ', $supportedComponents));
-        }
-
-        $options = VObject\Node::PROFILE_CALDAV;
-        $prefer = $this->server->getHTTPPrefer();
-
-        if ($prefer['handling'] !== 'strict') {
-            $options |= VObject\Node::REPAIR;
-        }
-
-        $messages = $vobj->validate($options);
-
-        $highestLevel = 0;
-        $warningMessage = null;
-
-        // $messages contains a list of problems with the vcard, along with
-        // their severity.
-        foreach ($messages as $message) {
-
-            if ($message['level'] > $highestLevel) {
-                // Recording the highest reported error level.
-                $highestLevel = $message['level'];
-                $warningMessage = $message['message'];
-            }
-            switch ($message['level']) {
-
-                case 1 :
-                    // Level 1 means that there was a problem, but it was repaired.
-                    $modified = true;
-                    break;
-                case 2 :
-                    // Level 2 means a warning, but not critical
-                    break;
-                case 3 :
-                    // Level 3 means a critical error
-                    throw new DAV\Exception\UnsupportedMediaType('Validation error in iCalendar: ' . $message['message']);
+                default :
+                    throw new DAV\Exception\BadRequest('You are not allowed to create components of type: ' . $component->name . ' here');
 
             }
-
         }
-        if ($warningMessage) {
-            $response->setHeader(
-                'X-Sabre-Ew-Gross',
-                'iCalendar validation warning: ' . $warningMessage
-            );
-        }
+        if (!$foundType)
+            throw new DAV\Exception\BadRequest('iCalendar object must contain at least 1 of VEVENT, VTODO or VJOURNAL');
 
-        // We use an extra variable to allow event handles to tell us whether
+        // We use an extra variable to allow event handles to tell us wether
         // the object was modified or not.
         //
         // This helps us determine if we need to re-serialize the object.
@@ -944,38 +890,19 @@ class Plugin extends DAV\ServerPlugin {
             ]
         );
 
-        if ($modified || $subModified) {
+        if ($subModified) {
             // An event handler told us that it modified the object.
             $data = $vobj->serialize();
 
             // Using md5 to figure out if there was an *actual* change.
-            if (!$modified && strcmp($data, $before) !== 0) {
+            if (!$modified && $before !== md5($data)) {
                 $modified = true;
             }
 
         }
 
-        // Destroy circular references so PHP will garbage collect the object.
-        $vobj->destroy();
-
     }
 
-    /**
-     * This method is triggered whenever a subsystem reqeuests the privileges
-     * that are supported on a particular node.
-     *
-     * @param INode $node
-     * @param array $supportedPrivilegeSet
-     */
-    function getSupportedPrivilegeSet(INode $node, array &$supportedPrivilegeSet) {
-
-        if ($node instanceof ICalendar) {
-            $supportedPrivilegeSet['{DAV:}read']['aggregates']['{' . self::NS_CALDAV . '}read-free-busy'] = [
-                'abstract'   => false,
-                'aggregates' => [],
-            ];
-        }
-    }
 
     /**
      * This method is used to generate HTML output for the
@@ -1035,9 +962,6 @@ class Plugin extends DAV\ServerPlugin {
 
         $jsonBody = json_encode($vobj->jsonSerialize());
         $response->setBody($jsonBody);
-
-        // Destroy circular references so PHP will garbage collect the object.
-        $vobj->destroy();
 
         $response->setHeader('Content-Type', 'application/calendar+json');
         $response->setHeader('Content-Length', strlen($jsonBody));

@@ -1,28 +1,28 @@
 CREATE TABLE addressbooks (
-    id integer primary key asc NOT NULL,
-    principaluri text NOT NULL,
+    id integer primary key asc,
+    principaluri text,
     displayname text,
-    uri text NOT NULL,
+    uri text,
     description text,
-    synctoken integer DEFAULT 1 NOT NULL
+    synctoken integer
 );
 
 CREATE TABLE cards (
-    id integer primary key asc NOT NULL,
-    addressbookid integer NOT NULL,
+    id integer primary key asc,
+    addressbookid integer,
     carddata blob,
-    uri text NOT NULL,
+    uri text,
     lastmodified integer,
     etag text,
     size integer
 );
 
 CREATE TABLE addressbookchanges (
-    id integer primary key asc NOT NULL,
+    id integer primary key asc,
     uri text,
-    synctoken integer NOT NULL,
-    addressbookid integer NOT NULL,
-    operation integer NOT NULL
+    synctoken integer,
+    addressbookid integer,
+    operation integer
 );
 
 CREATE INDEX addressbookid_synctoken ON addressbookchanges (addressbookid, synctoken);

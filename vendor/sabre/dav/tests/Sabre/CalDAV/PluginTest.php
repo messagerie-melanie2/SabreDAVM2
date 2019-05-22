@@ -2,11 +2,12 @@
 
 namespace Sabre\CalDAV;
 
-use DateTime;
-use DateTimeZone;
-use Sabre\DAV;
-use Sabre\DAVACL;
-use Sabre\HTTP;
+use
+    Sabre\DAVACL,
+    Sabre\DAV,
+    Sabre\HTTP,
+    DateTime,
+    DateTimeZone;
 
 class PluginTest extends \PHPUnit_Framework_TestCase {
 
@@ -26,47 +27,45 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
 
     function setup() {
 
-        $caldavNS = '{urn:ietf:params:xml:ns:caldav}';
-
-        $this->caldavBackend = new Backend\Mock([
-            [
-                'id'                                           => 1,
-                'uri'                                          => 'UUID-123467',
-                'principaluri'                                 => 'principals/user1',
-                '{DAV:}displayname'                            => 'user1 calendar',
-                $caldavNS . 'calendar-description'             => 'Calendar description',
-                '{http://apple.com/ns/ical/}calendar-order'    => '1',
-                '{http://apple.com/ns/ical/}calendar-color'    => '#FF0000',
-                $caldavNS . 'supported-calendar-component-set' => new Xml\Property\SupportedCalendarComponentSet(['VEVENT', 'VTODO']),
-            ],
-            [
-                'id'                                           => 2,
-                'uri'                                          => 'UUID-123468',
-                'principaluri'                                 => 'principals/user1',
-                '{DAV:}displayname'                            => 'user1 calendar2',
-                $caldavNS . 'calendar-description'             => 'Calendar description',
-                '{http://apple.com/ns/ical/}calendar-order'    => '1',
-                '{http://apple.com/ns/ical/}calendar-color'    => '#FF0000',
-                $caldavNS . 'supported-calendar-component-set' => new Xml\Property\SupportedCalendarComponentSet(['VEVENT', 'VTODO']),
-            ]
-        ], [
-            1 => [
-                'UUID-2345' => [
+        $this->caldavBackend = new Backend\Mock(array(
+            array(
+                'id' => 1,
+                'uri' => 'UUID-123467',
+                'principaluri' => 'principals/user1',
+                '{DAV:}displayname' => 'user1 calendar',
+                '{urn:ietf:params:xml:ns:caldav}calendar-description' => 'Calendar description',
+                '{http://apple.com/ns/ical/}calendar-order' => '1',
+                '{http://apple.com/ns/ical/}calendar-color' => '#FF0000',
+                '{urn:ietf:params:xml:ns:caldav}supported-calendar-component-set' => new Xml\Property\SupportedCalendarComponentSet(['VEVENT','VTODO']),
+            ),
+            array(
+                'id' => 2,
+                'uri' => 'UUID-123468',
+                'principaluri' => 'principals/user1',
+                '{DAV:}displayname' => 'user1 calendar2',
+                '{urn:ietf:params:xml:ns:caldav}calendar-description' => 'Calendar description',
+                '{http://apple.com/ns/ical/}calendar-order' => '1',
+                '{http://apple.com/ns/ical/}calendar-color' => '#FF0000',
+                '{urn:ietf:params:xml:ns:caldav}supported-calendar-component-set' => new Xml\Property\SupportedCalendarComponentSet(['VEVENT','VTODO']),
+            )
+        ), array(
+            1 => array(
+                'UUID-2345' => array(
                     'calendardata' => TestUtil::getTestCalendarData(),
-                ]
-            ]
-        ]);
+                )
+            )
+        ));
         $principalBackend = new DAVACL\PrincipalBackend\Mock();
-        $principalBackend->setGroupMemberSet('principals/admin/calendar-proxy-read', ['principals/user1']);
-        $principalBackend->setGroupMemberSet('principals/admin/calendar-proxy-write', ['principals/user1']);
-        $principalBackend->addPrincipal([
+        $principalBackend->setGroupMemberSet('principals/admin/calendar-proxy-read',array('principals/user1'));
+        $principalBackend->setGroupMemberSet('principals/admin/calendar-proxy-write',array('principals/user1'));
+        $principalBackend->addPrincipal(array(
             'uri' => 'principals/admin/calendar-proxy-read',
-        ]);
-        $principalBackend->addPrincipal([
+        ));
+        $principalBackend->addPrincipal(array(
             'uri' => 'principals/admin/calendar-proxy-write',
-        ]);
+        ));
 
-        $calendars = new CalendarRoot($principalBackend, $this->caldavBackend);
+        $calendars = new CalendarRoot($principalBackend,$this->caldavBackend);
         $principals = new Principal\Collection($principalBackend);
 
         $root = new DAV\SimpleCollection('root');
@@ -81,14 +80,12 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
         $this->server->addPlugin($this->plugin);
 
         // Adding ACL plugin
-        $aclPlugin = new DAVACL\Plugin();
-        $aclPlugin->allowUnauthenticatedAccess = false;
-        $this->server->addPlugin($aclPlugin);
+        $this->server->addPlugin(new DAVACL\Plugin());
 
         // Adding Auth plugin, and ensuring that we are logged in.
         $authBackend = new DAV\Auth\Backend\Mock();
         $authBackend->setPrincipal('principals/user1');
-        $authPlugin = new DAV\Auth\Plugin($authBackend);
+        $authPlugin = new DAV\Auth\Plugin($authBackend, 'SabreDAV');
         $authPlugin->beforeMethod(new \Sabre\HTTP\Request(), new \Sabre\HTTP\Response());
         $this->server->addPlugin($authPlugin);
 
@@ -102,8 +99,8 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
 
     function testSimple() {
 
-        $this->assertEquals(['MKCALENDAR'], $this->plugin->getHTTPMethods('calendars/user1/randomnewcalendar'));
-        $this->assertEquals(['calendar-access', 'calendar-proxy'], $this->plugin->getFeatures());
+        $this->assertEquals(array('MKCALENDAR'), $this->plugin->getHTTPMethods('calendars/user1/randomnewcalendar'));
+        $this->assertEquals(array('calendar-access','calendar-proxy'), $this->plugin->getFeatures());
         $this->assertEquals(
             'caldav',
             $this->plugin->getPluginInfo()['name']
@@ -113,18 +110,25 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
 
     function testUnknownMethodPassThrough() {
 
-        $request = new HTTP\Request('MKBREAKFAST', '/');
+        $request = HTTP\Sapi::createFromServerArray(array(
+            'REQUEST_METHOD' => 'MKBREAKFAST',
+            'REQUEST_URI'    => '/',
+        ));
 
         $this->server->httpRequest = $request;
         $this->server->exec();
 
-        $this->assertEquals(501, $this->response->status, 'Incorrect status returned. Full response body:' . $this->response->body);
+        $this->assertEquals(501, $this->response->status,'Incorrect status returned. Full response body:' . $this->response->body);
 
     }
 
     function testReportPassThrough() {
 
-        $request = new HTTP\Request('REPORT', '/', ['Content-Type' => 'application/xml']);
+        $request = HTTP\Sapi::createFromServerArray(array(
+            'REQUEST_METHOD'    => 'REPORT',
+            'HTTP_CONTENT_TYPE' => 'application/xml',
+            'REQUEST_URI'       => '/',
+        ));
         $request->setBody('<?xml version="1.0"?><s:somereport xmlns:s="http://www.rooftopsolutions.nl/NS/example" />');
 
         $this->server->httpRequest = $request;
@@ -136,7 +140,10 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
 
     function testMkCalendarBadLocation() {
 
-        $request = new HTTP\Request('MKCALENDAR', '/blabla');
+        $request = HTTP\Sapi::createFromServerArray(array(
+            'REQUEST_METHOD' => 'MKCALENDAR',
+            'REQUEST_URI'    => '/blabla',
+        ));
 
         $body = '<?xml version="1.0" encoding="utf-8" ?>
    <C:mkcalendar xmlns:D="DAV:"
@@ -186,7 +193,10 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
 
     function testMkCalendarNoParentNode() {
 
-        $request = new HTTP\Request('MKCALENDAR', '/doesntexist/calendar');
+        $request = HTTP\Sapi::createFromServerArray(array(
+            'REQUEST_METHOD' => 'MKCALENDAR',
+            'REQUEST_URI'    => '/doesntexist/calendar',
+        ));
 
         $body = '<?xml version="1.0" encoding="utf-8" ?>
    <C:mkcalendar xmlns:D="DAV:"
@@ -236,10 +246,10 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
 
     function testMkCalendarExistingCalendar() {
 
-        $request = HTTP\Sapi::createFromServerArray([
+        $request = HTTP\Sapi::createFromServerArray(array(
             'REQUEST_METHOD' => 'MKCALENDAR',
             'REQUEST_URI'    => '/calendars/user1/UUID-123467',
-        ]);
+        ));
 
         $body = '<?xml version="1.0" encoding="utf-8" ?>
    <C:mkcalendar xmlns:D="DAV:"
@@ -289,7 +299,10 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
 
     function testMkCalendarSucceed() {
 
-        $request = new HTTP\Request('MKCALENDAR', '/calendars/user1/NEWCALENDAR');
+        $request = HTTP\Sapi::createFromServerArray(array(
+            'REQUEST_METHOD' => 'MKCALENDAR',
+            'REQUEST_URI'    => '/calendars/user1/NEWCALENDAR',
+        ));
 
         $timezone = 'BEGIN:VCALENDAR
 PRODID:-//Example Corp.//CalDAV Client//EN
@@ -334,31 +347,31 @@ END:VCALENDAR';
         $this->server->httpRequest = $request;
         $this->server->exec();
 
-        $this->assertEquals(201, $this->response->status, 'Invalid response code received. Full response body: ' . $this->response->body);
+        $this->assertEquals(201, $this->response->status,'Invalid response code received. Full response body: ' .$this->response->body);
 
         $calendars = $this->caldavBackend->getCalendarsForUser('principals/user1');
         $this->assertEquals(3, count($calendars));
 
         $newCalendar = null;
-        foreach ($calendars as $calendar) {
+        foreach($calendars as $calendar) {
            if ($calendar['uri'] === 'NEWCALENDAR') {
                 $newCalendar = $calendar;
                 break;
            }
         }
 
-        $this->assertInternalType('array', $newCalendar);
+        $this->assertInternalType('array',$newCalendar);
 
-        $keys = [
-            'uri'                                                             => 'NEWCALENDAR',
-            'id'                                                              => null,
-            '{urn:ietf:params:xml:ns:caldav}calendar-description'             => 'Calendar restricted to events.',
-            '{urn:ietf:params:xml:ns:caldav}calendar-timezone'                => $timezone,
-            '{DAV:}displayname'                                               => 'Lisa\'s Events',
+        $keys = array(
+            'uri' => 'NEWCALENDAR',
+            'id' => null,
+            '{urn:ietf:params:xml:ns:caldav}calendar-description' => 'Calendar restricted to events.',
+            '{urn:ietf:params:xml:ns:caldav}calendar-timezone' => $timezone,
+            '{DAV:}displayname' => 'Lisa\'s Events',
             '{urn:ietf:params:xml:ns:caldav}supported-calendar-component-set' => null,
-        ];
+        );
 
-        foreach ($keys as $key => $value) {
+        foreach($keys as $key=>$value) {
 
             $this->assertArrayHasKey($key, $newCalendar);
 
@@ -368,40 +381,43 @@ END:VCALENDAR';
         }
         $sccs = '{urn:ietf:params:xml:ns:caldav}supported-calendar-component-set';
         $this->assertTrue($newCalendar[$sccs] instanceof Xml\Property\SupportedCalendarComponentSet);
-        $this->assertEquals(['VEVENT'], $newCalendar[$sccs]->getValue());
+        $this->assertEquals(array('VEVENT'),$newCalendar[$sccs]->getValue());
 
     }
 
     function testMkCalendarEmptyBodySucceed() {
 
-        $request = new HTTP\Request('MKCALENDAR', '/calendars/user1/NEWCALENDAR');
+        $request = HTTP\Sapi::createFromServerArray(array(
+            'REQUEST_METHOD' => 'MKCALENDAR',
+            'REQUEST_URI'    => '/calendars/user1/NEWCALENDAR',
+        ));
 
         $request->setBody('');
         $this->server->httpRequest = $request;
         $this->server->exec();
 
-        $this->assertEquals(201, $this->response->status, 'Invalid response code received. Full response body: ' . $this->response->body);
+        $this->assertEquals(201, $this->response->status,'Invalid response code received. Full response body: ' .$this->response->body);
 
         $calendars = $this->caldavBackend->getCalendarsForUser('principals/user1');
         $this->assertEquals(3, count($calendars));
 
         $newCalendar = null;
-        foreach ($calendars as $calendar) {
+        foreach($calendars as $calendar) {
            if ($calendar['uri'] === 'NEWCALENDAR') {
                 $newCalendar = $calendar;
                 break;
            }
         }
 
-        $this->assertInternalType('array', $newCalendar);
+        $this->assertInternalType('array',$newCalendar);
 
-        $keys = [
-            'uri'                                                             => 'NEWCALENDAR',
-            'id'                                                              => null,
+        $keys = array(
+            'uri' => 'NEWCALENDAR',
+            'id' => null,
             '{urn:ietf:params:xml:ns:caldav}supported-calendar-component-set' => null,
-        ];
+        );
 
-        foreach ($keys as $key => $value) {
+        foreach($keys as $key=>$value) {
 
             $this->assertArrayHasKey($key, $newCalendar);
 
@@ -411,13 +427,17 @@ END:VCALENDAR';
         }
         $sccs = '{urn:ietf:params:xml:ns:caldav}supported-calendar-component-set';
         $this->assertTrue($newCalendar[$sccs] instanceof Xml\Property\SupportedCalendarComponentSet);
-        $this->assertEquals(['VEVENT', 'VTODO'], $newCalendar[$sccs]->getValue());
+        $this->assertEquals(array('VEVENT','VTODO'),$newCalendar[$sccs]->getValue());
 
     }
 
     function testMkCalendarBadXml() {
 
-        $request = new HTTP\Request('MKCALENDAR', '/blabla');
+        $request = HTTP\Sapi::createFromServerArray(array(
+            'REQUEST_METHOD' => 'MKCALENDAR',
+            'REQUEST_URI'    => '/blabla',
+        ));
+
         $body = 'This is not xml';
 
         $request->setBody($body);
@@ -430,63 +450,64 @@ END:VCALENDAR';
 
     function testPrincipalProperties() {
 
-        $httpRequest = new HTTP\Request('FOO', '/blabla', ['Host' => 'sabredav.org']);
+        $httpRequest = HTTP\Sapi::createFromServerArray(array(
+            'HTTP_HOST' => 'sabredav.org',
+        ));
         $this->server->httpRequest = $httpRequest;
 
-        $props = $this->server->getPropertiesForPath('/principals/user1', [
+        $props = $this->server->getPropertiesForPath('/principals/user1',array(
             '{' . Plugin::NS_CALDAV . '}calendar-home-set',
             '{' . Plugin::NS_CALENDARSERVER . '}calendar-proxy-read-for',
             '{' . Plugin::NS_CALENDARSERVER . '}calendar-proxy-write-for',
             '{' . Plugin::NS_CALENDARSERVER . '}notification-URL',
             '{' . Plugin::NS_CALENDARSERVER . '}email-address-set',
-        ]);
+        ));
 
-        $this->assertArrayHasKey(0, $props);
-        $this->assertArrayHasKey(200, $props[0]);
+        $this->assertArrayHasKey(0,$props);
+        $this->assertArrayHasKey(200,$props[0]);
 
 
-        $this->assertArrayHasKey('{urn:ietf:params:xml:ns:caldav}calendar-home-set', $props[0][200]);
+        $this->assertArrayHasKey('{urn:ietf:params:xml:ns:caldav}calendar-home-set',$props[0][200]);
         $prop = $props[0][200]['{urn:ietf:params:xml:ns:caldav}calendar-home-set'];
         $this->assertInstanceOf('Sabre\\DAV\\Xml\\Property\\Href', $prop);
-        $this->assertEquals('calendars/user1/', $prop->getHref());
+        $this->assertEquals('calendars/user1/',$prop->getHref());
 
         $this->assertArrayHasKey('{http://calendarserver.org/ns/}calendar-proxy-read-for', $props[0][200]);
         $prop = $props[0][200]['{http://calendarserver.org/ns/}calendar-proxy-read-for'];
         $this->assertInstanceOf('Sabre\\DAV\\Xml\\Property\\Href', $prop);
-        $this->assertEquals(['principals/admin/'], $prop->getHrefs());
+        $this->assertEquals(array('principals/admin/'), $prop->getHrefs());
 
         $this->assertArrayHasKey('{http://calendarserver.org/ns/}calendar-proxy-write-for', $props[0][200]);
         $prop = $props[0][200]['{http://calendarserver.org/ns/}calendar-proxy-write-for'];
         $this->assertInstanceOf('Sabre\\DAV\\Xml\\Property\\Href', $prop);
-        $this->assertEquals(['principals/admin/'], $prop->getHrefs());
+        $this->assertEquals(array('principals/admin/'), $prop->getHrefs());
 
-        $this->assertArrayHasKey('{' . Plugin::NS_CALENDARSERVER . '}email-address-set', $props[0][200]);
+        $this->assertArrayHasKey('{' . Plugin::NS_CALENDARSERVER . '}email-address-set',$props[0][200]);
         $prop = $props[0][200]['{' . Plugin::NS_CALENDARSERVER . '}email-address-set'];
         $this->assertInstanceOf('Sabre\\CalDAV\\Xml\\Property\\EmailAddressSet', $prop);
-        $this->assertEquals(['user1.sabredav@sabredav.org'], $prop->getValue());
+        $this->assertEquals(['user1.sabredav@sabredav.org'],$prop->getValue());
 
     }
 
     function testSupportedReportSetPropertyNonCalendar() {
 
-        $props = $this->server->getPropertiesForPath('/calendars/user1', [
+        $props = $this->server->getPropertiesForPath('/calendars/user1',array(
             '{DAV:}supported-report-set',
-        ]);
+        ));
 
-        $this->assertArrayHasKey(0, $props);
-        $this->assertArrayHasKey(200, $props[0]);
-        $this->assertArrayHasKey('{DAV:}supported-report-set', $props[0][200]);
+        $this->assertArrayHasKey(0,$props);
+        $this->assertArrayHasKey(200,$props[0]);
+        $this->assertArrayHasKey('{DAV:}supported-report-set',$props[0][200]);
 
         $prop = $props[0][200]['{DAV:}supported-report-set'];
 
         $this->assertInstanceOf('\\Sabre\\DAV\\Xml\\Property\\SupportedReportSet', $prop);
-        $value = [
+        $value = array(
             '{DAV:}expand-property',
-            '{DAV:}principal-match',
             '{DAV:}principal-property-search',
-            '{DAV:}principal-search-property-set',
-        ];
-        $this->assertEquals($value, $prop->getValue());
+            '{DAV:}principal-search-property-set'
+        );
+        $this->assertEquals($value,$prop->getValue());
 
     }
 
@@ -495,27 +516,26 @@ END:VCALENDAR';
      */
     function testSupportedReportSetProperty() {
 
-        $props = $this->server->getPropertiesForPath('/calendars/user1/UUID-123467', [
+        $props = $this->server->getPropertiesForPath('/calendars/user1/UUID-123467',array(
             '{DAV:}supported-report-set',
-        ]);
+        ));
 
-        $this->assertArrayHasKey(0, $props);
-        $this->assertArrayHasKey(200, $props[0]);
-        $this->assertArrayHasKey('{DAV:}supported-report-set', $props[0][200]);
+        $this->assertArrayHasKey(0,$props);
+        $this->assertArrayHasKey(200,$props[0]);
+        $this->assertArrayHasKey('{DAV:}supported-report-set',$props[0][200]);
 
         $prop = $props[0][200]['{DAV:}supported-report-set'];
 
         $this->assertInstanceOf('\\Sabre\\DAV\\Xml\\Property\\SupportedReportSet', $prop);
-        $value = [
+        $value = array(
             '{urn:ietf:params:xml:ns:caldav}calendar-multiget',
             '{urn:ietf:params:xml:ns:caldav}calendar-query',
             '{urn:ietf:params:xml:ns:caldav}free-busy-query',
             '{DAV:}expand-property',
-            '{DAV:}principal-match',
             '{DAV:}principal-property-search',
             '{DAV:}principal-search-property-set'
-        ];
-        $this->assertEquals($value, $prop->getValue());
+        );
+        $this->assertEquals($value,$prop->getValue());
 
     }
 
@@ -523,25 +543,24 @@ END:VCALENDAR';
 
         $this->server->addPlugin(new \Sabre\DAV\Sync\Plugin());
 
-        $props = $this->server->getPropertiesForPath('/calendars/user1', [
+        $props = $this->server->getPropertiesForPath('/calendars/user1',array(
             '{DAV:}supported-report-set',
-        ]);
+        ));
 
-        $this->assertArrayHasKey(0, $props);
-        $this->assertArrayHasKey(200, $props[0]);
-        $this->assertArrayHasKey('{DAV:}supported-report-set', $props[0][200]);
+        $this->assertArrayHasKey(0,$props);
+        $this->assertArrayHasKey(200,$props[0]);
+        $this->assertArrayHasKey('{DAV:}supported-report-set',$props[0][200]);
 
         $prop = $props[0][200]['{DAV:}supported-report-set'];
 
         $this->assertInstanceOf('\\Sabre\\DAV\\Xml\\Property\\SupportedReportSet', $prop);
-        $value = [
+        $value = array(
             '{DAV:}sync-collection',
             '{DAV:}expand-property',
-            '{DAV:}principal-match',
             '{DAV:}principal-property-search',
             '{DAV:}principal-search-property-set',
-        ];
-        $this->assertEquals($value, $prop->getValue());
+        );
+        $this->assertEquals($value,$prop->getValue());
 
     }
 
@@ -560,13 +579,17 @@ END:VCALENDAR';
             '<d:href>/calendars/user1/UUID-123467/UUID-2345</d:href>' .
             '</c:calendar-multiget>';
 
-        $request = new HTTP\Request('REPORT', '/calendars/user1', ['Depth' => '1']);
+        $request = HTTP\Sapi::createFromServerArray(array(
+            'REQUEST_METHOD' => 'REPORT',
+            'REQUEST_URI'    => '/calendars/user1',
+            'HTTP_DEPTH'     => '1',
+        ));
         $request->setBody($body);
 
         $this->server->httpRequest = $request;
         $this->server->exec();
 
-        $this->assertEquals(207, $this->response->status, 'Invalid HTTP status received. Full response body');
+        $this->assertEquals(207, $this->response->status,'Invalid HTTP status received. Full response body');
 
         $expectedIcal = TestUtil::getTestCalendarData();
 
@@ -607,17 +630,21 @@ XML;
             '<d:href>/calendars/user1/UUID-123467/UUID-2345</d:href>' .
             '</c:calendar-multiget>';
 
-        $request = new HTTP\Request('REPORT', '/calendars/user1', ['Depth' => '1']);
+        $request = HTTP\Sapi::createFromServerArray(array(
+            'REQUEST_METHOD' => 'REPORT',
+            'REQUEST_URI'    => '/calendars/user1',
+            'HTTP_DEPTH'     => '1',
+        ));
         $request->setBody($body);
 
         $this->server->httpRequest = $request;
         $this->server->exec();
 
-        $this->assertEquals(207, $this->response->status, 'Invalid HTTP status received. Full response body: ' . $this->response->body);
+        $this->assertEquals(207, $this->response->status,'Invalid HTTP status received. Full response body: ' . $this->response->body);
 
         $expectedIcal = TestUtil::getTestCalendarData();
         $expectedIcal = \Sabre\VObject\Reader::read($expectedIcal);
-        $expectedIcal = $expectedIcal->expand(
+        $expectedIcal->expand(
             new DateTime('2011-01-01 00:00:00', new DateTimeZone('UTC')),
             new DateTime('2011-12-31 23:59:59', new DateTimeZone('UTC'))
         );
@@ -665,17 +692,21 @@ XML;
             '</c:filter>' .
             '</c:calendar-query>';
 
-        $request = new HTTP\Request('REPORT', '/calendars/user1/UUID-123467', ['Depth' => '1']);
+        $request = HTTP\Sapi::createFromServerArray(array(
+            'REQUEST_METHOD' => 'REPORT',
+            'REQUEST_URI'    => '/calendars/user1/UUID-123467',
+            'HTTP_DEPTH'     => '1',
+        ));
         $request->setBody($body);
 
         $this->server->httpRequest = $request;
         $this->server->exec();
 
-        $this->assertEquals(207, $this->response->status, 'Received an unexpected status. Full response body: ' . $this->response->body);
+        $this->assertEquals(207, $this->response->status,'Received an unexpected status. Full response body: ' . $this->response->body);
 
         $expectedIcal = TestUtil::getTestCalendarData();
         $expectedIcal = \Sabre\VObject\Reader::read($expectedIcal);
-        $expectedIcal = $expectedIcal->expand(
+        $expectedIcal->expand(
             new DateTime('2000-01-01 00:00:00', new DateTimeZone('UTC')),
             new DateTime('2010-12-31 23:59:59', new DateTimeZone('UTC'))
         );
@@ -723,23 +754,24 @@ XML;
             '</c:filter>' .
             '</c:calendar-query>';
 
-        $request = new HTTP\Request('REPORT', '/calendars/user1/UUID-123467', [
-            'Depth'      => '0',
-            'User-Agent' => 'MSFT-WP/8.10.14219 (gzip)',
-        ]);
-
+        $request = HTTP\Sapi::createFromServerArray(array(
+            'REQUEST_METHOD'  => 'REPORT',
+            'REQUEST_URI'     => '/calendars/user1/UUID-123467',
+            'HTTP_USER_AGENT' => 'MSFT-WP/8.10.14219 (gzip)',
+            'HTTP_DEPTH'      => '0',
+        ));
         $request->setBody($body);
 
         $this->server->httpRequest = $request;
         $this->server->exec();
 
-        $this->assertEquals(207, $this->response->status, 'Received an unexpected status. Full response body: ' . $this->response->body);
+        $this->assertEquals(207, $this->response->status,'Received an unexpected status. Full response body: ' . $this->response->body);
 
         $expectedIcal = TestUtil::getTestCalendarData();
         $expectedIcal = \Sabre\VObject\Reader::read($expectedIcal);
-        $expectedIcal = $expectedIcal->expand(
-            new DateTime('2000-01-01 00:00:00', new DateTimeZone('UTC')),
-            new DateTime('2010-12-31 23:59:59', new DateTimeZone('UTC'))
+        $expectedIcal->expand(
+            new \DateTime('2000-01-01 00:00:00', new \DateTimeZone('UTC')),
+            new \DateTime('2010-12-31 23:59:59', new \DateTimeZone('UTC'))
         );
         $expectedIcal = str_replace("\r\n", "&#xD;\n", $expectedIcal->serialize());
 
@@ -785,15 +817,17 @@ XML;
             '</c:filter>' .
             '</c:calendar-query>';
 
-        $request = new HTTP\Request('REPORT', '/calendars/user1/UUID-123467', [
-            'Depth' => '0',
-        ]);
+        $request = HTTP\Sapi::createFromServerArray(array(
+            'REQUEST_METHOD' => 'REPORT',
+            'REQUEST_URI'    => '/calendars/user1/UUID-123467',
+            'HTTP_DEPTH'     => '0',
+        ));
         $request->setBody($body);
 
         $this->server->httpRequest = $request;
         $this->server->exec();
 
-        $this->assertEquals(400, $this->response->status, 'Received an unexpected status. Full response body: ' . $this->response->body);
+        $this->assertEquals(400, $this->response->status,'Received an unexpected status. Full response body: ' . $this->response->body);
 
     }
 
@@ -815,15 +849,17 @@ XML;
             '</c:filter>' .
             '</c:calendar-query>';
 
-        $request = new HTTP\Request('REPORT', '/calendars/user1/UUID-123467', [
-            'Depth' => '1',
-        ]);
+        $request = HTTP\Sapi::createFromServerArray(array(
+            'REQUEST_METHOD' => 'REPORT',
+            'REQUEST_URI'    => '/calendars/user1//UUID-123467',
+            'HTTP_DEPTH'     => '1',
+        ));
         $request->setBody($body);
 
         $this->server->httpRequest = $request;
         $this->server->exec();
 
-        $this->assertEquals(207, $this->response->status, 'Received an unexpected status. Full response body: ' . $this->response->body);
+        $this->assertEquals(207, $this->response->status,'Received an unexpected status. Full response body: ' . $this->response->body);
 
         $expected = <<<XML
 <?xml version="1.0"?>
@@ -858,13 +894,16 @@ XML;
             '</d:prop>' .
             '</c:calendar-query>';
 
-        $request = new HTTP\Request('REPORT', '/calendars/user1/UUID-123467');
+        $request = HTTP\Sapi::createFromServerArray(array(
+            'REQUEST_METHOD' => 'REPORT',
+            'REQUEST_URI'    => '/calendars/user1//UUID-123467',
+        ));
         $request->setBody($body);
 
         $this->server->httpRequest = $request;
         $this->server->exec();
 
-        $this->assertEquals(400, $this->response->status, 'Received an unexpected status. Full response body: ' . $this->response->body);
+        $this->assertEquals(400, $this->response->status,'Received an unexpected status. Full response body: ' . $this->response->body);
 
     }
 
@@ -890,17 +929,21 @@ XML;
             '</c:filter>' .
             '</c:calendar-query>';
 
-        $request = new HTTP\Request('REPORT', '/calendars/user1/UUID-123467/UUID-2345', ['Depth' => '0']);
+        $request = HTTP\Sapi::createFromServerArray(array(
+            'REQUEST_METHOD' => 'REPORT',
+            'REQUEST_URI'    => '/calendars/user1/UUID-123467/UUID-2345',
+            'HTTP_DEPTH'     => '0',
+        ));
         $request->setBody($body);
 
         $this->server->httpRequest = $request;
         $this->server->exec();
 
-        $this->assertEquals(207, $this->response->status, 'Received an unexpected status. Full response body: ' . $this->response->body);
+        $this->assertEquals(207, $this->response->status,'Received an unexpected status. Full response body: ' . $this->response->body);
 
         $expectedIcal = TestUtil::getTestCalendarData();
         $expectedIcal = \Sabre\VObject\Reader::read($expectedIcal);
-        $expectedIcal = $expectedIcal->expand(
+        $expectedIcal->expand(
             new DateTime('2000-01-01 00:00:00', new DateTimeZone('UTC')),
             new DateTime('2010-12-31 23:59:59', new DateTimeZone('UTC'))
         );
@@ -945,13 +988,17 @@ XML;
             '</c:filter>' .
             '</c:calendar-query>';
 
-        $request = new HTTP\Request('REPORT', '/calendars/user1/UUID-123467/UUID-2345', ['Depth' => '0']);
+        $request = HTTP\Sapi::createFromServerArray(array(
+            'REQUEST_METHOD' => 'REPORT',
+            'REQUEST_URI'    => '/calendars/user1/UUID-123467/UUID-2345',
+            'HTTP_DEPTH'     => '0',
+        ));
         $request->setBody($body);
 
         $this->server->httpRequest = $request;
         $this->server->exec();
 
-        $this->assertEquals(207, $this->response->status, 'Received an unexpected status. Full response body: ' . $this->response->body);
+        $this->assertEquals(207, $this->response->status,'Received an unexpected status. Full response body: ' . $this->response->body);
 
         $expected = <<<XML
 <?xml version="1.0"?>
@@ -978,7 +1025,7 @@ XML;
         $r = $this->server->emit('onHTMLActionsPanel', [$this->server->tree->getNodeForPath('calendars/user1'), &$output]);
         $this->assertFalse($r);
 
-        $this->assertTrue(!!strpos($output, 'Display name'));
+        $this->assertTrue(!!strpos($output,'Display name'));
 
     }
 
@@ -999,13 +1046,17 @@ XML;
             '<d:href>/calendars/user1/UUID-123467/UUID-2345</d:href>' .
             '</c:calendar-multiget>';
 
-        $request = new HTTP\Request('REPORT', '/calendars/user1', ['Depth' => '1']);
+        $request = HTTP\Sapi::createFromServerArray(array(
+            'REQUEST_METHOD' => 'REPORT',
+            'REQUEST_URI'    => '/calendars/user1',
+            'HTTP_DEPTH'     => '1',
+        ));
         $request->setBody($body);
 
         $this->server->httpRequest = $request;
         $this->server->exec();
 
-        $this->assertEquals(400, $this->response->status, 'Invalid HTTP status received. Full response body: ' . $this->response->body);
+        $this->assertEquals(400, $this->response->status,'Invalid HTTP status received. Full response body: ' . $this->response->body);
 
     }
 
@@ -1026,13 +1077,17 @@ XML;
             '<d:href>/calendars/user1/UUID-123467/UUID-2345</d:href>' .
             '</c:calendar-multiget>';
 
-        $request = new HTTP\Request('REPORT', '/calendars/user1', ['Depth' => '1']);
+        $request = HTTP\Sapi::createFromServerArray(array(
+            'REQUEST_METHOD' => 'REPORT',
+            'REQUEST_URI'    => '/calendars/user1',
+            'HTTP_DEPTH'     => '1',
+        ));
         $request->setBody($body);
 
         $this->server->httpRequest = $request;
         $this->server->exec();
 
-        $this->assertEquals(400, $this->response->status, 'Invalid HTTP status received. Full response body: ' . $this->response->body);
+        $this->assertEquals(400, $this->response->status,'Invalid HTTP status received. Full response body: ' . $this->response->body);
 
     }
 
@@ -1053,13 +1108,17 @@ XML;
             '<d:href>/calendars/user1/UUID-123467/UUID-2345</d:href>' .
             '</c:calendar-multiget>';
 
-        $request = new HTTP\Request('REPORT', '/calendars/user1', ['Depth' => '1']);
+        $request = HTTP\Sapi::createFromServerArray(array(
+            'REQUEST_METHOD' => 'REPORT',
+            'REQUEST_URI'    => '/calendars/user1',
+            'HTTP_DEPTH'     => '1',
+        ));
         $request->setBody($body);
 
         $this->server->httpRequest = $request;
         $this->server->exec();
 
-        $this->assertEquals(400, $this->response->status, 'Invalid HTTP status received. Full response body: ' . $this->response->body);
+        $this->assertEquals(400, $this->response->status,'Invalid HTTP status received. Full response body: ' . $this->response->body);
 
     }
 
@@ -1076,7 +1135,7 @@ XML;
         ]);
 
         $this->assertEquals([
-            $ns . 'max-resource-size'       => 10000000,
+            $ns . 'max-resource-size' => 10000000,
             $ns . 'supported-calendar-data' => new Xml\Property\SupportedCalendarData(),
             $ns . 'supported-collation-set' => new Xml\Property\SupportedCollationSet(),
         ], $props);

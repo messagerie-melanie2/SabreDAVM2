@@ -2,8 +2,6 @@
 
 namespace Sabre\CalDAV;
 
-use Sabre\DAV\Sharing\ISharedNode;
-
 /**
  * This interface represents a Calendar that is shared by a different user.
  *
@@ -11,16 +9,28 @@ use Sabre\DAV\Sharing\ISharedNode;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-interface ISharedCalendar extends ISharedNode {
+interface ISharedCalendar extends ICalendar {
 
     /**
-     * Marks this calendar as published.
+     * This method should return the url of the owners' copy of the shared
+     * calendar.
      *
-     * Publishing a calendar should automatically create a read-only, public,
-     * subscribable calendar.
-     *
-     * @param bool $value
-     * @return void
+     * @return string
      */
-    function setPublishStatus($value);
+    function getSharedUrl();
+
+    /**
+     * Returns the list of people whom this calendar is shared with.
+     *
+     * Every element in this array should have the following properties:
+     *   * href - Often a mailto: address
+     *   * commonName - Optional, for example a first + last name
+     *   * status - See the Sabre\CalDAV\SharingPlugin::STATUS_ constants.
+     *   * readOnly - boolean
+     *   * summary - Optional, a description for the share
+     *
+     * @return array
+     */
+    function getShares();
+
 }

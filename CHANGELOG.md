@@ -24,7 +24,13 @@ A faire
 CalDAV - Liste des changements
 ==============================
 
-CalDAV - 0.6 (Pas encore publiée) [ Afficher les bogues ]
+CalDAV - 0.6.0.1 (Publiée 22/02/2018) [ Afficher les bogues ]
+---
+- 0004878: [SabreDAV] HOTFIX: Problème dans la récupération des freebusy (thomas.payen) - résolu.
+
+[1 bogue]
+
+CalDAV - 0.6 (Publiée 20/02/2018) [ Afficher les bogues ]
 ---
 - 0004875: [SabreDAV] La détermination du isSync ne fonctionne pas sur les synchros courantes (thomas.payen) - résolu.
 - 0004872: [SabreDAV] Mise à jour de version de SabreDAV (thomas.payen) - résolu.

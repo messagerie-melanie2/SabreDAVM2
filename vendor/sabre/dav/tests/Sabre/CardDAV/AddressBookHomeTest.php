@@ -90,7 +90,7 @@ class AddressBookHomeTest extends \PHPUnit_Framework_TestCase {
     function testGetChildren() {
 
         $children = $this->s->getChildren();
-        $this->assertEquals(2, count($children));
+        $this->assertEquals(1, count($children));
         $this->assertInstanceOf('Sabre\\CardDAV\\AddressBook', $children[0]);
         $this->assertEquals('book1', $children[0]->getName());
 
@@ -98,18 +98,18 @@ class AddressBookHomeTest extends \PHPUnit_Framework_TestCase {
 
     function testCreateExtendedCollection() {
 
-        $resourceType = [
+        $resourceType = [ 
             '{' . Plugin::NS_CARDDAV . '}addressbook',
             '{DAV:}collection',
         ];
         $this->s->createExtendedCollection('book2', new MkCol($resourceType, ['{DAV:}displayname' => 'a-book 2']));
 
-        $this->assertEquals([
-            'id'                => 'book2',
-            'uri'               => 'book2',
+        $this->assertEquals(array(
+            'id' => 'book2',
+            'uri' => 'book2',
             '{DAV:}displayname' => 'a-book 2',
-            'principaluri'      => 'principals/user1',
-        ], $this->backend->addressBooks[2]);
+            'principaluri' => 'principals/user1',
+        ), $this->backend->addressBooks[1]);
 
     }
 
@@ -118,10 +118,10 @@ class AddressBookHomeTest extends \PHPUnit_Framework_TestCase {
      */
     function testCreateExtendedCollectionInvalid() {
 
-        $resourceType = [
+        $resourceType = array(
             '{DAV:}collection',
-        ];
-        $this->s->createExtendedCollection('book2', new MkCol($resourceType, ['{DAV:}displayname' => 'a-book 2']));
+        );
+        $this->s->createExtendedCollection('book2', new MkCol($resourceType, array('{DAV:}displayname' => 'a-book 2')));
 
     }
 
@@ -130,22 +130,27 @@ class AddressBookHomeTest extends \PHPUnit_Framework_TestCase {
 
         $this->assertEquals('principals/user1', $this->s->getOwner());
         $this->assertNull($this->s->getGroup());
-        $this->assertEquals([
-            [
-                'privilege' => '{DAV:}all',
-                'principal' => '{DAV:}owner',
+        $this->assertEquals(array(
+            array(
+                'privilege' => '{DAV:}read',
+                'principal' => 'principals/user1',
                 'protected' => true,
-            ],
-        ], $this->s->getACL());
+            ),
+            array(
+                'privilege' => '{DAV:}write',
+                'principal' => 'principals/user1',
+                'protected' => true,
+            ),
+        ), $this->s->getACL());
 
     }
 
     /**
-     * @expectedException Sabre\DAV\Exception\Forbidden
+     * @expectedException Sabre\DAV\Exception\MethodNotAllowed
      */
     function testSetACL() {
 
-       $this->s->setACL([]);
+       $this->s->setACL(array());
 
     }
 

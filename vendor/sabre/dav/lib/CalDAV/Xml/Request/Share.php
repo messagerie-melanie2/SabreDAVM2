@@ -2,10 +2,9 @@
 
 namespace Sabre\CalDAV\Xml\Request;
 
-use Sabre\CalDAV\Plugin;
-use Sabre\DAV\Xml\Element\Sharee;
 use Sabre\Xml\Reader;
 use Sabre\Xml\XmlDeserializable;
+use Sabre\CalDAV\Plugin;
 
 /**
  * Share POST request parser
@@ -21,27 +20,44 @@ use Sabre\Xml\XmlDeserializable;
 class Share implements XmlDeserializable {
 
     /**
-     * The list of new people added or updated or removed from the share.
+     * The list of new people added or updated.
      *
-     * @var Sharee[]
+     * Every element has the following keys:
+     * 1. href - An email address
+     * 2. commonName - Some name
+     * 3. summary - An optional description of the share
+     * 4. readOnly - true or false
+     *
+     * @var array
      */
-    public $sharees = [];
+    public $set = [];
+
+    /**
+     * List of people removed from the share list.
+     *
+     * The list is a flat list of email addresses (including mailto:).
+     *
+     * @var array
+     */
+    public $remove = [];
 
     /**
      * Constructor
      *
-     * @param Sharee[] $sharees
+     * @param array $set
+     * @param array $remove
      */
-    function __construct(array $sharees) {
+    function __construct(array $set, array $remove) {
 
-        $this->sharees = $sharees;
+        $this->set = $set;
+        $this->remove = $remove;
 
     }
 
     /**
      * The deserialize method is called during xml parsing.
      *
-     * This method is called statically, this is because in theory this method
+     * This method is called statictly, this is because in theory this method
      * may be used as a type of constructor, or factory method.
      *
      * Often you want to return an instance of the current class, but you are
@@ -61,12 +77,13 @@ class Share implements XmlDeserializable {
      */
     static function xmlDeserialize(Reader $reader) {
 
-        $elems = $reader->parseGetElements([
+        $elems = $reader->parseInnerTree([
             '{' . Plugin::NS_CALENDARSERVER . '}set'    => 'Sabre\\Xml\\Element\\KeyValue',
             '{' . Plugin::NS_CALENDARSERVER . '}remove' => 'Sabre\\Xml\\Element\\KeyValue',
         ]);
 
-        $sharees = [];
+        $set = [];
+        $remove = [];
 
         foreach ($elems as $elem) {
             switch ($elem['name']) {
@@ -77,34 +94,22 @@ class Share implements XmlDeserializable {
                     $sumElem = '{' . Plugin::NS_CALENDARSERVER . '}summary';
                     $commonName = '{' . Plugin::NS_CALENDARSERVER . '}common-name';
 
-                    $properties = [];
-                    if (isset($sharee[$commonName])) {
-                        $properties['{DAV:}displayname'] = $sharee[$commonName];
-                    }
-
-                    $access = array_key_exists('{' . Plugin::NS_CALENDARSERVER . '}read-write', $sharee)
-                        ? \Sabre\DAV\Sharing\Plugin::ACCESS_READWRITE
-                        : \Sabre\DAV\Sharing\Plugin::ACCESS_READ;
-
-                    $sharees[] = new Sharee([
+                    $set[] = [
                         'href'       => $sharee['{DAV:}href'],
-                        'properties' => $properties,
-                        'access'     => $access,
-                        'comment'    => isset($sharee[$sumElem]) ? $sharee[$sumElem] : null
-                    ]);
+                        'commonName' => isset($sharee[$commonName]) ? $sharee[$commonName] : null,
+                        'summary'    => isset($sharee[$sumElem]) ? $sharee[$sumElem] : null,
+                        'readOnly'   => !array_key_exists('{' . Plugin::NS_CALENDARSERVER . '}read-write', $sharee),
+                    ];
                     break;
 
                 case '{' . Plugin::NS_CALENDARSERVER . '}remove' :
-                    $sharees[] = new Sharee([
-                        'href'   => $elem['value']['{DAV:}href'],
-                        'access' => \Sabre\DAV\Sharing\Plugin::ACCESS_NOACCESS
-                    ]);
+                    $remove[] = $elem['value']['{DAV:}href'];
                     break;
 
             }
         }
 
-        return new self($sharees);
+        return new self($set, $remove);
 
     }
 

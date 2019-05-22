@@ -42,7 +42,7 @@ class PropertiesCollection extends Collection implements IProperties {
      * To update specific properties, call the 'handle' method on this object.
      * Read the PropPatch documentation for more information.
      *
-     * @param PropPatch $proppatch
+     * @param array $mutations
      * @return bool|array
      */
     function propPatch(PropPatch $proppatch) {
@@ -75,7 +75,7 @@ class PropertiesCollection extends Collection implements IProperties {
      * conforming to the list of requested properties.
      * The Server class will filter out the extra.
      *
-     * @param array $requestedProperties
+     * @param array $properties
      * @return array
      */
     function getProperties($requestedProperties) {

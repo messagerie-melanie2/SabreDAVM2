@@ -28,20 +28,20 @@ class Mock extends AbstractBackend {
      * @param bool $returnChildLocks
      * @return array
      */
-    function getLocks($uri, $returnChildLocks) {
+    public function getLocks($uri, $returnChildLocks) {
 
-        $newLocks = [];
+        $newLocks = array();
 
         $locks = $this->getData();
 
-        foreach ($locks as $lock) {
+        foreach($locks as $lock) {
 
             if ($lock->uri === $uri ||
                 //deep locks on parents
-                ($lock->depth != 0 && strpos($uri, $lock->uri . '/') === 0) ||
+                ($lock->depth!=0 && strpos($uri, $lock->uri . '/')===0) ||
 
                 // locks on children
-                ($returnChildLocks && (strpos($lock->uri, $uri . '/') === 0))) {
+                ($returnChildLocks && (strpos($lock->uri, $uri . '/')===0)) ) {
 
                 $newLocks[] = $lock;
 
@@ -50,7 +50,7 @@ class Mock extends AbstractBackend {
         }
 
         // Checking if we can remove any of these locks
-        foreach ($newLocks as $k => $lock) {
+        foreach($newLocks as $k=>$lock) {
             if (time() > $lock->timeout + $lock->created) unset($newLocks[$k]);
         }
         return $newLocks;
@@ -64,7 +64,7 @@ class Mock extends AbstractBackend {
      * @param LockInfo $lockInfo
      * @return bool
      */
-    function lock($uri, LockInfo $lockInfo) {
+    public function lock($uri, LockInfo $lockInfo) {
 
         // We're making the lock timeout 30 minutes
         $lockInfo->timeout = 1800;
@@ -73,7 +73,7 @@ class Mock extends AbstractBackend {
 
         $locks = $this->getData();
 
-        foreach ($locks as $k => $lock) {
+        foreach($locks as $k=>$lock) {
             if (
                 ($lock->token == $lockInfo->token) ||
                 (time() > $lock->timeout + $lock->created)
@@ -94,10 +94,10 @@ class Mock extends AbstractBackend {
      * @param LockInfo $lockInfo
      * @return bool
      */
-    function unlock($uri, LockInfo $lockInfo) {
+    public function unlock($uri, LockInfo $lockInfo) {
 
         $locks = $this->getData();
-        foreach ($locks as $k => $lock) {
+        foreach($locks as $k=>$lock) {
 
             if ($lock->token == $lockInfo->token) {
 

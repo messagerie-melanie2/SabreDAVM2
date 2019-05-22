@@ -2,8 +2,9 @@
 
 namespace Sabre\DAV;
 
-use Sabre\HTTP\RequestInterface;
-use Sabre\HTTP\ResponseInterface;
+use
+    Sabre\HTTP\RequestInterface,
+    Sabre\HTTP\ResponseInterface;
 
 class TestPlugin extends ServerPlugin {
 
@@ -23,7 +24,7 @@ class TestPlugin extends ServerPlugin {
 
     function initialize(Server $server) {
 
-        $server->on('beforeMethod', [$this, 'beforeMethod']);
+        $server->on('beforeMethod', [$this,'beforeMethod']);
 
     }
 

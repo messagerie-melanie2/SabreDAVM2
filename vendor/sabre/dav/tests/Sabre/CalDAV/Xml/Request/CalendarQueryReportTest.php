@@ -2,8 +2,6 @@
 
 namespace Sabre\CalDAV\Xml\Request;
 
-use DateTimeImmutable;
-use DateTimeZone;
 use Sabre\DAV\Xml\XmlTest;
 
 class CalendarQueryReportTest extends XmlTest {
@@ -116,8 +114,8 @@ XML;
             '{urn:ietf:params:xml:ns:caldav}calendar-data',
         ];
         $calendarQueryReport->expand = [
-            'start' => new DateTimeImmutable('2015-01-01 00:00:00', new DateTimeZone('UTC')),
-            'end'   => new DateTimeImmutable('2016-01-01 00:00:00', new DateTimeZone('UTC')),
+            'start' => new \DateTime('2015-01-01 00:00:00', new \DateTimeZone('UTC')),
+            'end'   => new \DateTime('2016-01-01 00:00:00', new \DateTimeZone('UTC')),
         ];
         $calendarQueryReport->filters = [
             'name'           => 'VCALENDAR',
@@ -181,8 +179,8 @@ XML;
                             'name'           => 'X-PROP3',
                             'is-not-defined' => false,
                             'time-range'     => [
-                                'start' => new DateTimeImmutable('2015-01-01 00:00:00', new DateTimeZone('UTC')),
-                                'end'   => new DateTimeImmutable('2016-01-01 00:00:00', new DateTimeZone('UTC')),
+                                'start' => new \DateTime('2015-01-01 00:00:00', new \DateTimeZone('UTC')),
+                                'end'   => new \DateTime('2016-01-01 00:00:00', new \DateTimeZone('UTC')),
                             ],
                             'text-match'    => null,
                             'param-filters' => [],
@@ -200,8 +198,8 @@ XML;
                         ],
                     ],
                     'time-range' => [
-                        'start' => new DateTimeImmutable('2015-01-01 00:00:00', new DateTimeZone('UTC')),
-                        'end'   => new DateTimeImmutable('2016-01-01 00:00:00', new DateTimeZone('UTC')),
+                        'start' => new \DateTime('2015-01-01 00:00:00', new \DateTimeZone('UTC')),
+                        'end'   => new \DateTime('2016-01-01 00:00:00', new \DateTimeZone('UTC')),
                     ]
                 ],
             ],

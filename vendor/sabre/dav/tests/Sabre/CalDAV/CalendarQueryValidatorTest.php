@@ -1,8 +1,8 @@
 <?php
 
 namespace Sabre\CalDAV;
-
 use Sabre\VObject;
+use Sabre\DAV;
 
 class CalendarQueryValidatorTest extends \PHPUnit_Framework_TestCase {
 
@@ -21,9 +21,6 @@ ICS;
     }
 
     /**
-     * @param string $icalObject
-     * @param array $filters
-     * @param int $outcome
      * @dataProvider provider
      */
     function testValid($icalObject, $filters, $outcome) {
@@ -32,17 +29,17 @@ ICS;
 
         // Wrapping filter in a VCALENDAR component filter, as this is always
         // there anyway.
-        $filters = [
-            'name'           => 'VCALENDAR',
-            'comp-filters'   => [$filters],
-            'prop-filters'   => [],
+        $filters = array(
+            'name' => 'VCALENDAR',
+            'comp-filters' => array($filters),
+            'prop-filters' => array(),
             'is-not-defined' => false,
-            'time-range'     => null,
-        ];
+            'time-range' => null,
+        );
 
         $vObject = VObject\Reader::read($icalObject);
 
-        switch ($outcome) {
+        switch($outcome) {
             case 0 :
                 $this->assertFalse($validator->validate($vObject, $filters));
                 break;
@@ -395,13 +392,13 @@ END:VEVENT
 END:VCALENDAR
 yow;
 
-        $filter1 = [
-            'name'           => 'VEVENT',
-            'comp-filters'   => [],
-            'prop-filters'   => [],
+        $filter1 = array(
+            'name' => 'VEVENT',
+            'comp-filters' => array(),
+            'prop-filters' => array(),
             'is-not-defined' => false,
-            'time-range'     => null,
-        ];
+            'time-range' => null,
+        );
         $filter2 = $filter1;
         $filter2['name'] = 'VTODO';
 
@@ -413,25 +410,25 @@ yow;
         $filter4['is-not-defined'] = true;
 
         $filter5 = $filter1;
-        $filter5['comp-filters'] = [
-            [
-                'name'           => 'VALARM',
+        $filter5['comp-filters'] = array(
+            array(
+                'name' => 'VALARM',
                 'is-not-defined' => false,
-                'comp-filters'   => [],
-                'prop-filters'   => [],
-                'time-range'     => null,
-            ],
-        ];
+                'comp-filters' => array(),
+                'prop-filters' => array(),
+                'time-range' => null,
+            ),
+        );
         $filter6 = $filter1;
-        $filter6['prop-filters'] = [
-            [
-                'name'           => 'SUMMARY',
+        $filter6['prop-filters'] = array(
+            array(
+                'name' => 'SUMMARY',
                 'is-not-defined' => false,
-                'param-filters'  => [],
-                'time-range'     => null,
-                'text-match'     => null,
-            ],
-        ];
+                'param-filters' => array(),
+                'time-range' => null,
+                'text-match' => null,
+            ),
+        );
         $filter7 = $filter6;
         $filter7['prop-filters'][0]['name'] = 'DESCRIPTION';
 
@@ -446,21 +443,21 @@ yow;
 
         // Param filters
         $filter11 = $filter1;
-        $filter11['prop-filters'] = [
-            [
-                'name'           => 'DTSTART',
+        $filter11['prop-filters'] = array(
+            array(
+                'name' => 'DTSTART',
                 'is-not-defined' => false,
-                'param-filters'  => [
-                    [
-                        'name'           => 'VALUE',
+                'param-filters' => array(
+                    array(
+                        'name' => 'VALUE',
                         'is-not-defined' => false,
-                        'text-match'     => null,
-                    ],
-                ],
+                        'text-match' => null,
+                    ),
+                ),
                 'time-range' => null,
                 'text-match' => null,
-            ],
-        ];
+            ),
+        );
 
         $filter12 = $filter11;
         $filter12['prop-filters'][0]['param-filters'][0]['name'] = 'TZID';
@@ -473,11 +470,11 @@ yow;
 
         // Param text filter
         $filter15 = $filter11;
-        $filter15['prop-filters'][0]['param-filters'][0]['text-match'] = [
-            'collation'        => 'i;ascii-casemap',
-            'value'            => 'dAtE',
+        $filter15['prop-filters'][0]['param-filters'][0]['text-match'] = array(
+            'collation' => 'i;ascii-casemap',
+            'value' => 'dAtE',
             'negate-condition' => false,
-        ];
+        );
         $filter16 = $filter15;
         $filter16['prop-filters'][0]['param-filters'][0]['text-match']['collation'] = 'i;octet';
 
@@ -490,31 +487,31 @@ yow;
 
         // prop + text
         $filter19 = $filter5;
-        $filter19['comp-filters'][0]['prop-filters'] = [
-            [
-                'name'           => 'action',
+        $filter19['comp-filters'][0]['prop-filters'] = array(
+            array(
+                'name' => 'action',
                 'is-not-defined' => false,
-                'time-range'     => null,
-                'param-filters'  => [],
-                'text-match'     => [
-                    'collation'        => 'i;ascii-casemap',
-                    'value'            => 'display',
+                'time-range' => null,
+                'param-filters' => array(),
+                'text-match' => array(
+                    'collation' => 'i;ascii-casemap',
+                    'value' => 'display',
                     'negate-condition' => false,
-                ],
-            ],
-        ];
+                ),
+            ),
+        );
 
         // Time range
-        $filter20 = [
-            'name'           => 'VEVENT',
-            'comp-filters'   => [],
-            'prop-filters'   => [],
+        $filter20 = array(
+            'name' => 'VEVENT',
+            'comp-filters' => array(),
+            'prop-filters' => array(),
             'is-not-defined' => false,
-            'time-range'     => [
+            'time-range' => array(
                'start' => new \DateTime('2011-01-01 10:00:00', new \DateTimeZone('GMT')),
-               'end'   => new \DateTime('2011-01-01 13:00:00', new \DateTimeZone('GMT')),
-            ],
-        ];
+               'end' => new \DateTime('2011-01-01 13:00:00', new \DateTimeZone('GMT')),
+            ),
+        );
         // Time range, no end date
         $filter21 = $filter20;
         $filter21['time-range']['end'] = null;
@@ -525,105 +522,105 @@ yow;
 
         // Time range, other dates
         $filter23 = $filter20;
-        $filter23['time-range'] = [
+        $filter23['time-range'] = array(
            'start' => new \DateTime('2011-02-01 10:00:00', new \DateTimeZone('GMT')),
-           'end'   => new \DateTime('2011-02-01 13:00:00', new \DateTimeZone('GMT')),
-        ];
+           'end' => new \DateTime('2011-02-01 13:00:00', new \DateTimeZone('GMT')),
+        );
         // Time range
-        $filter24 = [
-            'name'           => 'VTODO',
-            'comp-filters'   => [],
-            'prop-filters'   => [],
+        $filter24 = array(
+            'name' => 'VTODO',
+            'comp-filters' => array(),
+            'prop-filters' => array(),
             'is-not-defined' => false,
-            'time-range'     => [
+            'time-range' => array(
                'start' => new \DateTime('2011-01-01 12:45:00', new \DateTimeZone('GMT')),
-               'end'   => new \DateTime('2011-01-01 13:15:00', new \DateTimeZone('GMT')),
-            ],
-        ];
+               'end' => new \DateTime('2011-01-01 13:15:00', new \DateTimeZone('GMT')),
+            ),
+        );
         // Time range, other dates (1 month in the future)
         $filter25 = $filter24;
-        $filter25['time-range'] = [
+        $filter25['time-range'] = array(
            'start' => new \DateTime('2011-02-01 10:00:00', new \DateTimeZone('GMT')),
-           'end'   => new \DateTime('2011-02-01 13:00:00', new \DateTimeZone('GMT')),
-        ];
+           'end' => new \DateTime('2011-02-01 13:00:00', new \DateTimeZone('GMT')),
+        );
         $filter26 = $filter24;
-        $filter26['time-range'] = [
+        $filter26['time-range'] = array(
            'start' => new \DateTime('2011-01-01 11:45:00', new \DateTimeZone('GMT')),
-           'end'   => new \DateTime('2011-01-01 12:15:00', new \DateTimeZone('GMT')),
-       ];
+           'end' => new \DateTime('2011-01-01 12:15:00', new \DateTimeZone('GMT')),
+       );
 
         // Time range for VJOURNAL
-        $filter27 = [
-            'name'           => 'VJOURNAL',
-            'comp-filters'   => [],
-            'prop-filters'   => [],
+        $filter27 = array(
+            'name' => 'VJOURNAL',
+            'comp-filters' => array(),
+            'prop-filters' => array(),
             'is-not-defined' => false,
-            'time-range'     => [
+            'time-range' => array(
                'start' => new \DateTime('2011-01-01 12:45:00', new \DateTimeZone('GMT')),
-               'end'   => new \DateTime('2011-01-01 13:15:00', new \DateTimeZone('GMT')),
-            ],
-        ];
+               'end' => new \DateTime('2011-01-01 13:15:00', new \DateTimeZone('GMT')),
+            ),
+        );
         $filter28 = $filter27;
-        $filter28['time-range'] = [
+        $filter28['time-range'] = array(
            'start' => new \DateTime('2011-01-01 11:45:00', new \DateTimeZone('GMT')),
-           'end'   => new \DateTime('2011-01-01 12:15:00', new \DateTimeZone('GMT')),
-        ];
+           'end' => new \DateTime('2011-01-01 12:15:00', new \DateTimeZone('GMT')),
+        );
         // Time range for VFREEBUSY
-        $filter29 = [
-            'name'           => 'VFREEBUSY',
-            'comp-filters'   => [],
-            'prop-filters'   => [],
+        $filter29 = array(
+            'name' => 'VFREEBUSY',
+            'comp-filters' => array(),
+            'prop-filters' => array(),
             'is-not-defined' => false,
-            'time-range'     => [
+            'time-range' => array(
                'start' => new \DateTime('2011-01-01 12:45:00', new \DateTimeZone('GMT')),
-               'end'   => new \DateTime('2011-01-01 13:15:00', new \DateTimeZone('GMT')),
-            ],
-        ];
+               'end' => new \DateTime('2011-01-01 13:15:00', new \DateTimeZone('GMT')),
+            ),
+        );
         // Time range filter on property
-        $filter30 = [
-            'name'         => 'VEVENT',
-            'comp-filters' => [],
-            'prop-filters' => [
-                [
-                    'name'           => 'DTSTART',
+        $filter30 = array(
+            'name' => 'VEVENT',
+            'comp-filters' => array(),
+            'prop-filters' => array(
+                array(
+                    'name' => 'DTSTART',
                     'is-not-defined' => false,
-                    'param-filters'  => [],
-                    'time-range'     => [
+                    'param-filters' => array(),
+                    'time-range' => array(
                        'start' => new \DateTime('2011-01-01 10:00:00', new \DateTimeZone('GMT')),
-                       'end'   => new \DateTime('2011-01-01 13:00:00', new \DateTimeZone('GMT')),
-                   ],
+                       'end' => new \DateTime('2011-01-01 13:00:00', new \DateTimeZone('GMT')),
+                   ),
                     'text-match' => null,
-               ],
-            ],
+               ),
+            ),
             'is-not-defined' => false,
-            'time-range'     => null,
-        ];
+            'time-range' => null,
+        );
 
         // Time range for alarm
-        $filter31 = [
-            'name'         => 'VEVENT',
-            'prop-filters' => [],
-            'comp-filters' => [
-                [
-                    'name'           => 'VALARM',
+        $filter31 = array(
+            'name' => 'VEVENT',
+            'prop-filters' => array(),
+            'comp-filters' => array(
+                array(
+                    'name' => 'VALARM',
                     'is-not-defined' => false,
-                    'comp-filters'   => [],
-                    'prop-filters'   => [],
-                    'time-range'     => [
+                    'comp-filters' => array(),
+                    'prop-filters' => array(),
+                    'time-range' => array(
                        'start' => new \DateTime('2011-01-01 10:45:00', new \DateTimeZone('GMT')),
-                       'end'   => new \DateTime('2011-01-01 11:15:00', new \DateTimeZone('GMT')),
-                    ],
+                       'end' => new \DateTime('2011-01-01 11:15:00', new \DateTimeZone('GMT')),
+                    ),
                     'text-match' => null,
-               ],
-            ],
+               ),
+            ),
             'is-not-defined' => false,
-            'time-range'     => null,
-        ];
+            'time-range' => null,
+        );
         $filter32 = $filter31;
-        $filter32['comp-filters'][0]['time-range'] = [
+        $filter32['comp-filters'][0]['time-range'] = array(
            'start' => new \DateTime('2011-01-01 11:45:00', new \DateTimeZone('GMT')),
-           'end'   => new \DateTime('2011-01-01 12:15:00', new \DateTimeZone('GMT')),
-       ];
+           'end' => new \DateTime('2011-01-01 12:15:00', new \DateTimeZone('GMT')),
+       );
 
         $filter33 = $filter31;
         $filter33['name'] = 'VTODO';
@@ -635,194 +632,194 @@ yow;
         $filter36['name'] = 'VJOURNAL';
 
         // Time range filter on non-datetime property
-        $filter37 = [
-            'name'         => 'VEVENT',
-            'comp-filters' => [],
-            'prop-filters' => [
-                [
-                    'name'           => 'SUMMARY',
+        $filter37 = array(
+            'name' => 'VEVENT',
+            'comp-filters' => array(),
+            'prop-filters' => array(
+                array(
+                    'name' => 'SUMMARY',
                     'is-not-defined' => false,
-                    'param-filters'  => [],
-                    'time-range'     => [
+                    'param-filters' => array(),
+                    'time-range' => array(
                        'start' => new \DateTime('2011-01-01 10:00:00', new \DateTimeZone('GMT')),
-                       'end'   => new \DateTime('2011-01-01 13:00:00', new \DateTimeZone('GMT')),
-                   ],
+                       'end' => new \DateTime('2011-01-01 13:00:00', new \DateTimeZone('GMT')),
+                   ),
                     'text-match' => null,
-               ],
-            ],
+               ),
+            ),
             'is-not-defined' => false,
-            'time-range'     => null,
-        ];
+            'time-range' => null,
+        );
 
-        $filter38 = [
-            'name'           => 'VEVENT',
-            'comp-filters'   => [],
-            'prop-filters'   => [],
+        $filter38 = array(
+            'name' => 'VEVENT',
+            'comp-filters' => array(),
+            'prop-filters' => array(),
             'is-not-defined' => false,
-            'time-range'     => [
+            'time-range' => array(
                 'start' => new \DateTime('2012-07-01 00:00:00', new \DateTimeZone('UTC')),
-                'end'   => new \DateTime('2012-08-01 00:00:00', new \DateTimeZone('UTC')),
-            ]
-        ];
-        $filter39 = [
-            'name'         => 'VEVENT',
-            'comp-filters' => [
-                [
-                    'name'           => 'VALARM',
-                    'comp-filters'   => [],
-                    'prop-filters'   => [],
+                'end' => new \DateTime('2012-08-01 00:00:00', new \DateTimeZone('UTC')),
+            )
+        );
+        $filter39 = array(
+            'name' => 'VEVENT',
+            'comp-filters' => array(
+                array(
+                    'name' => 'VALARM',
+                    'comp-filters' => array(),
+                    'prop-filters' => array(),
                     'is-not-defined' => false,
-                    'time-range'     => [
+                    'time-range' => array(
                         'start' => new \DateTime('2012-09-01 00:00:00', new \DateTimeZone('UTC')),
-                        'end'   => new \DateTime('2012-10-01 00:00:00', new \DateTimeZone('UTC')),
-                    ]
-                ],
-            ],
-            'prop-filters'   => [],
+                        'end' => new \DateTime('2012-10-01 00:00:00', new \DateTimeZone('UTC')),
+                    )
+                ),
+            ),
+            'prop-filters' => array(),
             'is-not-defined' => false,
-            'time-range'     => null,
-        ];
+            'time-range' => null,
+        );
 
-        return [
+        return array(
 
             // Component check
 
-            [$blob1, $filter1, 1],
-            [$blob1, $filter2, 0],
-            [$blob1, $filter3, 0],
-            [$blob1, $filter4, 1],
+            array($blob1, $filter1, 1),
+            array($blob1, $filter2, 0),
+            array($blob1, $filter3, 0),
+            array($blob1, $filter4, 1),
 
             // Subcomponent check (4)
-            [$blob1, $filter5, 0],
-            [$blob2, $filter5, 1],
+            array($blob1, $filter5, 0),
+            array($blob2, $filter5, 1),
 
             // Property checki (6)
-            [$blob1, $filter6, 1],
-            [$blob1, $filter7, 0],
-            [$blob1, $filter8, 0],
-            [$blob1, $filter9, 1],
+            array($blob1, $filter6, 1),
+            array($blob1, $filter7, 0),
+            array($blob1, $filter8, 0),
+            array($blob1, $filter9, 1),
 
             // Subcomponent + property (10)
-            [$blob2, $filter10, 1],
+            array($blob2, $filter10, 1),
 
             // Param filter (11)
-            [$blob3, $filter11, 1],
-            [$blob3, $filter12, 0],
-            [$blob3, $filter13, 0],
-            [$blob3, $filter14, 1],
+            array($blob3, $filter11, 1),
+            array($blob3, $filter12, 0),
+            array($blob3, $filter13, 0),
+            array($blob3, $filter14, 1),
 
             // Param + text (15)
-            [$blob3, $filter15, 1],
-            [$blob3, $filter16, 0],
-            [$blob3, $filter17, 0],
-            [$blob3, $filter18, 1],
+            array($blob3, $filter15, 1),
+            array($blob3, $filter16, 0),
+            array($blob3, $filter17, 0),
+            array($blob3, $filter18, 1),
 
             // Prop + text (19)
-            [$blob2, $filter19, 1],
+            array($blob2, $filter19, 1),
 
             // Incorrect object (vcard) (20)
-            [$blob4, $filter1, -1],
+            array($blob4, $filter1, -1),
 
             // Time-range for event (21)
-            [$blob5, $filter20, 1],
-            [$blob6, $filter20, 1],
-            [$blob7, $filter20, 1],
-            [$blob8, $filter20, 1],
+            array($blob5, $filter20, 1),
+            array($blob6, $filter20, 1),
+            array($blob7, $filter20, 1),
+            array($blob8, $filter20, 1),
 
-            [$blob5, $filter21, 1],
-            [$blob5, $filter22, 1],
+            array($blob5, $filter21, 1),
+            array($blob5, $filter22, 1),
 
-            [$blob5, $filter23, 0],
-            [$blob6, $filter23, 0],
-            [$blob7, $filter23, 0],
-            [$blob8, $filter23, 0],
+            array($blob5, $filter23, 0),
+            array($blob6, $filter23, 0),
+            array($blob7, $filter23, 0),
+            array($blob8, $filter23, 0),
 
             // Time-range for todo (31)
-            [$blob9, $filter24, 1],
-            [$blob9, $filter25, 0],
-            [$blob9, $filter26, 1],
-            [$blob10, $filter24, 1],
-            [$blob10, $filter25, 0],
-            [$blob10, $filter26, 1],
+            array($blob9, $filter24, 1),
+            array($blob9, $filter25, 0),
+            array($blob9, $filter26, 1),
+            array($blob10, $filter24, 1),
+            array($blob10, $filter25, 0),
+            array($blob10, $filter26, 1),
 
-            [$blob11, $filter24, 0],
-            [$blob11, $filter25, 0],
-            [$blob11, $filter26, 1],
+            array($blob11, $filter24, 0),
+            array($blob11, $filter25, 0),
+            array($blob11, $filter26, 1),
 
-            [$blob12, $filter24, 1],
-            [$blob12, $filter25, 0],
-            [$blob12, $filter26, 0],
+            array($blob12, $filter24, 1),
+            array($blob12, $filter25, 0),
+            array($blob12, $filter26, 0),
 
-            [$blob13, $filter24, 1],
-            [$blob13, $filter25, 0],
-            [$blob13, $filter26, 1],
+            array($blob13, $filter24, 1),
+            array($blob13, $filter25, 0),
+            array($blob13, $filter26, 1),
 
-            [$blob14, $filter24, 1],
-            [$blob14, $filter25, 0],
-            [$blob14, $filter26, 0],
+            array($blob14, $filter24, 1),
+            array($blob14, $filter25, 0),
+            array($blob14, $filter26, 0),
 
-            [$blob15, $filter24, 1],
-            [$blob15, $filter25, 1],
-            [$blob15, $filter26, 1],
+            array($blob15, $filter24, 1),
+            array($blob15, $filter25, 1),
+            array($blob15, $filter26, 1),
 
-            [$blob16, $filter24, 1],
-            [$blob16, $filter25, 1],
-            [$blob16, $filter26, 1],
+            array($blob16, $filter24, 1),
+            array($blob16, $filter25, 1),
+            array($blob16, $filter26, 1),
 
             // Time-range for journals (55)
-            [$blob17, $filter27, 0],
-            [$blob17, $filter28, 0],
-            [$blob18, $filter27, 0],
-            [$blob18, $filter28, 1],
-            [$blob19, $filter27, 1],
-            [$blob19, $filter28, 1],
+            array($blob17, $filter27, 0),
+            array($blob17, $filter28, 0),
+            array($blob18, $filter27, 0),
+            array($blob18, $filter28, 1),
+            array($blob19, $filter27, 1),
+            array($blob19, $filter28, 1),
 
             // Time-range for free-busy (61)
-            [$blob20, $filter29, -1],
+            array($blob20, $filter29, -1),
 
             // Time-range on property (62)
-            [$blob5, $filter30, 1],
-            [$blob3, $filter37, -1],
-            [$blob3, $filter30, 0],
+            array($blob5, $filter30, 1),
+            array($blob3, $filter37, -1),
+            array($blob3, $filter30, 0),
 
             // Time-range on alarm in vevent (65)
-            [$blob21, $filter31, 1],
-            [$blob21, $filter32, 0],
-            [$blob22, $filter31, 1],
-            [$blob22, $filter32, 0],
-            [$blob23, $filter31, 1],
-            [$blob23, $filter32, 0],
-            [$blob24, $filter31, 1],
-            [$blob24, $filter32, 0],
-            [$blob25, $filter31, 1],
-            [$blob25, $filter32, 0],
-            [$blob26, $filter31, 1],
-            [$blob26, $filter32, 0],
+            array($blob21, $filter31, 1),
+            array($blob21, $filter32, 0),
+            array($blob22, $filter31, 1),
+            array($blob22, $filter32, 0),
+            array($blob23, $filter31, 1),
+            array($blob23, $filter32, 0),
+            array($blob24, $filter31, 1),
+            array($blob24, $filter32, 0),
+            array($blob25, $filter31, 1),
+            array($blob25, $filter32, 0),
+            array($blob26, $filter31, 1),
+            array($blob26, $filter32, 0),
 
             // Time-range on alarm for vtodo (77)
-            [$blob27, $filter33, 1],
-            [$blob27, $filter34, 0],
+            array($blob27, $filter33, 1),
+            array($blob27, $filter34, 0),
 
             // Time-range on alarm for vjournal (79)
-            [$blob28, $filter35, -1],
-            [$blob28, $filter36, -1],
+            array($blob28, $filter35, -1),
+            array($blob28, $filter36, -1),
 
             // Time-range on alarm with duration (81)
-            [$blob29, $filter31, 1],
-            [$blob29, $filter32, 0],
-            [$blob30, $filter31, 0],
-            [$blob30, $filter32, 0],
+            array($blob29, $filter31, 1),
+            array($blob29, $filter32, 0),
+            array($blob30, $filter31, 0),
+            array($blob30, $filter32, 0),
 
             // Time-range with RRULE (85)
-            [$blob31, $filter20, 1],
-            [$blob32, $filter20, 0],
+            array($blob31, $filter20, 1),
+            array($blob32, $filter20, 0),
 
             // Bug reported on mailing list, related to all-day events (87)
             //array($blob33, $filter38, 1),
 
             // Event in timerange, but filtered alarm is in the far future (88).
-            [$blob34, $filter39, 0],
-        ];
+            array($blob34, $filter39, 0),
+        );
 
     }
 

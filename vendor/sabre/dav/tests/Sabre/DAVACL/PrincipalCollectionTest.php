@@ -2,22 +2,26 @@
 
 namespace Sabre\DAVACL;
 
+use Sabre\DAV;
+use Sabre\HTTP;
+
+
 class PrincipalCollectionTest extends \PHPUnit_Framework_TestCase {
 
-    function testBasic() {
+    public function testBasic() {
 
         $backend = new PrincipalBackend\Mock();
         $pc = new PrincipalCollection($backend);
         $this->assertTrue($pc instanceof PrincipalCollection);
 
-        $this->assertEquals('principals', $pc->getName());
+        $this->assertEquals('principals',$pc->getName());
 
     }
 
     /**
      * @depends testBasic
      */
-    function testGetChildren() {
+    public function testGetChildren() {
 
         $backend = new PrincipalBackend\Mock();
         $pc = new PrincipalCollection($backend);
@@ -25,7 +29,7 @@ class PrincipalCollectionTest extends \PHPUnit_Framework_TestCase {
         $children = $pc->getChildren();
         $this->assertTrue(is_array($children));
 
-        foreach ($children as $child) {
+        foreach($children as $child) {
             $this->assertTrue($child instanceof IPrincipal);
         }
 
@@ -35,7 +39,7 @@ class PrincipalCollectionTest extends \PHPUnit_Framework_TestCase {
      * @depends testBasic
      * @expectedException Sabre\DAV\Exception\MethodNotAllowed
      */
-    function testGetChildrenDisable() {
+    public function testGetChildrenDisable() {
 
         $backend = new PrincipalBackend\Mock();
         $pc = new PrincipalCollection($backend);
@@ -45,7 +49,7 @@ class PrincipalCollectionTest extends \PHPUnit_Framework_TestCase {
 
     }
 
-    function testFindByUri() {
+    public function testFindByUri() {
 
         $backend = new PrincipalBackend\Mock();
         $pc = new PrincipalCollection($backend);

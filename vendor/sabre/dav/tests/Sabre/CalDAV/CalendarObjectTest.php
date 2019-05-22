@@ -1,6 +1,7 @@
 <?php
 
 namespace Sabre\CalDAV;
+use Sabre\DAVACL;
 
 require_once 'Sabre/CalDAV/TestUtil.php';
 
@@ -18,10 +19,11 @@ class CalendarObjectTest extends \PHPUnit_Framework_TestCase {
 
     function setup() {
 
+        if (!SABRE_HASSQLITE) $this->markTestSkipped('SQLite driver is not available');
         $this->backend = TestUtil::getBackend();
 
         $calendars = $this->backend->getCalendarsForUser('principals/user1');
-        $this->assertEquals(2, count($calendars));
+        $this->assertEquals(2,count($calendars));
         $this->calendar = new Calendar($this->backend, $calendars[0]);
 
     }
@@ -38,10 +40,10 @@ class CalendarObjectTest extends \PHPUnit_Framework_TestCase {
         $children = $this->calendar->getChildren();
         $this->assertTrue($children[0] instanceof CalendarObject);
 
-        $this->assertInternalType('string', $children[0]->getName());
-        $this->assertInternalType('string', $children[0]->get());
-        $this->assertInternalType('string', $children[0]->getETag());
-        $this->assertEquals('text/calendar; charset=utf-8', $children[0]->getContentType());
+        $this->assertInternalType('string',$children[0]->getName());
+        $this->assertInternalType('string',$children[0]->get());
+        $this->assertInternalType('string',$children[0]->getETag());
+        $this->assertEquals('text/calendar; charset=utf-8; component=vevent', $children[0]->getContentType());
 
     }
 
@@ -51,9 +53,9 @@ class CalendarObjectTest extends \PHPUnit_Framework_TestCase {
     function testInvalidArg1() {
 
         $obj = new CalendarObject(
-            new Backend\Mock([], []),
-            [],
-            []
+            new Backend\Mock(array(),array()),
+            array(),
+            array()
         );
 
     }
@@ -64,9 +66,9 @@ class CalendarObjectTest extends \PHPUnit_Framework_TestCase {
     function testInvalidArg2() {
 
         $obj = new CalendarObject(
-            new Backend\Mock([], []),
-            [],
-            ['calendarid' => '1']
+            new Backend\Mock(array(),array()),
+            array(),
+            array('calendarid' => '1')
         );
 
     }
@@ -94,7 +96,7 @@ class CalendarObjectTest extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($children[0] instanceof CalendarObject);
         $newData = TestUtil::getTestCalendarData();
 
-        $stream = fopen('php://temp', 'r+');
+        $stream = fopen('php://temp','r+');
         fwrite($stream, $newData);
         rewind($stream);
         $children[0]->put($stream);
@@ -114,8 +116,8 @@ class CalendarObjectTest extends \PHPUnit_Framework_TestCase {
         $obj = $children[0];
         $obj->delete();
 
-        $children2 = $this->calendar->getChildren();
-        $this->assertEquals(count($children) - 1, count($children2));
+        $children2 =  $this->calendar->getChildren();
+        $this->assertEquals(count($children)-1, count($children2));
 
     }
 
@@ -130,7 +132,7 @@ class CalendarObjectTest extends \PHPUnit_Framework_TestCase {
         $obj = $children[0];
 
         $lastMod = $obj->getLastModified();
-        $this->assertTrue(is_int($lastMod) || ctype_digit($lastMod) || is_null($lastMod));
+        $this->assertTrue(is_int($lastMod) || ctype_digit($lastMod));
 
     }
 
@@ -171,33 +173,33 @@ class CalendarObjectTest extends \PHPUnit_Framework_TestCase {
 
     function testGetACL() {
 
-        $expected = [
-            [
+        $expected = array(
+            array(
                 'privilege' => '{DAV:}read',
                 'principal' => 'principals/user1',
                 'protected' => true,
-            ],
-            [
+            ),
+            array(
                 'privilege' => '{DAV:}read',
                 'principal' => 'principals/user1/calendar-proxy-write',
                 'protected' => true,
-            ],
-            [
+            ),
+            array(
                 'privilege' => '{DAV:}read',
                 'principal' => 'principals/user1/calendar-proxy-read',
                 'protected' => true,
-            ],
-            [
+            ),
+            array(
                 'privilege' => '{DAV:}write',
                 'principal' => 'principals/user1',
                 'protected' => true,
-            ],
-            [
+            ),
+            array(
                 'privilege' => '{DAV:}write',
                 'principal' => 'principals/user1/calendar-proxy-write',
                 'protected' => true,
-            ],
-        ];
+            ),
+        );
 
         $children = $this->calendar->getChildren();
         $this->assertTrue($children[0] instanceof CalendarObject);
@@ -211,30 +213,40 @@ class CalendarObjectTest extends \PHPUnit_Framework_TestCase {
 
         $backend = new Backend\Mock([], []);
         $calendarObject = new CalendarObject($backend, ['principaluri' => 'principals/user1'], ['calendarid' => 1, 'uri' => 'foo']);
-        $expected = [
-            [
-                'privilege' => '{DAV:}all',
+        $expected = array(
+            array(
+                'privilege' => '{DAV:}read',
                 'principal' => 'principals/user1',
                 'protected' => true,
-            ],
-            [
-                'privilege' => '{DAV:}all',
+            ),
+            array(
+                'privilege' => '{DAV:}write',
+                'principal' => 'principals/user1',
+                'protected' => true,
+            ),
+            array(
+                'privilege' => '{DAV:}read',
                 'principal' => 'principals/user1/calendar-proxy-write',
                 'protected' => true,
-            ],
-            [
+            ),
+            array(
+                'privilege' => '{DAV:}write',
+                'principal' => 'principals/user1/calendar-proxy-write',
+                'protected' => true,
+            ),
+            array(
                 'privilege' => '{DAV:}read',
                 'principal' => 'principals/user1/calendar-proxy-read',
                 'protected' => true,
-            ],
-        ];
+            ),
+        );
         $this->assertEquals($expected, $calendarObject->getACL());
 
 
     }
 
     /**
-     * @expectedException \Sabre\DAV\Exception\Forbidden
+     * @expectedException Sabre\DAV\Exception\MethodNotAllowed
      */
     function testSetACL() {
 
@@ -242,7 +254,7 @@ class CalendarObjectTest extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($children[0] instanceof CalendarObject);
 
         $obj = $children[0];
-        $obj->setACL([]);
+        $obj->setACL(array());
 
     }
 
@@ -294,15 +306,15 @@ END:VCALENDAR";
 
     function testGetRefetch() {
 
-        $backend = new Backend\Mock([], [
-            1 => [
-                'foo' => [
+        $backend = new Backend\Mock(array(), array(
+            1 => array(
+                'foo' => array(
                     'calendardata' => 'foo',
-                    'uri'          => 'foo'
-                ],
-            ]
-        ]);
-        $obj = new CalendarObject($backend, ['id' => 1], ['uri' => 'foo']);
+                    'uri' => 'foo'
+                ),
+            )
+        ));
+        $obj = new CalendarObject($backend, array('id' => 1), array('uri' => 'foo'));
 
         $this->assertEquals('foo', $obj->get());
 
@@ -310,15 +322,15 @@ END:VCALENDAR";
 
     function testGetEtag1() {
 
-        $objectInfo = [
+        $objectInfo = array(
             'calendardata' => 'foo',
-            'uri'          => 'foo',
-            'etag'         => 'bar',
-            'calendarid'   => 1
-        ];
+            'uri' => 'foo',
+            'etag' => 'bar',
+            'calendarid' => 1
+        );
 
-        $backend = new Backend\Mock([], []);
-        $obj = new CalendarObject($backend, [], $objectInfo);
+        $backend = new Backend\Mock(array(), array());
+        $obj = new CalendarObject($backend, array(), $objectInfo);
 
         $this->assertEquals('bar', $obj->getETag());
 
@@ -326,14 +338,14 @@ END:VCALENDAR";
 
     function testGetEtag2() {
 
-        $objectInfo = [
+        $objectInfo = array(
             'calendardata' => 'foo',
-            'uri'          => 'foo',
-            'calendarid'   => 1
-        ];
+            'uri' => 'foo',
+            'calendarid' => 1
+        );
 
-        $backend = new Backend\Mock([], []);
-        $obj = new CalendarObject($backend, [], $objectInfo);
+        $backend = new Backend\Mock(array(), array());
+        $obj = new CalendarObject($backend, array(), $objectInfo);
 
         $this->assertEquals('"' . md5('foo') . '"', $obj->getETag());
 
@@ -341,42 +353,42 @@ END:VCALENDAR";
 
     function testGetSupportedPrivilegesSet() {
 
-        $objectInfo = [
+        $objectInfo = array(
             'calendardata' => 'foo',
-            'uri'          => 'foo',
-            'calendarid'   => 1
-        ];
+            'uri' => 'foo',
+            'calendarid' => 1
+        );
 
-        $backend = new Backend\Mock([], []);
-        $obj = new CalendarObject($backend, [], $objectInfo);
+        $backend = new Backend\Mock(array(), array());
+        $obj = new CalendarObject($backend, array(), $objectInfo);
         $this->assertNull($obj->getSupportedPrivilegeSet());
 
     }
 
     function testGetSize1() {
 
-        $objectInfo = [
+        $objectInfo = array(
             'calendardata' => 'foo',
-            'uri'          => 'foo',
-            'calendarid'   => 1
-        ];
+            'uri' => 'foo',
+            'calendarid' => 1
+        );
 
-        $backend = new Backend\Mock([], []);
-        $obj = new CalendarObject($backend, [], $objectInfo);
+        $backend = new Backend\Mock(array(), array());
+        $obj = new CalendarObject($backend, array(), $objectInfo);
         $this->assertEquals(3, $obj->getSize());
 
     }
 
     function testGetSize2() {
 
-        $objectInfo = [
-            'uri'        => 'foo',
+        $objectInfo = array(
+            'uri' => 'foo',
             'calendarid' => 1,
-            'size'       => 4,
-        ];
+            'size' => 4,
+        );
 
-        $backend = new Backend\Mock([], []);
-        $obj = new CalendarObject($backend, [], $objectInfo);
+        $backend = new Backend\Mock(array(), array());
+        $obj = new CalendarObject($backend, array(), $objectInfo);
         $this->assertEquals(4, $obj->getSize());
 
     }

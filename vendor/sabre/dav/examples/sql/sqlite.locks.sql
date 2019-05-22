@@ -1,6 +1,6 @@
 BEGIN TRANSACTION;
 CREATE TABLE locks (
-	id integer primary key asc NOT NULL,
+	id integer primary key asc,
 	owner text,
 	timeout integer,
 	created integer,

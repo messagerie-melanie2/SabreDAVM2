@@ -2,43 +2,60 @@
 
 namespace Sabre\DAV\Xml\Property;
 
-use Sabre\DAV\Xml\XmlTest;
+use Sabre\DAV;
+use Sabre\HTTP;
 
-class SupportedMethodSetTest extends XmlTest {
+require_once 'Sabre/HTTP/ResponseMock.php';
+require_once 'Sabre/DAV/AbstractServer.php';
 
-    function testSimple() {
+class SupportedMethodSetTest extends DAV\AbstractServer {
 
-        $cus = new SupportedMethodSet(['GET', 'PUT']);
-        $this->assertEquals(['GET', 'PUT'], $cus->getValue());
+    function sendPROPFIND($body) {
 
-        $this->assertTrue($cus->has('GET'));
-        $this->assertFalse($cus->has('HEAD'));
+        $request = new HTTP\Request('PROPFIND', '/', ['Depth' => '0' ]);
+        $request->setBody($body);
 
-    }
-
-    function testSerialize() {
-
-        $cus = new SupportedMethodSet(['GET', 'PUT']);
-        $xml = $this->write(['{DAV:}foo' => $cus]);
-
-        $expected = '<?xml version="1.0"?>
-<d:foo xmlns:d="DAV:">
-    <d:supported-method name="GET"/>
-    <d:supported-method name="PUT"/>
-</d:foo>';
-
-        $this->assertXmlStringEqualsXmlString($expected, $xml);
+        $this->server->httpRequest = $request;
+        $this->server->exec();
 
     }
 
-    function testSerializeHtml() {
+    /**
+     */
+    function testMethods() {
 
-        $cus = new SupportedMethodSet(['GET', 'PUT']);
-        $result = $cus->toHtml(
-            new \Sabre\DAV\Browser\HtmlOutputHelper('/', [])
-        );
+        $xml = '<?xml version="1.0"?>
+<d:propfind xmlns:d="DAV:">
+  <d:prop>
+    <d:supported-method-set />
+  </d:prop>
+</d:propfind>';
 
-        $this->assertEquals('GET, PUT', $result);
+        $this->sendPROPFIND($xml);
+
+        $this->assertEquals(207, $this->response->status, 'We expected a multi-status response. Full response body: ' . $this->response->body);
+
+        $body = preg_replace("/xmlns(:[A-Za-z0-9_])?=(\"|\')DAV:(\"|\')/", "xmlns\\1=\"urn:DAV\"", $this->response->body);
+        $xml = simplexml_load_string($body);
+        $xml->registerXPathNamespace('d', 'urn:DAV');
+
+        $data = $xml->xpath('/d:multistatus/d:response/d:propstat/d:prop');
+        $this->assertEquals(1, count($data), 'We expected 1 \'d:prop\' element');
+
+        $data = $xml->xpath('/d:multistatus/d:response/d:propstat/d:prop/d:supported-method-set');
+        $this->assertEquals(1, count($data), 'We expected 1 \'d:supported-method-set\' element');
+
+        $data = $xml->xpath('/d:multistatus/d:response/d:propstat/d:status');
+        $this->assertEquals(1, count($data), 'We expected 1 \'d:status\' element');
+
+        $this->assertEquals('HTTP/1.1 200 OK', (string)$data[0], 'The status for this property should have been 200');
+
+    }
+
+    function testGetObj() {
+
+        $result = $this->server->getProperties('/', ['{DAV:}supported-method-set']);
+        $this->assertTrue($result['{DAV:}supported-method-set']->has('PROPFIND'));
 
     }
 

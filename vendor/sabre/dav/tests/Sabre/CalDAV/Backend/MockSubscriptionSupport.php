@@ -1,9 +1,8 @@
 <?php
 
 namespace Sabre\CalDAV\Backend;
-
-use Sabre\CalDAV;
 use Sabre\DAV;
+use Sabre\CalDAV;
 
 /**
  * This is a mock CalDAV backend that supports subscriptions.
@@ -51,7 +50,7 @@ class MockSubscriptionSupport extends Mock implements SubscriptionSupport {
      * @param string $principalUri
      * @return array
      */
-    function getSubscriptionsForUser($principalUri) {
+    public function getSubscriptionsForUser($principalUri) {
 
         if (isset($this->subs[$principalUri])) {
             return $this->subs[$principalUri];
@@ -71,7 +70,7 @@ class MockSubscriptionSupport extends Mock implements SubscriptionSupport {
      * @param array $properties
      * @return mixed
      */
-    function createSubscription($principalUri, $uri, array $properties) {
+    public function createSubscription($principalUri, $uri, array $properties) {
 
         $properties['uri'] = $uri;
         $properties['principaluri'] = $principalUri;
@@ -81,7 +80,7 @@ class MockSubscriptionSupport extends Mock implements SubscriptionSupport {
             $this->subs[$principalUri] = [];
         }
 
-        $id = [$principalUri, count($this->subs[$principalUri]) + 1];
+        $id = [$principalUri, count($this->subs[$principalUri])+1];
 
         $properties['id'] = $id;
 
@@ -103,19 +102,19 @@ class MockSubscriptionSupport extends Mock implements SubscriptionSupport {
      * Calling the handle method is like telling the PropPatch object "I
      * promise I can handle updating this property".
      *
-     * Read the PropPatch documentation for more info and examples.
+     * Read the PropPatch documenation for more info and examples.
      *
      * @param mixed $subscriptionId
      * @param \Sabre\DAV\PropPatch $propPatch
      * @return void
      */
-    function updateSubscription($subscriptionId, DAV\PropPatch $propPatch) {
+    public function updateSubscription($subscriptionId, DAV\PropPatch $propPatch) {
 
         $found = null;
-        foreach ($this->subs[$subscriptionId[0]] as &$sub) {
+        foreach($this->subs[$subscriptionId[0]] as &$sub) {
 
             if ($sub['id'][1] === $subscriptionId[1]) {
-                $found = & $sub;
+                $found =& $sub;
                 break;
             }
 
@@ -124,7 +123,7 @@ class MockSubscriptionSupport extends Mock implements SubscriptionSupport {
         if (!$found) return;
 
         $propPatch->handleRemaining(function($mutations) use (&$found) {
-            foreach ($mutations as $k => $v) {
+            foreach($mutations as $k=>$v) {
                 $found[$k] = $v;
             }
             return true;
@@ -138,9 +137,10 @@ class MockSubscriptionSupport extends Mock implements SubscriptionSupport {
      * @param mixed $subscriptionId
      * @return void
      */
-    function deleteSubscription($subscriptionId) {
+    public function deleteSubscription($subscriptionId) {
 
-        foreach ($this->subs[$subscriptionId[0]] as $index => $sub) {
+        $found = null;
+        foreach($this->subs[$subscriptionId[0]] as $index=>$sub) {
 
             if ($sub['id'][1] === $subscriptionId[1]) {
                 unset($this->subs[$subscriptionId[0]][$index]);

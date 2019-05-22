@@ -18,28 +18,19 @@ class File extends DAV\File {
     protected $name;
     protected $contents;
     protected $parent;
-    protected $lastModified;
 
     /**
      * Creates the object
      *
      * @param string $name
-     * @param resource $contents
-     * @param Collection $parent
-     * @param int $lastModified
+     * @param array $children
      * @return void
      */
-    function __construct($name, $contents, Collection $parent = null, $lastModified = -1) {
+    function __construct($name, $contents, Collection $parent = null) {
 
         $this->name = $name;
         $this->put($contents);
         $this->parent = $parent;
-
-        if ($lastModified === -1) {
-            $lastModified = time();
-        }
-
-        $this->lastModified = $lastModified;
 
     }
 
@@ -59,7 +50,6 @@ class File extends DAV\File {
     /**
      * Changes the name of the node.
      *
-     * @param string $name
      * @return void
      */
     function setName($name) {
@@ -73,7 +63,7 @@ class File extends DAV\File {
      *
      * The data argument is a readable stream resource.
      *
-     * After a successful put operation, you may choose to return an ETag. The
+     * After a succesful put operation, you may choose to return an ETag. The
      * etag must always be surrounded by double-quotes. These quotes must
      * appear in the actual string you're returning.
      *
@@ -145,18 +135,6 @@ class File extends DAV\File {
     function delete() {
 
         $this->parent->deleteChild($this->name);
-
-    }
-
-    /**
-     * Returns the last modification time as a unix timestamp.
-     * If the information is not available, return null.
-     *
-     * @return int
-     */
-    function getLastModified() {
-
-        return $this->lastModified;
 
     }
 

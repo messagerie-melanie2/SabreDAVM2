@@ -4,9 +4,9 @@ namespace Sabre\CardDAV;
 
 use Sabre\DAV\PropPatch;
 
-class AddressBookTest extends \PHPUnit_Framework_TestCase {
+require_once 'Sabre/CardDAV/Backend/Mock.php';
 
-    use \Sabre\DAV\DbTestHelperTrait;
+class AddressBookTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @var Sabre\CardDAV\AddressBook
@@ -19,12 +19,12 @@ class AddressBookTest extends \PHPUnit_Framework_TestCase {
         $this->backend = new Backend\Mock();
         $this->ab = new AddressBook(
             $this->backend,
-            [
-                'uri'               => 'book1',
-                'id'                => 'foo',
+            array(
+                'uri' => 'book1',
+                'id' => 'foo',
                 '{DAV:}displayname' => 'd-name',
-                'principaluri'      => 'principals/user1',
-            ]
+                'principaluri' => 'principals/user1',
+            )
         );
 
     }
@@ -73,10 +73,10 @@ class AddressBookTest extends \PHPUnit_Framework_TestCase {
 
     function testCreateFile() {
 
-        $file = fopen('php://memory', 'r+');
-        fwrite($file, 'foo');
+        $file = fopen('php://memory','r+');
+        fwrite($file,'foo');
         rewind($file);
-        $this->ab->createFile('card2', $file);
+        $this->ab->createFile('card2',$file);
 
         $this->assertEquals('foo', $this->backend->cards['foo']['card2']);
 
@@ -85,7 +85,7 @@ class AddressBookTest extends \PHPUnit_Framework_TestCase {
     function testDelete() {
 
         $this->ab->delete();
-        $this->assertEquals(1, count($this->backend->addressBooks));
+        $this->assertEquals(array(), $this->backend->addressBooks);
 
     }
 
@@ -118,10 +118,10 @@ class AddressBookTest extends \PHPUnit_Framework_TestCase {
 
     function testGetProperties() {
 
-        $props = $this->ab->getProperties(['{DAV:}displayname']);
-        $this->assertEquals([
+        $props = $this->ab->getProperties(array('{DAV:}displayname'));
+        $this->assertEquals(array(
             '{DAV:}displayname' => 'd-name',
-        ], $props);
+        ), $props);
 
     }
 
@@ -129,22 +129,27 @@ class AddressBookTest extends \PHPUnit_Framework_TestCase {
 
         $this->assertEquals('principals/user1', $this->ab->getOwner());
         $this->assertNull($this->ab->getGroup());
-        $this->assertEquals([
-            [
-                'privilege' => '{DAV:}all',
-                'principal' => '{DAV:}owner',
+        $this->assertEquals(array(
+            array(
+                'privilege' => '{DAV:}read',
+                'principal' => 'principals/user1',
                 'protected' => true,
-            ],
-        ], $this->ab->getACL());
+            ),
+            array(
+                'privilege' => '{DAV:}write',
+                'principal' => 'principals/user1',
+                'protected' => true,
+            ),
+        ), $this->ab->getACL());
 
     }
 
     /**
-     * @expectedException Sabre\DAV\Exception\Forbidden
+     * @expectedException Sabre\DAV\Exception\MethodNotAllowed
      */
     function testSetACL() {
 
-       $this->ab->setACL([]);
+       $this->ab->setACL(array());
 
     }
 
@@ -158,37 +163,47 @@ class AddressBookTest extends \PHPUnit_Framework_TestCase {
 
     function testGetSyncTokenNoSyncSupport() {
 
-        $this->assertNull($this->ab->getSyncToken());
+        $this->assertNull(null, $this->ab->getSyncToken());
 
     }
     function testGetChangesNoSyncSupport() {
 
-        $this->assertNull($this->ab->getChanges(1, null));
+        $this->assertNull($this->ab->getChanges(1,null));
 
     }
 
     function testGetSyncToken() {
 
-        $this->driver = 'sqlite';
-        $this->dropTables(['addressbooks', 'cards', 'addressbookchanges']);
-        $this->createSchema('addressbooks');
-        $backend = new Backend\PDO(
-            $this->getPDO()
-        );
-        $ab = new AddressBook($backend, ['id' => 1, '{DAV:}sync-token' => 2]);
+        if (!SABRE_HASSQLITE) {
+            $this->markTestSkipped('Sqlite is required for this test to run');
+        }
+        $ab = new AddressBook(TestUtil::getBackend(), [ 'id' => 1, '{DAV:}sync-token' => 2]);
         $this->assertEquals(2, $ab->getSyncToken());
     }
 
     function testGetSyncToken2() {
 
-        $this->driver = 'sqlite';
-        $this->dropTables(['addressbooks', 'cards', 'addressbookchanges']);
-        $this->createSchema('addressbooks');
-        $backend = new Backend\PDO(
-            $this->getPDO()
-        );
-        $ab = new AddressBook($backend, ['id' => 1, '{http://sabredav.org/ns}sync-token' => 2]);
+        if (!SABRE_HASSQLITE) {
+            $this->markTestSkipped('Sqlite is required for this test to run');
+        }
+        $ab = new AddressBook(TestUtil::getBackend(), [ 'id' => 1, '{http://sabredav.org/ns}sync-token' => 2]);
         $this->assertEquals(2, $ab->getSyncToken());
     }
+
+    function testGetChanges() {
+
+        if (!SABRE_HASSQLITE) {
+            $this->markTestSkipped('Sqlite is required for this test to run');
+        }
+        $ab = new AddressBook(TestUtil::getBackend(), [ 'id' => 1, '{DAV:}sync-token' => 2]);
+        $this->assertEquals([
+            'syncToken' => 2,
+            'modified' => [],
+            'deleted' => [],
+            'added' => ['UUID-2345'],
+        ], $ab->getChanges(1, 1));
+
+    }
+
 
 }

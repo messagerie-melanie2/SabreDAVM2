@@ -2,8 +2,9 @@
 
 namespace Sabre\CalDAV\Schedule;
 
-use Sabre\HTTP\Request;
-use Sabre\VObject;
+use
+    Sabre\HTTP\Request,
+    Sabre\VObject;
 
 class DeliverNewEventTest extends \Sabre\DAVServerTest {
 
@@ -45,7 +46,7 @@ CREATED:20140109T204404Z
 UID:AADC6438-18CF-4B52-8DD2-EF9AD75ADE83
 DTEND;TZID=America/Toronto:20140107T110000
 TRANSP:OPAQUE
-ATTENDEE;CN="Administrator";CUTYPE=INDIVIDUAL;PARTSTAT=ACCEPTED:mailto:user1.sabredav@sabredav.org
+ATTENDEE;CN="Adminstrator";CUTYPE=INDIVIDUAL;PARTSTAT=ACCEPTED:mailto:user1.sabredav@sabredav.org
 ATTENDEE;CN="Roxy Kesh";CUTYPE=INDIVIDUAL;EMAIL="user2.sabredav@sabrdav.org";
  PARTSTAT=NEEDS-ACTION;ROLE=REQ-PARTICIPANT;RSVP=TRUE:mailto:user2.sabredav@sabredav.org
 SUMMARY:Just testing!

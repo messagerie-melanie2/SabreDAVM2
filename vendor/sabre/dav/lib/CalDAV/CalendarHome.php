@@ -22,12 +22,10 @@ use Sabre\HTTP\URLUtil;
  */
 class CalendarHome implements DAV\IExtendedCollection, DAVACL\IACL {
 
-    use DAVACL\ACLTrait;
-
     /**
      * CalDAV backend
      *
-     * @var Backend\BackendInterface
+     * @var Sabre\CalDAV\Backend\BackendInterface
      */
     protected $caldavBackend;
 
@@ -42,7 +40,7 @@ class CalendarHome implements DAV\IExtendedCollection, DAVACL\IACL {
      * Constructor
      *
      * @param Backend\BackendInterface $caldavBackend
-     * @param array $principalInfo
+     * @param mixed $userUri
      */
     function __construct(Backend\BackendInterface $caldavBackend, $principalInfo) {
 
@@ -149,7 +147,11 @@ class CalendarHome implements DAV\IExtendedCollection, DAVACL\IACL {
         foreach ($this->caldavBackend->getCalendarsForUser($this->principalInfo['uri']) as $calendar) {
             if ($calendar['uri'] === $name) {
                 if ($this->caldavBackend instanceof Backend\SharingSupport) {
-                    return new SharedCalendar($this->caldavBackend, $calendar);
+                    if (isset($calendar['{http://calendarserver.org/ns/}shared-url'])) {
+                        return new SharedCalendar($this->caldavBackend, $calendar);
+                    } else {
+                        return new ShareableCalendar($this->caldavBackend, $calendar);
+                    }
                 } else {
                     return new Calendar($this->caldavBackend, $calendar);
                 }
@@ -196,7 +198,11 @@ class CalendarHome implements DAV\IExtendedCollection, DAVACL\IACL {
         $objs = [];
         foreach ($calendars as $calendar) {
             if ($this->caldavBackend instanceof Backend\SharingSupport) {
-                $objs[] = new SharedCalendar($this->caldavBackend, $calendar);
+                if (isset($calendar['{http://calendarserver.org/ns/}shared-url'])) {
+                    $objs[] = new SharedCalendar($this->caldavBackend, $calendar);
+                } else {
+                    $objs[] = new ShareableCalendar($this->caldavBackend, $calendar);
+                }
             } else {
                 $objs[] = new Calendar($this->caldavBackend, $calendar);
             }
@@ -272,13 +278,28 @@ class CalendarHome implements DAV\IExtendedCollection, DAVACL\IACL {
     }
 
     /**
-     * Returns the owner of the calendar home.
+     * Returns the owner principal
      *
-     * @return string
+     * This must be a url to a principal, or null if there's no owner
+     *
+     * @return string|null
      */
     function getOwner() {
 
         return $this->principalInfo['uri'];
+
+    }
+
+    /**
+     * Returns a group principal
+     *
+     * This must be a url to a principal, or null if there's no owner
+     *
+     * @return string|null
+     */
+    function getGroup() {
+
+        return null;
 
     }
 
@@ -327,6 +348,37 @@ class CalendarHome implements DAV\IExtendedCollection, DAVACL\IACL {
 
     }
 
+    /**
+     * Updates the ACL
+     *
+     * This method will receive a list of new ACE's.
+     *
+     * @param array $acl
+     * @return void
+     */
+    function setACL(array $acl) {
+
+        throw new DAV\Exception\MethodNotAllowed('Changing ACL is not yet supported');
+
+    }
+
+    /**
+     * Returns the list of supported privileges for this node.
+     *
+     * The returned data structure is a list of nested privileges.
+     * See Sabre\DAVACL\Plugin::getDefaultSupportedPrivilegeSet for a simple
+     * standard structure.
+     *
+     * If null is returned from this method, the default privilege set is used,
+     * which is fine for most common usecases.
+     *
+     * @return array|null
+     */
+    function getSupportedPrivilegeSet() {
+
+        return null;
+
+    }
 
     /**
      * This method is called when a user replied to a request to share.
@@ -334,8 +386,8 @@ class CalendarHome implements DAV\IExtendedCollection, DAVACL\IACL {
      * This method should return the url of the newly created calendar if the
      * share was accepted.
      *
-     * @param string $href The sharee who is replying (often a mailto: address)
-     * @param int    $status One of the SharingPlugin::STATUS_* constants
+     * @param string href The sharee who is replying (often a mailto: address)
+     * @param int status One of the SharingPlugin::STATUS_* constants
      * @param string $calendarUri The url to the calendar thats being shared
      * @param string $inReplyTo The unique id this message is a response to
      * @param string $summary A description of the reply

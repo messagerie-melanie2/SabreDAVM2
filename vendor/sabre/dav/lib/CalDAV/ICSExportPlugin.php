@@ -2,13 +2,13 @@
 
 namespace Sabre\CalDAV;
 
-use DateTime;
 use DateTimeZone;
 use Sabre\DAV;
-use Sabre\DAV\Exception\BadRequest;
+use Sabre\VObject;
 use Sabre\HTTP\RequestInterface;
 use Sabre\HTTP\ResponseInterface;
-use Sabre\VObject;
+use Sabre\DAV\Exception\BadRequest;
+use DateTime;
 
 /**
  * ICS Exporter
@@ -170,13 +170,13 @@ class ICSExportPlugin extends DAV\ServerPlugin {
     protected function generateResponse($path, $start, $end, $expand, $componentType, $format, $properties, ResponseInterface $response) {
 
         $calDataProp = '{' . Plugin::NS_CALDAV . '}calendar-data';
-        $calendarNode = $this->server->tree->getNodeForPath($path);
 
         $blobs = [];
         if ($start || $end || $componentType) {
 
             // If there was a start or end filter, we need to enlist
             // calendarQuery for speed.
+            $calendarNode = $this->server->tree->getNodeForPath($path);
             $queryResult = $calendarNode->calendarQuery([
                 'name'         => 'VCALENDAR',
                 'comp-filters' => [
@@ -235,39 +235,25 @@ class ICSExportPlugin extends DAV\ServerPlugin {
                 // VTIMEZONE.
                 $vtimezoneObj = VObject\Reader::read($tzResult[$tzProp]);
                 $calendarTimeZone = $vtimezoneObj->VTIMEZONE->getTimeZone();
-                // Destroy circular references to PHP will GC the object.
-                $vtimezoneObj->destroy();
                 unset($vtimezoneObj);
             } else {
                 // Defaulting to UTC.
                 $calendarTimeZone = new DateTimeZone('UTC');
             }
 
-            $mergedCalendar = $mergedCalendar->expand($start, $end, $calendarTimeZone);
+            $mergedCalendar->expand($start, $end, $calendarTimeZone);
         }
 
-        $filenameExtension = '.ics';
+        $response->setHeader('Content-Type', $format);
 
         switch ($format) {
             case 'text/calendar' :
                 $mergedCalendar = $mergedCalendar->serialize();
-                $filenameExtension = '.ics';
                 break;
             case 'application/calendar+json' :
                 $mergedCalendar = json_encode($mergedCalendar->jsonSerialize());
-                $filenameExtension = '.json';
                 break;
         }
-
-        $filename = preg_replace(
-            '/[^a-zA-Z0-9-_ ]/um',
-            '',
-            $calendarNode->getName()
-        );
-        $filename .= '-' . date('Y-m-d') . $filenameExtension;
-
-        $response->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"');
-        $response->setHeader('Content-Type', $format);
 
         $response->setStatus(200);
         $response->setBody($mergedCalendar);
@@ -284,11 +270,11 @@ class ICSExportPlugin extends DAV\ServerPlugin {
     function mergeObjects(array $properties, array $inputObjects) {
 
         $calendar = new VObject\Component\VCalendar();
-        $calendar->VERSION = '2.0';
+        $calendar->version = '2.0';
         if (DAV\Server::$exposeVersion) {
-            $calendar->PRODID = '-//SabreDAV//SabreDAV ' . DAV\Version::VERSION . '//EN';
+            $calendar->prodid = '-//SabreDAV//SabreDAV ' . DAV\Version::VERSION . '//EN';
         } else {
-            $calendar->PRODID = '-//SabreDAV//SabreDAV//EN';
+            $calendar->prodid = '-//SabreDAV//SabreDAV//EN';
         }
         if (isset($properties['{DAV:}displayname'])) {
             $calendar->{'X-WR-CALNAME'} = $properties['{DAV:}displayname'];
@@ -312,7 +298,7 @@ class ICSExportPlugin extends DAV\ServerPlugin {
                     case 'VEVENT' :
                     case 'VTODO' :
                     case 'VJOURNAL' :
-                        $objects[] = clone $child;
+                        $objects[] = $child;
                         break;
 
                     // VTIMEZONE is special, because we need to filter out the duplicates
@@ -320,16 +306,13 @@ class ICSExportPlugin extends DAV\ServerPlugin {
                         // Naively just checking tzid.
                         if (in_array((string)$child->TZID, $collectedTimezones)) continue;
 
-                        $timezones[] = clone $child;
+                        $timezones[] = $child;
                         $collectedTimezones[] = $child->TZID;
                         break;
 
                 }
 
             }
-            // Destroy circular references to PHP will GC the object.
-            $nodeComp->destroy();
-            unset($nodeComp);
 
         }
 

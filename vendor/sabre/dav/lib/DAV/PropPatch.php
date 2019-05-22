@@ -71,14 +71,7 @@ class PropPatch {
      * "{DAV:}displayname" and a second argument that's a method that does the
      * actual updating.
      *
-     * It's possible to specify more than one property as an array.
-     *
-     * The callback must return a boolean or an it. If the result is true, the
-     * operation was considered successful. If it's false, it's consided
-     * failed.
-     *
-     * If the result is an integer, we'll use that integer as the http status
-     * code associated with the operation.
+     * It's possible to specify more than one property.
      *
      * @param string|string[] $properties
      * @param callable $callback

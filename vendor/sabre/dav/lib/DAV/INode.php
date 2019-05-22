@@ -36,10 +36,9 @@ interface INode {
     function setName($name);
 
     /**
-     * Returns the last modification time, as a unix timestamp. Return null
-     * if the information is not available.
+     * Returns the last modification time, as a unix timestamp
      *
-     * @return int|null
+     * @return int
      */
     function getLastModified();
 

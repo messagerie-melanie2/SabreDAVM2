@@ -14,7 +14,7 @@ class GetIfConditionsTest extends AbstractServer {
         $request = new HTTP\Request();
 
         $conditions = $this->server->getIfConditions($request);
-        $this->assertEquals([], $conditions);
+        $this->assertEquals(array(),$conditions);
 
     }
 
@@ -23,314 +23,314 @@ class GetIfConditionsTest extends AbstractServer {
         $request = new HTTP\Request('GET', '/path/', ['If' => '(<opaquelocktoken:token1>)']);
         $conditions = $this->server->getIfConditions($request);
 
-        $compare = [
+        $compare = array(
 
-            [
-                'uri'    => 'path',
-                'tokens' => [
-                    [
+            array(
+                'uri' => 'path',
+                'tokens' => array(
+                    array(
                         'negate' => false,
-                        'token'  => 'opaquelocktoken:token1',
-                        'etag'   => '',
-                    ],
-                ],
+                        'token' => 'opaquelocktoken:token1',
+                        'etag' => '',
+                    ),
+                ),
 
-            ],
+            ),
 
-        ];
+        );
 
-        $this->assertEquals($compare, $conditions);
+        $this->assertEquals($compare,$conditions);
 
     }
 
     function testNotLockToken() {
 
-        $serverVars = [
-            'HTTP_IF'     => '(Not <opaquelocktoken:token1>)',
+        $serverVars = array(
+            'HTTP_IF' => '(Not <opaquelocktoken:token1>)',
             'REQUEST_URI' => '/bla'
-        ];
+        );
 
         $request = HTTP\Sapi::createFromServerArray($serverVars);
         $conditions = $this->server->getIfConditions($request);
 
-        $compare = [
+        $compare = array(
 
-            [
-                'uri'    => 'bla',
-                'tokens' => [
-                    [
+            array(
+                'uri' => 'bla',
+                'tokens' => array(
+                    array(
                         'negate' => true,
                         'token'  => 'opaquelocktoken:token1',
                         'etag'   => '',
-                    ],
-                ],
+                    ),
+                ),
 
-            ],
+            ),
 
-        ];
-        $this->assertEquals($compare, $conditions);
+        );
+        $this->assertEquals($compare,$conditions);
 
     }
 
     function testLockTokenUrl() {
 
-        $serverVars = [
+        $serverVars = array(
             'HTTP_IF' => '<http://www.example.com/> (<opaquelocktoken:token1>)',
-        ];
+        );
 
         $request = HTTP\Sapi::createFromServerArray($serverVars);
         $conditions = $this->server->getIfConditions($request);
 
-        $compare = [
+        $compare = array(
 
-            [
-                'uri'    => '',
-                'tokens' => [
-                    [
+            array(
+                'uri' => '',
+                'tokens' => array(
+                    array(
                         'negate' => false,
                         'token'  => 'opaquelocktoken:token1',
                         'etag'   => '',
-                    ],
-                ],
+                    ),
+                ),
 
-            ],
+            ),
 
-        ];
-        $this->assertEquals($compare, $conditions);
+        );
+        $this->assertEquals($compare,$conditions);
 
     }
 
     function test2LockTokens() {
 
-        $serverVars = [
-            'HTTP_IF'     => '(<opaquelocktoken:token1>) (Not <opaquelocktoken:token2>)',
+        $serverVars = array(
+            'HTTP_IF' => '(<opaquelocktoken:token1>) (Not <opaquelocktoken:token2>)',
             'REQUEST_URI' => '/bla',
-        ];
+        );
 
         $request = HTTP\Sapi::createFromServerArray($serverVars);
         $conditions = $this->server->getIfConditions($request);
 
-        $compare = [
+        $compare = array(
 
-            [
-                'uri'    => 'bla',
-                'tokens' => [
-                    [
+            array(
+                'uri' => 'bla',
+                'tokens' => array(
+                    array(
                         'negate' => false,
                         'token'  => 'opaquelocktoken:token1',
                         'etag'   => '',
-                    ],
-                    [
+                    ),
+                    array(
                         'negate' => true,
                         'token'  => 'opaquelocktoken:token2',
                         'etag'   => '',
-                    ],
-                ],
+                    ),
+                ),
 
-            ],
+            ),
 
-        ];
-        $this->assertEquals($compare, $conditions);
+        );
+        $this->assertEquals($compare,$conditions);
 
     }
 
     function test2UriLockTokens() {
 
-        $serverVars = [
+        $serverVars = array(
             'HTTP_IF' => '<http://www.example.org/node1> (<opaquelocktoken:token1>) <http://www.example.org/node2> (Not <opaquelocktoken:token2>)',
-        ];
+        );
 
         $request = HTTP\Sapi::createFromServerArray($serverVars);
         $conditions = $this->server->getIfConditions($request);
 
-        $compare = [
+        $compare = array(
 
-            [
-                'uri'    => 'node1',
-                'tokens' => [
-                    [
+            array(
+                'uri' => 'node1',
+                'tokens' => array(
+                    array(
                         'negate' => false,
                         'token'  => 'opaquelocktoken:token1',
                         'etag'   => '',
-                    ],
-                 ],
-            ],
-            [
-                'uri'    => 'node2',
-                'tokens' => [
-                    [
+                    ),
+                 ),
+            ),
+            array(
+                'uri' => 'node2',
+                'tokens' => array(
+                    array(
                         'negate' => true,
                         'token'  => 'opaquelocktoken:token2',
                         'etag'   => '',
-                    ],
-                ],
+                    ),
+                ),
 
-            ],
+            ),
 
-        ];
-        $this->assertEquals($compare, $conditions);
+        );
+        $this->assertEquals($compare,$conditions);
 
     }
 
     function test2UriMultiLockTokens() {
 
-        $serverVars = [
+        $serverVars = array(
             'HTTP_IF' => '<http://www.example.org/node1> (<opaquelocktoken:token1>) (<opaquelocktoken:token2>) <http://www.example.org/node2> (Not <opaquelocktoken:token3>)',
-        ];
+        );
 
         $request = HTTP\Sapi::createFromServerArray($serverVars);
         $conditions = $this->server->getIfConditions($request);
 
-        $compare = [
+        $compare = array(
 
-            [
-                'uri'    => 'node1',
-                'tokens' => [
-                    [
+            array(
+                'uri' => 'node1',
+                'tokens' => array(
+                    array(
                         'negate' => false,
                         'token'  => 'opaquelocktoken:token1',
                         'etag'   => '',
-                    ],
-                    [
+                    ),
+                    array(
                         'negate' => false,
                         'token'  => 'opaquelocktoken:token2',
                         'etag'   => '',
-                    ],
-                 ],
-            ],
-            [
-                'uri'    => 'node2',
-                'tokens' => [
-                    [
+                    ),
+                 ),
+            ),
+            array(
+                'uri' => 'node2',
+                'tokens' => array(
+                    array(
                         'negate' => true,
                         'token'  => 'opaquelocktoken:token3',
                         'etag'   => '',
-                    ],
-                ],
+                    ),
+                ),
 
-            ],
+            ),
 
-        ];
-        $this->assertEquals($compare, $conditions);
+        );
+        $this->assertEquals($compare,$conditions);
 
     }
 
     function testEtag() {
 
-        $serverVars = [
-            'HTTP_IF'     => '(["etag1"])',
+        $serverVars = array(
+            'HTTP_IF' => '(["etag1"])',
             'REQUEST_URI' => '/foo',
-        ];
+        );
 
         $request = HTTP\Sapi::createFromServerArray($serverVars);
         $conditions = $this->server->getIfConditions($request);
 
-        $compare = [
+        $compare = array(
 
-            [
-                'uri'    => 'foo',
-                'tokens' => [
-                    [
+            array(
+                'uri' => 'foo',
+                'tokens' => array(
+                    array(
                         'negate' => false,
                         'token'  => '',
                         'etag'   => '"etag1"',
-                    ],
-                 ],
-            ],
+                    ),
+                 ),
+            ),
 
-        ];
-        $this->assertEquals($compare, $conditions);
+        );
+        $this->assertEquals($compare,$conditions);
 
     }
 
     function test2Etags() {
 
-        $serverVars = [
+        $serverVars = array(
             'HTTP_IF' => '<http://www.example.org/> (["etag1"]) (["etag2"])',
-        ];
+        );
 
         $request = HTTP\Sapi::createFromServerArray($serverVars);
         $conditions = $this->server->getIfConditions($request);
 
-        $compare = [
+        $compare = array(
 
-            [
-                'uri'    => '',
-                'tokens' => [
-                    [
+            array(
+                'uri' => '',
+                'tokens' => array(
+                    array(
                         'negate' => false,
                         'token'  => '',
                         'etag'   => '"etag1"',
-                    ],
-                    [
+                    ),
+                    array(
                         'negate' => false,
                         'token'  => '',
                         'etag'   => '"etag2"',
-                    ],
-                 ],
-            ],
+                    ),
+                 ),
+            ),
 
-        ];
-        $this->assertEquals($compare, $conditions);
+        );
+        $this->assertEquals($compare,$conditions);
 
     }
 
     function testComplexIf() {
 
-        $serverVars = [
+        $serverVars = array(
             'HTTP_IF' => '<http://www.example.org/node1> (<opaquelocktoken:token1> ["etag1"]) ' .
                          '(Not <opaquelocktoken:token2>) (["etag2"]) <http://www.example.org/node2> ' .
                          '(<opaquelocktoken:token3>) (Not <opaquelocktoken:token4>) (["etag3"])',
-        ];
+        );
 
         $request = HTTP\Sapi::createFromServerArray($serverVars);
         $conditions = $this->server->getIfConditions($request);
 
-        $compare = [
+        $compare = array(
 
-            [
-                'uri'    => 'node1',
-                'tokens' => [
-                    [
+            array(
+                'uri' => 'node1',
+                'tokens' => array(
+                    array(
                         'negate' => false,
                         'token'  => 'opaquelocktoken:token1',
                         'etag'   => '"etag1"',
-                    ],
-                    [
+                    ),
+                    array(
                         'negate' => true,
                         'token'  => 'opaquelocktoken:token2',
                         'etag'   => '',
-                    ],
-                    [
+                    ),
+                    array(
                         'negate' => false,
                         'token'  => '',
                         'etag'   => '"etag2"',
-                    ],
-                 ],
-            ],
-            [
-                'uri'    => 'node2',
-                'tokens' => [
-                    [
+                    ),
+                 ),
+            ),
+            array(
+                'uri' => 'node2',
+                'tokens' => array(
+                    array(
                         'negate' => false,
                         'token'  => 'opaquelocktoken:token3',
                         'etag'   => '',
-                    ],
-                    [
+                    ),
+                    array(
                         'negate' => true,
                         'token'  => 'opaquelocktoken:token4',
                         'etag'   => '',
-                    ],
-                    [
+                    ),
+                    array(
                         'negate' => false,
                         'token'  => '',
                         'etag'   => '"etag3"',
-                    ],
-                 ],
-            ],
+                    ),
+                 ),
+            ),
 
-        ];
-        $this->assertEquals($compare, $conditions);
+        );
+        $this->assertEquals($compare,$conditions);
 
     }
 

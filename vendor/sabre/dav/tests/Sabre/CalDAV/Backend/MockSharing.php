@@ -2,8 +2,9 @@
 
 namespace Sabre\CalDAV\Backend;
 
-use Sabre\CalDAV\Xml\Notification\NotificationInterface;
 use Sabre\DAV;
+use Sabre\CalDAV;
+use Sabre\CalDAV\Xml\Notification\NotificationInterface;
 
 class MockSharing extends Mock implements NotificationSupport, SharingSupport {
 
@@ -14,43 +15,6 @@ class MockSharing extends Mock implements NotificationSupport, SharingSupport {
 
         parent::__construct($calendars, $calendarData);
         $this->notifications = $notifications;
-
-    }
-
-    /**
-     * Returns a list of calendars for a principal.
-     *
-     * Every project is an array with the following keys:
-     *  * id, a unique id that will be used by other functions to modify the
-     *    calendar. This can be the same as the uri or a database key.
-     *  * uri, which the basename of the uri with which the calendar is
-     *    accessed.
-     *  * principalUri. The owner of the calendar. Almost always the same as
-     *    principalUri passed to this method.
-     *
-     * Furthermore it can contain webdav properties in clark notation. A very
-     * common one is '{DAV:}displayname'.
-     *
-     * @param string $principalUri
-     * @return array
-     */
-    function getCalendarsForUser($principalUri) {
-
-        $calendars = parent::getCalendarsForUser($principalUri);
-        foreach ($calendars as $k => $calendar) {
-
-            if (isset($calendar['share-access'])) {
-                continue;
-            }
-            if (!empty($this->shares[$calendar['id']])) {
-                $calendar['share-access'] = DAV\Sharing\Plugin::ACCESS_SHAREDOWNER;
-            } else {
-                $calendar['share-access'] = DAV\Sharing\Plugin::ACCESS_NOTSHARED;
-            }
-            $calendars[$k] = $calendar;
-
-        }
-        return $calendars;
 
     }
 
@@ -83,7 +47,7 @@ class MockSharing extends Mock implements NotificationSupport, SharingSupport {
      */
     function deleteNotification($principalUri, NotificationInterface $notification) {
 
-        foreach ($this->notifications[$principalUri] as $key => $value) {
+        foreach($this->notifications[$principalUri] as $key=>$value) {
             if ($notification === $value) {
                 unset($this->notifications[$principalUri][$key]);
             }
@@ -94,38 +58,43 @@ class MockSharing extends Mock implements NotificationSupport, SharingSupport {
     /**
      * Updates the list of shares.
      *
+     * The first array is a list of people that are to be added to the
+     * calendar.
+     *
+     * Every element in the add array has the following properties:
+     *   * href - A url. Usually a mailto: address
+     *   * commonName - Usually a first and last name, or false
+     *   * summary - A description of the share, can also be false
+     *   * readOnly - A boolean value
+     *
+     * Every element in the remove array is just the address string.
+     *
+     * Note that if the calendar is currently marked as 'not shared' by and
+     * this method is called, the calendar should be 'upgraded' to a shared
+     * calendar.
+     *
      * @param mixed $calendarId
-     * @param \Sabre\DAV\Xml\Element\Sharee[] $sharees
+     * @param array $add
+     * @param array $remove
      * @return void
      */
-    function updateInvites($calendarId, array $sharees) {
+    function updateShares($calendarId, array $add, array $remove) {
 
         if (!isset($this->shares[$calendarId])) {
             $this->shares[$calendarId] = [];
         }
 
-        foreach ($sharees as $sharee) {
+        foreach($add as $val) {
+            $val['status'] = CalDAV\SharingPlugin::STATUS_NORESPONSE;
+            $this->shares[$calendarId][] = $val;
+        }
 
-            $existingKey = null;
-            foreach ($this->shares[$calendarId] as $k => $existingSharee) {
-                if ($sharee->href === $existingSharee->href) {
-                    $existingKey = $k;
-                }
-            }
-            // Just making sure we're not affecting an existing copy.
-            $sharee = clone $sharee;
-            $sharee->inviteStatus = DAV\Sharing\Plugin::INVITE_NORESPONSE;
+        foreach($this->shares[$calendarId] as $k=>$share) {
 
-            if ($sharee->access === DAV\Sharing\Plugin::ACCESS_NOACCESS) {
-                // It's a removal
-                unset($this->shares[$calendarId][$existingKey]);
-            } elseif ($existingKey) {
-                // It's an update
-                $this->shares[$calendarId][$existingKey] = $sharee;
-            } else {
-                // It's an addition
-                $this->shares[$calendarId][] = $sharee;
+            if (in_array($share['href'], $remove)) {
+                unset($this->shares[$calendarId][$k]);
             }
+
         }
 
         // Re-numbering keys
@@ -136,19 +105,17 @@ class MockSharing extends Mock implements NotificationSupport, SharingSupport {
     /**
      * Returns the list of people whom this calendar is shared with.
      *
-     * Every item in the returned list must be a Sharee object with at
-     * least the following properties set:
-     *   $href
-     *   $shareAccess
-     *   $inviteStatus
-     *
-     * and optionally:
-     *   $properties
+     * Every element in this array should have the following properties:
+     *   * href - Often a mailto: address
+     *   * commonName - Optional, for example a first + last name
+     *   * status - See the Sabre\CalDAV\SharingPlugin::STATUS_ constants.
+     *   * readOnly - boolean
+     *   * summary - Optional, a description for the share
      *
      * @param mixed $calendarId
-     * @return \Sabre\DAV\Xml\Element\Sharee[]
+     * @return array
      */
-    function getInvites($calendarId) {
+    function getShares($calendarId) {
 
         if (!isset($this->shares[$calendarId])) {
             return [];
@@ -162,7 +129,7 @@ class MockSharing extends Mock implements NotificationSupport, SharingSupport {
      * This method is called when a user replied to a request to share.
      *
      * @param string href The sharee who is replying (often a mailto: address)
-     * @param int status One of the \Sabre\DAV\Sharing\Plugin::INVITE_* constants
+     * @param int status One of the SharingPlugin::STATUS_* constants
      * @param string $calendarUri The url to the calendar thats being shared
      * @param string $inReplyTo The unique id this message is a response to
      * @param string $summary A description of the reply
@@ -171,7 +138,7 @@ class MockSharing extends Mock implements NotificationSupport, SharingSupport {
     function shareReply($href, $status, $calendarUri, $inReplyTo, $summary = null) {
 
         // This operation basically doesn't do anything yet
-        if ($status === DAV\Sharing\Plugin::INVITE_ACCEPTED) {
+        if ($status === CalDAV\SharingPlugin::STATUS_ACCEPTED) {
             return 'calendars/blabla/calendar';
         }
 
@@ -186,7 +153,7 @@ class MockSharing extends Mock implements NotificationSupport, SharingSupport {
      */
     function setPublishStatus($calendarId, $value) {
 
-        foreach ($this->calendars as $k => $cal) {
+        foreach($this->calendars as $k=>$cal) {
             if ($cal['id'] === $calendarId) {
                 if (!$value) {
                     unset($cal['{http://calendarserver.org/ns/}publish-url']);
@@ -202,3 +169,4 @@ class MockSharing extends Mock implements NotificationSupport, SharingSupport {
     }
 
 }
+

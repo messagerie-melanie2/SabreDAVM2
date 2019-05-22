@@ -2,61 +2,42 @@
 
 namespace Sabre\DAV;
 
-use DateTime;
 use Sabre\HTTP;
 
-/**
- * This file tests HTTP requests that use the Range: header.
- *
- * @copyright Copyright (C) fruux GmbH. (https://fruux.com/)
- * @author Evert Pot (http://evertpot.com/)
- * @license http://sabre.io/license/ Modified BSD License
- */
-class ServerRangeTest extends \Sabre\DAVServerTest {
+require_once 'Sabre/DAV/AbstractServer.php';
 
-    protected $setupFiles = true;
+class ServerRangeTest extends AbstractServer{
 
-    /**
-     * We need this string a lot
-     */
-    protected $lastModified;
+    protected function getRootNode() {
 
-    function setUp() {
-
-        parent::setUp();
-        $this->server->createFile('files/test.txt', 'Test contents');
-
-        $this->lastModified = HTTP\Util::toHTTPDate(
-            new DateTime('@' . $this->server->tree->getNodeForPath('files/test.txt')->getLastModified())
-        );
-
-        $stream = popen('echo "Test contents"', 'r');
-        $streamingFile = new Mock\StreamingFile(
-                'no-seeking.txt',
-                $stream
-            );
-        $streamingFile->setSize(12);
-        $this->server->tree->getNodeForPath('files')->addNode($streamingFile);
+        return new FSExt\Directory(SABRE_TEMPDIR);
 
     }
 
     function testRange() {
 
-        $request = new HTTP\Request('GET', '/files/test.txt', ['Range' => 'bytes=2-5']);
-        $response = $this->request($request);
+        $request = new HTTP\Request(
+            'GET',
+            '/test.txt',
+            ['Range' => 'Bytes=2-5']
+        );
+        $filename = SABRE_TEMPDIR . '/test.txt';
+        $this->server->httpRequest = $request;
+        $this->server->exec();
 
         $this->assertEquals([
             'X-Sabre-Version' => [Version::VERSION],
             'Content-Type'    => ['application/octet-stream'],
             'Content-Length'  => [4],
             'Content-Range'   => ['bytes 2-5/13'],
-            'ETag'            => ['"' . md5('Test contents') . '"'],
-            'Last-Modified'   => [$this->lastModified],
+            'Last-Modified'   => [HTTP\Util::toHTTPDate(new \DateTime('@' . filemtime($this->tempDir . '/test.txt')))],
+            'ETag'            => ['"' . sha1(fileinode($filename) . filesize($filename) . filemtime($filename)) . '"'],
             ],
-            $response->getHeaders()
-        );
-        $this->assertEquals(206, $response->getStatus());
-        $this->assertEquals('st c', $response->getBodyAsString());
+            $this->response->getHeaders()
+         );
+
+        $this->assertEquals(206, $this->response->status);
+        $this->assertEquals('st c', stream_get_contents($this->response->body, 4));
 
     }
 
@@ -65,22 +46,29 @@ class ServerRangeTest extends \Sabre\DAVServerTest {
      */
     function testStartRange() {
 
-        $request = new HTTP\Request('GET', '/files/test.txt', ['Range' => 'bytes=2-']);
-        $response = $this->request($request);
+        $request = new HTTP\Request(
+            'GET',
+            '/test.txt',
+            ['Range' => 'bytes=2-']
+        );
+        $filename = SABRE_TEMPDIR . '/test.txt';
+
+        $this->server->httpRequest = $request;
+        $this->server->exec();
 
         $this->assertEquals([
             'X-Sabre-Version' => [Version::VERSION],
             'Content-Type'    => ['application/octet-stream'],
             'Content-Length'  => [11],
             'Content-Range'   => ['bytes 2-12/13'],
-            'ETag'            => ['"' . md5('Test contents') . '"'],
-            'Last-Modified'   => [$this->lastModified],
+            'Last-Modified'   => [HTTP\Util::toHTTPDate(new \DateTime('@' . filemtime($this->tempDir . '/test.txt')))],
+            'ETag'            => ['"' . sha1(fileinode($filename) . filesize($filename) . filemtime($filename)) . '"'],
             ],
-            $response->getHeaders()
-        );
+            $this->response->getHeaders()
+         );
 
-        $this->assertEquals(206, $response->getStatus());
-        $this->assertEquals('st contents', $response->getBodyAsString());
+        $this->assertEquals(206, $this->response->status);
+        $this->assertEquals('st contents', stream_get_contents($this->response->body, 11));
 
     }
 
@@ -89,22 +77,29 @@ class ServerRangeTest extends \Sabre\DAVServerTest {
      */
     function testEndRange() {
 
-        $request = new HTTP\Request('GET', '/files/test.txt', ['Range' => 'bytes=-8']);
-        $response = $this->request($request);
+        $request = new HTTP\Request(
+            'GET',
+            '/test.txt',
+            ['Range' => 'bytes=-8']
+        );
+        $filename = SABRE_TEMPDIR . '/test.txt';
+
+        $this->server->httpRequest = $request;
+        $this->server->exec();
 
         $this->assertEquals([
             'X-Sabre-Version' => [Version::VERSION],
             'Content-Type'    => ['application/octet-stream'],
             'Content-Length'  => [8],
             'Content-Range'   => ['bytes 5-12/13'],
-            'ETag'            => ['"' . md5('Test contents') . '"'],
-            'Last-Modified'   => [$this->lastModified],
+            'Last-Modified'   => [HTTP\Util::toHTTPDate(new \DateTime('@' . filemtime($this->tempDir . '/test.txt')))],
+            'ETag'            => ['"' . sha1(fileinode($filename) . filesize($filename) . filemtime($filename)) . '"'],
             ],
-            $response->getHeaders()
-        );
+            $this->response->getHeaders()
+         );
 
-        $this->assertEquals(206, $response->getStatus());
-        $this->assertEquals('contents', $response->getBodyAsString());
+        $this->assertEquals(206, $this->response->status);
+        $this->assertEquals('contents', stream_get_contents($this->response->body, 8));
 
     }
 
@@ -113,10 +108,16 @@ class ServerRangeTest extends \Sabre\DAVServerTest {
      */
     function testTooHighRange() {
 
-        $request = new HTTP\Request('GET', '/files/test.txt', ['Range' => 'bytes=100-200']);
-        $response = $this->request($request);
+        $request = new HTTP\Request(
+            'GET',
+            '/test.txt',
+            ['Range' => 'bytes=100-200']
+        );
 
-        $this->assertEquals(416, $response->getStatus());
+        $this->server->httpRequest = $request;
+        $this->server->exec();
+
+        $this->assertEquals(416, $this->response->status);
 
     }
 
@@ -125,31 +126,16 @@ class ServerRangeTest extends \Sabre\DAVServerTest {
      */
     function testCrazyRange() {
 
-        $request = new HTTP\Request('GET', '/files/test.txt', ['Range' => 'bytes=8-4']);
-        $response = $this->request($request);
-
-        $this->assertEquals(416, $response->getStatus());
-
-    }
-
-    function testNonSeekableStream() {
-
-        $request = new HTTP\Request('GET', '/files/no-seeking.txt', ['Range' => 'bytes=2-5']);
-        $response = $this->request($request);
-
-        $this->assertEquals(206, $response->getStatus(), $response);
-        $this->assertEquals([
-            'X-Sabre-Version' => [Version::VERSION],
-            'Content-Type'    => ['application/octet-stream'],
-            'Content-Length'  => [4],
-            'Content-Range'   => ['bytes 2-5/12'],
-            // 'ETag'            => ['"' . md5('Test contents') . '"'],
-            'Last-Modified' => [$this->lastModified],
-            ],
-            $response->getHeaders()
+        $request = new HTTP\Request(
+            'GET',
+            '/test.txt',
+            ['Range' => 'bytes=8-4']
         );
 
-        $this->assertEquals('st c', $response->getBodyAsString());
+        $this->server->httpRequest = $request;
+        $this->server->exec();
+
+        $this->assertEquals(416, $this->response->status);
 
     }
 
@@ -158,105 +144,138 @@ class ServerRangeTest extends \Sabre\DAVServerTest {
      */
     function testIfRangeEtag() {
 
-        $request = new HTTP\Request('GET', '/files/test.txt', [
-            'Range'    => 'bytes=2-5',
-            'If-Range' => '"' . md5('Test contents') . '"',
-        ]);
-        $response = $this->request($request);
+        $node = $this->server->tree->getNodeForPath('test.txt');
+
+        $request = new HTTP\Request(
+            'GET',
+            '/test.txt',
+            ['Range' => 'bytes=2-5']
+        );
+        $filename = SABRE_TEMPDIR . '/test.txt';
+
+        $this->server->httpRequest = $request;
+        $this->server->exec();
 
         $this->assertEquals([
             'X-Sabre-Version' => [Version::VERSION],
             'Content-Type'    => ['application/octet-stream'],
             'Content-Length'  => [4],
             'Content-Range'   => ['bytes 2-5/13'],
-            'ETag'            => ['"' . md5('Test contents') . '"'],
-            'Last-Modified'   => [$this->lastModified],
+            'Last-Modified'   => [HTTP\Util::toHTTPDate(new \DateTime('@' . filemtime($this->tempDir . '/test.txt')))],
+            'ETag'            => ['"' . sha1(fileinode($filename) . filesize($filename) . filemtime($filename)) . '"'],
             ],
-            $response->getHeaders()
-        );
+            $this->response->getHeaders()
+         );
 
-        $this->assertEquals(206, $response->getStatus());
-        $this->assertEquals('st c', $response->getBodyAsString());
+        $this->assertEquals(206, $this->response->status);
+        $this->assertEquals('st c', stream_get_contents($this->response->body, 4));
 
     }
 
     /**
-     * @depends testIfRangeEtag
+     * @depends testRange
      */
     function testIfRangeEtagIncorrect() {
 
-        $request = new HTTP\Request('GET', '/files/test.txt', [
-            'Range'    => 'bytes=2-5',
-            'If-Range' => '"foobar"',
-        ]);
-        $response = $this->request($request);
+        $node = $this->server->tree->getNodeForPath('test.txt');
+
+        $request = new HTTP\Request(
+            'GET',
+            '/test.txt',
+            [
+                'Range'    => 'bytes=2-5',
+                'If-Range' => $node->getEtag() . 'blabla'
+            ]
+        );
+        $filename = SABRE_TEMPDIR . '/test.txt';
+
+        $this->server->httpRequest = $request;
+        $this->server->exec();
 
         $this->assertEquals([
             'X-Sabre-Version' => [Version::VERSION],
             'Content-Type'    => ['application/octet-stream'],
             'Content-Length'  => [13],
-            'ETag'            => ['"' . md5('Test contents') . '"'],
-            'Last-Modified'   => [$this->lastModified],
+            'Last-Modified'   => [HTTP\Util::toHTTPDate(new \DateTime('@' . filemtime($this->tempDir . '/test.txt')))],
+            'ETag'            => ['"' . sha1(fileinode($filename) . filesize($filename) . filemtime($filename)) . '"'],
             ],
-            $response->getHeaders()
-        );
+            $this->response->getHeaders()
+         );
 
-        $this->assertEquals(200, $response->getStatus());
-        $this->assertEquals('Test contents', $response->getBodyAsString());
+        $this->assertEquals(200, $this->response->status);
+        $this->assertEquals('Test contents', stream_get_contents($this->response->body));
 
     }
 
     /**
-     * @depends testIfRangeEtag
+     * @depends testRange
      */
     function testIfRangeModificationDate() {
 
-        $request = new HTTP\Request('GET', '/files/test.txt', [
-            'Range'    => 'bytes=2-5',
-            'If-Range' => 'tomorrow',
-        ]);
-        $response = $this->request($request);
+        $node = $this->server->tree->getNodeForPath('test.txt');
+
+        $request = new HTTP\Request(
+            'GET',
+            '/test.txt',
+            [
+                'Range'    => 'bytes=2-5',
+                'If-Range' => 'tomorrow',
+            ]
+        );
+        $filename = SABRE_TEMPDIR . '/test.txt';
+
+        $this->server->httpRequest = ($request);
+        $this->server->exec();
 
         $this->assertEquals([
             'X-Sabre-Version' => [Version::VERSION],
             'Content-Type'    => ['application/octet-stream'],
             'Content-Length'  => [4],
             'Content-Range'   => ['bytes 2-5/13'],
-            'ETag'            => ['"' . md5('Test contents') . '"'],
-            'Last-Modified'   => [$this->lastModified],
+            'Last-Modified'   => [HTTP\Util::toHTTPDate(new \DateTime('@' . filemtime($this->tempDir . '/test.txt')))],
+            'ETag'            => ['"' . sha1(fileinode($filename) . filesize($filename) . filemtime($filename)) . '"'],
             ],
-            $response->getHeaders()
-        );
+            $this->response->getHeaders()
+         );
 
-        $this->assertEquals(206, $response->getStatus());
-        $this->assertEquals('st c', $response->getBodyAsString());
+        $this->assertEquals(206, $this->response->status);
+        $this->assertEquals('st c', stream_get_contents($this->response->body, 4));
 
     }
 
     /**
-     * @depends testIfRangeModificationDate
+     * @depends testRange
      */
     function testIfRangeModificationDateModified() {
 
-        $request = new HTTP\Request('GET', '/files/test.txt', [
-            'Range'    => 'bytes=2-5',
-            'If-Range' => '-2 years',
-        ]);
-        $response = $this->request($request);
+        $node = $this->server->tree->getNodeForPath('test.txt');
+
+        $request = new HTTP\Request(
+            'GET',
+            '/test.txt',
+            [
+                'Range'    => 'bytes=2-5',
+                'If-Range' => '-2 years',
+            ]
+        );
+
+        $filename = SABRE_TEMPDIR . '/test.txt';
+
+        $this->server->httpRequest = $request;
+        $this->server->exec();
 
         $this->assertEquals([
             'X-Sabre-Version' => [Version::VERSION],
             'Content-Type'    => ['application/octet-stream'],
             'Content-Length'  => [13],
-            'ETag'            => ['"' . md5('Test contents') . '"'],
-            'Last-Modified'   => [$this->lastModified],
+            'Last-Modified'   => [HTTP\Util::toHTTPDate(new \DateTime('@' . filemtime($this->tempDir . '/test.txt')))],
+            'ETag'            => ['"' . sha1(fileinode($filename) . filesize($filename) . filemtime($filename)) . '"'],
             ],
-            $response->getHeaders()
-        );
+            $this->response->getHeaders()
+         );
 
-        $this->assertEquals(200, $response->getStatus());
-        $this->assertEquals('Test contents', $response->getBodyAsString());
+        $this->assertEquals(200, $this->response->status);
+        $this->assertEquals('Test contents', stream_get_contents($this->response->body));
 
     }
-
 }

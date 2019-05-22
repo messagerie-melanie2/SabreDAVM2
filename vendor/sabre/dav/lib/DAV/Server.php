@@ -2,10 +2,6 @@
 
 namespace Sabre\DAV;
 
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use Sabre\Event\EventEmitter;
 use Sabre\HTTP;
 use Sabre\HTTP\RequestInterface;
@@ -20,9 +16,7 @@ use Sabre\Uri;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class Server extends EventEmitter implements LoggerAwareInterface {
-
-    use LoggerAwareTrait;
+class Server extends EventEmitter {
 
     /**
      * Infinity is used for some request supporting the HTTP Depth header and indicates that the operation should traverse the entire tree
@@ -37,7 +31,7 @@ class Server extends EventEmitter implements LoggerAwareInterface {
     /**
      * The tree object
      *
-     * @var Tree
+     * @var Sabre\DAV\Tree
      */
     public $tree;
 
@@ -51,21 +45,21 @@ class Server extends EventEmitter implements LoggerAwareInterface {
     /**
      * httpResponse
      *
-     * @var HTTP\Response
+     * @var Sabre\HTTP\Response
      */
     public $httpResponse;
 
     /**
      * httpRequest
      *
-     * @var HTTP\Request
+     * @var Sabre\HTTP\Request
      */
     public $httpRequest;
 
     /**
      * PHP HTTP Sapi
      *
-     * @var HTTP\Sapi
+     * @var Sabre\HTTP\Sapi
      */
     public $sapi;
 
@@ -437,25 +431,11 @@ class Server extends EventEmitter implements LoggerAwareInterface {
     }
 
     /**
-     * Returns the PSR-3 logger object.
-     *
-     * @return LoggerInterface
-     */
-    function getLogger() {
-
-        if (!$this->logger) {
-            $this->logger = new NullLogger();
-        }
-        return $this->logger;
-
-    }
-
-    /**
      * Handles a http request, and execute a method based on its name
      *
      * @param RequestInterface $request
      * @param ResponseInterface $response
-     * @param bool $sendResponse Whether to send the HTTP response to the DAV client.
+     * @param $sendResponse Whether to send the HTTP response to the DAV client.
      * @return void
      */
     function invokeMethod(RequestInterface $request, ResponseInterface $response, $sendResponse = true) {
@@ -478,22 +458,14 @@ class Server extends EventEmitter implements LoggerAwareInterface {
 
         if ($this->emit('method:' . $method, [$request, $response])) {
             if ($this->emit('method', [$request, $response])) {
-                $exMessage = "There was no plugin in the system that was willing to handle this " . $method . " method.";
-                if ($method === "GET") {
-                    $exMessage .= " Enable the Browser plugin to get a better result here.";
-                }
-
                 // Unsupported method
-                throw new Exception\NotImplemented($exMessage);
+                throw new Exception\NotImplemented('There was no handler found for this "' . $method . '" method');
             }
         }
 
         if (!$this->emit('afterMethod:' . $method, [$request, $response])) return;
         if (!$this->emit('afterMethod', [$request, $response])) return;
 
-        if ($response->getStatus() === null) {
-            throw new Exception('No subsystem set a valid HTTP status code. Something must have interrupted the request without providing further detail.');
-        }
         if ($sendResponse) {
             $this->sapi->sendResponse($response);
             $this->emit('afterResponse', [$request, $response]);
@@ -681,18 +653,18 @@ class Server extends EventEmitter implements LoggerAwareInterface {
             // can be true or false
             'respond-async' => false,
             // Could be set to 'representation' or 'minimal'.
-            'return' => null,
+            'return'        => null,
             // Used as a timeout, is usually a number.
-            'wait' => null,
+            'wait'          => null,
             // can be 'strict' or 'lenient'.
-            'handling' => false,
+            'handling'      => false,
         ];
 
         if ($prefer = $this->httpRequest->getHeader('Prefer')) {
 
             $result = array_merge(
                 $result,
-                HTTP\parsePrefer($prefer)
+                \Sabre\HTTP\parsePrefer($prefer)
             );
 
         } elseif ($this->httpRequest->getHeader('Brief') == 't') {
@@ -784,26 +756,17 @@ class Server extends EventEmitter implements LoggerAwareInterface {
     /**
      * Returns a list of properties for a path
      *
-     * This is a simplified version getPropertiesForPath. If you aren't
-     * interested in status codes, but you just want to have a flat list of
-     * properties, use this method.
-     *
-     * Please note though that any problems related to retrieving properties,
-     * such as permission issues will just result in an empty array being
-     * returned.
+     * This is a simplified version getPropertiesForPath.
+     * if you aren't interested in status codes, but you just
+     * want to have a flat list of properties. Use this method.
      *
      * @param string $path
      * @param array $propertyNames
-     * @return array
      */
     function getProperties($path, $propertyNames) {
 
         $result = $this->getPropertiesForPath($path, $propertyNames, 0);
-        if (isset($result[0][200])) {
-            return $result[0][200];
-        } else {
-            return [];
-        }
+        return $result[0][200];
 
     }
 
@@ -878,14 +841,12 @@ class Server extends EventEmitter implements LoggerAwareInterface {
     /**
      * Small helper to support PROPFIND with DEPTH_INFINITY.
      *
+     * @param array[] $propFindRequests
      * @param PropFind $propFind
-     * @param array $yieldFirst
-     * @return \Iterator
+     * @return void
      */
-    private function generatePathNodes(PropFind $propFind, array $yieldFirst = null) {
-        if ($yieldFirst !== null) {
-            yield $yieldFirst;
-        }
+    private function addPathNodesRecursively(&$propFindRequests, PropFind $propFind) {
+
         $newDepth = $propFind->getDepth();
         $path = $propFind->getPath();
 
@@ -903,15 +864,13 @@ class Server extends EventEmitter implements LoggerAwareInterface {
             }
             $subPropFind->setPath($subPath);
 
-            yield [
+            $propFindRequests[] = [
                 $subPropFind,
                 $childNode
             ];
 
             if (($newDepth === self::DEPTH_INFINITY || $newDepth >= 1) && $childNode instanceof ICollection) {
-                foreach ($this->generatePathNodes($subPropFind) as $subItem) {
-                    yield $subItem;
-                }
+                $this->addPathNodesRecursively($propFindRequests, $subPropFind);
             }
 
         }
@@ -930,30 +889,8 @@ class Server extends EventEmitter implements LoggerAwareInterface {
      * @param array $propertyNames
      * @param int $depth
      * @return array
-     *
-     * @deprecated Use getPropertiesIteratorForPath() instead (as it's more memory efficient)
-     * @see getPropertiesIteratorForPath()
      */
     function getPropertiesForPath($path, $propertyNames = [], $depth = 0) {
-
-        return iterator_to_array($this->getPropertiesIteratorForPath($path, $propertyNames, $depth));
-
-    }
-    /**
-     * Returns a list of properties for a given path
-     *
-     * The path that should be supplied should have the baseUrl stripped out
-     * The list of properties should be supplied in Clark notation. If the list is empty
-     * 'allprops' is assumed.
-     *
-     * If a depth of 1 is requested child elements will also be returned.
-     *
-     * @param string $path
-     * @param array $propertyNames
-     * @param int $depth
-     * @return \Iterator
-     */
-    function getPropertiesIteratorForPath($path, $propertyNames = [], $depth = 0) {
 
         // The only two options for the depth of a propfind is 0 or 1 - as long as depth infinity is not enabled
         if (!$this->enablePropfindDepthInfinity && $depth != 0) $depth = 1;
@@ -971,8 +908,10 @@ class Server extends EventEmitter implements LoggerAwareInterface {
         ]];
 
         if (($depth > 0 || $depth === self::DEPTH_INFINITY) && $parentNode instanceof ICollection) {
-            $propFindRequests = $this->generatePathNodes(clone $propFind, current($propFindRequests));
+            $this->addPathNodesRecursively($propFindRequests, $propFind);
         }
+
+        $returnPropertyList = [];
 
         foreach ($propFindRequests as $propFindRequest) {
 
@@ -990,10 +929,12 @@ class Server extends EventEmitter implements LoggerAwareInterface {
                 if (in_array('{DAV:}collection', $resourceType) || in_array('{DAV:}principal', $resourceType)) {
                     $result['href'] .= '/';
                 }
-                yield $result;
+                $returnPropertyList[] = $result;
             }
 
         }
+
+        return $returnPropertyList;
 
     }
 
@@ -1220,20 +1161,9 @@ class Server extends EventEmitter implements LoggerAwareInterface {
 
         if (!$success) {
             $result = $mkCol->getResult();
-
-            $formattedResult = [
-                'href' => $uri,
-            ];
-
-            foreach ($result as $propertyName => $status) {
-
-                if (!isset($formattedResult[$status])) {
-                    $formattedResult[$status] = [];
-                }
-                $formattedResult[$status][$propertyName] = null;
-
-            }
-            return $formattedResult;
+            // generateMkCol needs the href key to exist.
+            $result['href'] = $uri;
+            return $result;
         }
 
         $this->tree->markDirty($parentUri);
@@ -1453,7 +1383,7 @@ class Server extends EventEmitter implements LoggerAwareInterface {
         // Plugins are responsible for validating all the tokens.
         // If a plugin deemed a token 'valid', it will set 'validToken' to
         // true.
-        $this->emit('validateTokens', [$request, &$ifConditions]);
+        $this->emit('validateTokens', [ $request, &$ifConditions ]);
 
         // Now we're going to analyze the result.
 
@@ -1473,7 +1403,7 @@ class Server extends EventEmitter implements LoggerAwareInterface {
                 if (!$token['etag']) {
                     $etagValid = true;
                 }
-                // Checking the ETag, only if the token was already deemed
+                // Checking the ETag, only if the token was already deamed
                 // valid and there is one.
                 if ($token['etag'] && $tokenValid) {
 
@@ -1649,18 +1579,13 @@ class Server extends EventEmitter implements LoggerAwareInterface {
      *
      * If 'strip404s' is set to true, all 404 responses will be removed.
      *
-     * @param array|\Traversable $fileProperties The list with nodes
-     * @param bool $strip404s
+     * @param array $fileProperties The list with nodes
+     * @param bool strip404s
      * @return string
      */
-    function generateMultiStatus($fileProperties, $strip404s = false) {
+    function generateMultiStatus(array $fileProperties, $strip404s = false) {
 
-        $w = $this->xml->getWriter();
-        $w->openMemory();
-        $w->contextUri = $this->baseUri;
-        $w->startDocument();
-
-        $w->startElement('{DAV:}multistatus');
+        $xml = [];
 
         foreach ($fileProperties as $entry) {
 
@@ -1673,14 +1598,13 @@ class Server extends EventEmitter implements LoggerAwareInterface {
                 ltrim($href, '/'),
                 $entry
             );
-            $w->write([
+            $xml[] = [
                 'name'  => '{DAV:}response',
                 'value' => $response
-            ]);
-        }
-        $w->endElement();
+            ];
 
-        return $w->outputMemory();
+        }
+        return $this->xml->write('{DAV:}multistatus', $xml, $this->baseUri);
 
     }
 

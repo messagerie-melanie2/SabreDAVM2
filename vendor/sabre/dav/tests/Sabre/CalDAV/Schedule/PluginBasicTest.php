@@ -20,11 +20,7 @@ class PluginBasicTest extends \Sabre\DAVServerTest {
     function testOptions() {
 
         $plugin = new Plugin();
-        $expected = [
-            'calendar-auto-schedule',
-            'calendar-availability',
-        ];
-        $this->assertEquals($expected, $plugin->getFeatures());
+        $this->assertEquals(['calendar-auto-schedule'], $plugin->getFeatures());
 
     }
 

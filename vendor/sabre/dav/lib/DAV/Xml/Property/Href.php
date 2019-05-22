@@ -4,7 +4,6 @@ namespace Sabre\DAV\Xml\Property;
 
 use Sabre\DAV\Browser\HtmlOutput;
 use Sabre\DAV\Browser\HtmlOutputHelper;
-use Sabre\Uri;
 use Sabre\Xml\Element;
 use Sabre\Xml\Reader;
 use Sabre\Xml\Writer;
@@ -33,6 +32,13 @@ class Href implements Element, HtmlOutput {
     protected $hrefs;
 
     /**
+     * Automatically prefix the url with the server base directory
+     *
+     * @var bool
+     */
+    protected $autoPrefix = true;
+
+    /**
      * Constructor
      *
      * You must either pass a string for a single href, or an array of hrefs.
@@ -40,14 +46,17 @@ class Href implements Element, HtmlOutput {
      * If auto-prefix is set to false, the hrefs will be treated as absolute
      * and not relative to the servers base uri.
      *
-     * @param string|string[] $hrefs
+     * @param string|string[] $href
+     * @param bool $autoPrefix
      */
-    function __construct($hrefs) {
+    function __construct($hrefs, $autoPrefix = true) {
 
         if (is_string($hrefs)) {
             $hrefs = [$hrefs];
         }
         $this->hrefs = $hrefs;
+        $this->autoPrefix = $autoPrefix;
+
 
     }
 
@@ -74,12 +83,12 @@ class Href implements Element, HtmlOutput {
     }
 
     /**
-     * The xmlSerialize method is called during xml writing.
+     * The xmlSerialize metod is called during xml writing.
      *
      * Use the $writer argument to write its own xml serialization.
      *
      * An important note: do _not_ create a parent element. Any element
-     * implementing XmlSerializable should only ever write what's considered
+     * implementing XmlSerializble should only ever write what's considered
      * its 'inner xml'.
      *
      * The parent of the current element is responsible for writing a
@@ -95,7 +104,9 @@ class Href implements Element, HtmlOutput {
     function xmlSerialize(Writer $writer) {
 
         foreach ($this->getHrefs() as $href) {
-            $href = Uri\resolve($writer->contextUri, $href);
+            if ($this->autoPrefix) {
+                $href = $writer->contextUri . \Sabre\HTTP\encodePath($href);
+            }
             $writer->writeElement('{DAV:}href', $href);
         }
 
@@ -128,7 +139,7 @@ class Href implements Element, HtmlOutput {
     /**
      * The deserialize method is called during xml parsing.
      *
-     * This method is called statically, this is because in theory this method
+     * This method is called statictly, this is because in theory this method
      * may be used as a type of constructor, or factory method.
      *
      * Often you want to return an instance of the current class, but you are

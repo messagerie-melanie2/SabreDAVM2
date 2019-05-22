@@ -2,6 +2,8 @@
 
 namespace Sabre\DAV\FSExt;
 
+use Sabre\DAV;
+
 require_once 'Sabre/TestUtil.php';
 
 class FileTest extends \PHPUnit_Framework_TestCase {
@@ -24,12 +26,12 @@ class FileTest extends \PHPUnit_Framework_TestCase {
         $file = new File($filename);
         $result = $file->put('New contents');
 
-        $this->assertEquals('New contents', file_get_contents(SABRE_TEMPDIR . '/file.txt'));
+        $this->assertEquals('New contents',file_get_contents(SABRE_TEMPDIR . '/file.txt'));
         $this->assertEquals(
             '"' .
             sha1(
                 fileinode($filename) .
-                filesize($filename) .
+                filesize($filename ) .
                 filemtime($filename)
             ) . '"',
             $result
@@ -43,13 +45,13 @@ class FileTest extends \PHPUnit_Framework_TestCase {
         $file->put('0000000');
         $file->patch('111', 2, 3);
 
-        $this->assertEquals('0001110', file_get_contents(SABRE_TEMPDIR . '/file.txt'));
+        $this->assertEquals('0001110',file_get_contents(SABRE_TEMPDIR . '/file.txt'));
 
     }
 
     function testRangeStream() {
 
-        $stream = fopen('php://memory', 'r+');
+        $stream = fopen('php://memory','r+');
         fwrite($stream, "222");
         rewind($stream);
 
@@ -57,7 +59,7 @@ class FileTest extends \PHPUnit_Framework_TestCase {
         $file->put('0000000');
         $file->patch($stream, 2, 3);
 
-        $this->assertEquals('0002220', file_get_contents(SABRE_TEMPDIR . '/file.txt'));
+        $this->assertEquals('0002220',file_get_contents(SABRE_TEMPDIR . '/file.txt'));
 
     }
 
@@ -65,7 +67,7 @@ class FileTest extends \PHPUnit_Framework_TestCase {
     function testGet() {
 
         $file = new File(SABRE_TEMPDIR . '/file.txt');
-        $this->assertEquals('Contents', stream_get_contents($file->get()));
+        $this->assertEquals('Contents',stream_get_contents($file->get()));
 
     }
 
@@ -86,7 +88,7 @@ class FileTest extends \PHPUnit_Framework_TestCase {
             '"' .
             sha1(
                 fileinode($filename) .
-                filesize($filename) .
+                filesize($filename ) .
                 filemtime($filename)
             ) . '"',
             $file->getETag()
@@ -103,7 +105,7 @@ class FileTest extends \PHPUnit_Framework_TestCase {
     function testGetSize() {
 
         $file = new File(SABRE_TEMPDIR . '/file.txt');
-        $this->assertEquals(8, $file->getSize());
+        $this->assertEquals(8,$file->getSize());
 
     }
 

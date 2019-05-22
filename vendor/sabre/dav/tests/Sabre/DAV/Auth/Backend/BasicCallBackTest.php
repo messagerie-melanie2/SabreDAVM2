@@ -2,8 +2,10 @@
 
 namespace Sabre\DAV\Auth\Backend;
 
-use Sabre\HTTP\Response;
-use Sabre\HTTP\Sapi;
+use
+    Sabre\DAV\Server,
+    Sabre\HTTP\Sapi,
+    Sabre\HTTP\Response;
 
 class BasicCallBackTest extends \PHPUnit_Framework_TestCase {
 
@@ -29,7 +31,7 @@ class BasicCallBackTest extends \PHPUnit_Framework_TestCase {
             $backend->check($request, $response)
         );
 
-        $this->assertEquals(['foo', 'bar'], $args);
+        $this->assertEquals(['foo','bar'], $args);
 
     }
 

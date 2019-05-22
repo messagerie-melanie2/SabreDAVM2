@@ -2,8 +2,8 @@
 
 namespace Sabre\CalDAV\Principal;
 
-use Sabre\DAV;
 use Sabre\DAVACL;
+use Sabre\DAV;
 
 /**
  * ProxyRead principal
@@ -84,8 +84,8 @@ class ProxyRead implements IProxyRead {
     /**
      * Renames the node
      *
-     * @param string $name The new name
      * @throws DAV\Exception\Forbidden
+     * @param string $name The new name
      * @return void
      */
     function setName($name) {

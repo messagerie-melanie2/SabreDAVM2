@@ -2,7 +2,9 @@
 
 namespace Sabre\CalDAV;
 
-use Sabre\DAV\MkCol;
+use
+    Sabre\DAV\MkCol,
+    Sabre\DAVACL;
 
 class CalendarHomeSubscriptionsTest extends \PHPUnit_Framework_TestCase {
 
@@ -11,7 +13,7 @@ class CalendarHomeSubscriptionsTest extends \PHPUnit_Framework_TestCase {
     function getInstance() {
 
         $props = [
-            '{DAV:}displayname'                     => 'baz',
+            '{DAV:}displayname' => 'baz',
             '{http://calendarserver.org/ns/}source' => new \Sabre\DAV\Xml\Property\Href('http://example.org/test.ics'),
         ];
         $principal = [
@@ -36,7 +38,7 @@ class CalendarHomeSubscriptionsTest extends \PHPUnit_Framework_TestCase {
         $instance = $this->getInstance();
         $children = $instance->getChildren();
         $this->assertEquals(1, count($children));
-        foreach ($children as $child) {
+        foreach($children as $child) {
             if ($child instanceof Subscriptions\Subscription) {
                 return;
             }
@@ -51,7 +53,7 @@ class CalendarHomeSubscriptionsTest extends \PHPUnit_Framework_TestCase {
         $rt = ['{DAV:}collection', '{http://calendarserver.org/ns/}subscribed'];
 
         $props = [
-            '{DAV:}displayname'                     => 'baz',
+            '{DAV:}displayname' => 'baz',
             '{http://calendarserver.org/ns/}source' => new \Sabre\DAV\Xml\Property\Href('http://example.org/test2.ics'),
         ];
         $instance->createExtendedCollection('sub2', new MkCol($rt, $props));
@@ -75,7 +77,7 @@ class CalendarHomeSubscriptionsTest extends \PHPUnit_Framework_TestCase {
         $rt = ['{DAV:}collection', '{http://calendarserver.org/ns/}subscribed'];
 
         $props = [
-            '{DAV:}displayname'                     => 'baz',
+            '{DAV:}displayname' => 'baz',
             '{http://calendarserver.org/ns/}source' => new \Sabre\DAV\Xml\Property\Href('http://example.org/test2.ics'),
         ];
         $uC->createExtendedCollection('sub2', new MkCol($rt, $props));

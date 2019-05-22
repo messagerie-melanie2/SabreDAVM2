@@ -3,6 +3,7 @@
 namespace Sabre\CalDAV;
 
 use Sabre\DAV;
+use Sabre\DAVACL;
 use Sabre\HTTP;
 
 require_once 'Sabre/CalDAV/Backend/Mock.php';
@@ -11,11 +12,11 @@ require_once 'Sabre/HTTP/ResponseMock.php';
 class FreeBusyReportTest extends \PHPUnit_Framework_TestCase {
 
     /**
-     * @var Plugin
+     * @var Sabre\CalDAV\Plugin
      */
     protected $plugin;
     /**
-     * @var DAV\Server
+     * @var Sabre\DAV\Server
      */
     protected $server;
 
@@ -30,8 +31,8 @@ END:VEVENT
 END:VCALENDAR
 ics;
 
-        $obj2 = fopen('php://memory', 'r+');
-        fwrite($obj2, <<<ics
+        $obj2 = fopen('php://memory','r+');
+        fwrite($obj2,<<<ics
 BEGIN:VCALENDAR
 BEGIN:VEVENT
 DTSTART:20121005T120000Z
@@ -54,18 +55,18 @@ ics;
         $calendarData = [
             1 => [
                 'obj1' => [
-                    'calendarid'   => 1,
-                    'uri'          => 'event1.ics',
+                    'calendarid' => 1,
+                    'uri' => 'event1.ics',
                     'calendardata' => $obj1,
                 ],
                 'obj2' => [
-                    'calendarid'   => 1,
-                    'uri'          => 'event2.ics',
+                    'calendarid' => 1,
+                    'uri' => 'event2.ics',
                     'calendardata' => $obj2
                 ],
                 'obj3' => [
-                    'calendarid'   => 1,
-                    'uri'          => 'event3.ics',
+                    'calendarid' => 1,
+                    'uri' => 'event3.ics',
                     'calendardata' => $obj3
                 ]
             ],
@@ -75,9 +76,9 @@ ics;
         $caldavBackend = new Backend\Mock([], $calendarData);
 
         $calendar = new Calendar($caldavBackend, [
-            'id'                                           => 1,
-            'uri'                                          => 'calendar',
-            'principaluri'                                 => 'principals/user1',
+            'id' => 1,
+            'uri' => 'calendar',
+            'principaluri' => 'principals/user1',
             '{' . Plugin::NS_CALDAV . '}calendar-timezone' => "BEGIN:VCALENDAR\r\nBEGIN:VTIMEZONE\r\nTZID:Europe/Berlin\r\nEND:VTIMEZONE\r\nEND:VCALENDAR",
         ]);
 
@@ -104,13 +105,13 @@ ics;
 XML;
 
         $report = $this->server->xml->parse($reportXML, null, $rootElem);
-        $this->plugin->report($rootElem, $report, null);
+        $this->plugin->report($rootElem, $report);
 
         $this->assertEquals(200, $this->server->httpResponse->status);
         $this->assertEquals('text/calendar', $this->server->httpResponse->getHeader('Content-Type'));
-        $this->assertTrue(strpos($this->server->httpResponse->body, 'BEGIN:VFREEBUSY') !== false);
-        $this->assertTrue(strpos($this->server->httpResponse->body, '20111005T120000Z/20111005T130000Z') !== false);
-        $this->assertTrue(strpos($this->server->httpResponse->body, '20111006T100000Z/20111006T110000Z') !== false);
+        $this->assertTrue(strpos($this->server->httpResponse->body, 'BEGIN:VFREEBUSY')!==false);
+        $this->assertTrue(strpos($this->server->httpResponse->body, '20111005T120000Z/20111005T130000Z')!==false);
+        $this->assertTrue(strpos($this->server->httpResponse->body, '20111006T100000Z/20111006T110000Z')!==false);
 
     }
 
@@ -126,6 +127,7 @@ XML;
 XML;
 
         $report = $this->server->xml->parse($reportXML, null, $rootElem);
+        $this->plugin->report($rootElem, $report);
 
     }
 
@@ -134,9 +136,9 @@ XML;
      */
     function testFreeBusyReportWrongNode() {
 
-        $request = HTTP\Sapi::createFromServerArray([
+        $request = HTTP\Sapi::createFromServerArray(array(
             'REQUEST_URI' => '/',
-        ]);
+        ));
         $this->server->httpRequest = $request;
 
         $reportXML = <<<XML
@@ -147,7 +149,7 @@ XML;
 XML;
 
         $report = $this->server->xml->parse($reportXML, null, $rootElem);
-        $this->plugin->report($rootElem, $report, null);
+        $this->plugin->report($rootElem, $report);
 
     }
 
@@ -168,7 +170,7 @@ XML;
 XML;
 
         $report = $this->server->xml->parse($reportXML, null, $rootElem);
-        $this->plugin->report($rootElem, $report, null);
+        $this->plugin->report($rootElem, $report);
 
     }
 }

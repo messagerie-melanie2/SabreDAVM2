@@ -30,7 +30,6 @@ class Collection extends DAV\Collection {
      *
      * @param string $name
      * @param array $children
-     * @param Collection $parent
      * @return void
      */
     function __construct($name, array $children = [], Collection $parent = null) {
@@ -118,17 +117,6 @@ class Collection extends DAV\Collection {
     function getChildren() {
 
         return $this->children;
-
-    }
-
-    /**
-     * Adds an already existing node to this collection.
-     *
-     * @param \Sabre\DAV\INode $node
-     */
-    function addNode(\Sabre\DAV\INode $node) {
-
-        $this->children[] = $node;
 
     }
 

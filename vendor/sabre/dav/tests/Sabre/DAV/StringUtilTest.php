@@ -5,13 +5,6 @@ namespace Sabre\DAV;
 class StringUtilTest extends \PHPUnit_Framework_TestCase {
 
     /**
-     * @param string $haystack
-     * @param string $needle
-     * @param string $collation
-     * @param string $matchType
-     * @param string $result
-     * @throws Exception\BadRequest
-     *
      * @dataProvider dataset
      */
     function testTextMatch($haystack, $needle, $collation, $matchType, $result) {
@@ -22,61 +15,61 @@ class StringUtilTest extends \PHPUnit_Framework_TestCase {
 
     function dataset() {
 
-        return [
-            ['FOOBAR', 'FOO',    'i;octet', 'contains', true],
-            ['FOOBAR', 'foo',    'i;octet', 'contains', false],
-            ['FÖÖBAR', 'FÖÖ',    'i;octet', 'contains', true],
-            ['FÖÖBAR', 'föö',    'i;octet', 'contains', false],
-            ['FOOBAR', 'FOOBAR', 'i;octet', 'equals', true],
-            ['FOOBAR', 'fooBAR', 'i;octet', 'equals', false],
-            ['FOOBAR', 'FOO',    'i;octet', 'starts-with', true],
-            ['FOOBAR', 'foo',    'i;octet', 'starts-with', false],
-            ['FOOBAR', 'BAR',    'i;octet', 'starts-with', false],
-            ['FOOBAR', 'bar',    'i;octet', 'starts-with', false],
-            ['FOOBAR', 'FOO',    'i;octet', 'ends-with', false],
-            ['FOOBAR', 'foo',    'i;octet', 'ends-with', false],
-            ['FOOBAR', 'BAR',    'i;octet', 'ends-with', true],
-            ['FOOBAR', 'bar',    'i;octet', 'ends-with', false],
+        return array(
+            array('FOOBAR', 'FOO',    'i;octet', 'contains', true),
+            array('FOOBAR', 'foo',    'i;octet', 'contains', false),
+            array('FÖÖBAR', 'FÖÖ',    'i;octet', 'contains', true),
+            array('FÖÖBAR', 'föö',    'i;octet', 'contains', false),
+            array('FOOBAR', 'FOOBAR', 'i;octet', 'equals', true),
+            array('FOOBAR', 'fooBAR', 'i;octet', 'equals', false),
+            array('FOOBAR', 'FOO',    'i;octet', 'starts-with', true),
+            array('FOOBAR', 'foo',    'i;octet', 'starts-with', false),
+            array('FOOBAR', 'BAR',    'i;octet', 'starts-with', false),
+            array('FOOBAR', 'bar',    'i;octet', 'starts-with', false),
+            array('FOOBAR', 'FOO',    'i;octet', 'ends-with', false),
+            array('FOOBAR', 'foo',    'i;octet', 'ends-with', false),
+            array('FOOBAR', 'BAR',    'i;octet', 'ends-with', true),
+            array('FOOBAR', 'bar',    'i;octet', 'ends-with', false),
 
-            ['FOOBAR', 'FOO',    'i;ascii-casemap', 'contains', true],
-            ['FOOBAR', 'foo',    'i;ascii-casemap', 'contains', true],
-            ['FÖÖBAR', 'FÖÖ',    'i;ascii-casemap', 'contains', true],
-            ['FÖÖBAR', 'föö',    'i;ascii-casemap', 'contains', false],
-            ['FOOBAR', 'FOOBAR', 'i;ascii-casemap', 'equals', true],
-            ['FOOBAR', 'fooBAR', 'i;ascii-casemap', 'equals', true],
-            ['FOOBAR', 'FOO',    'i;ascii-casemap', 'starts-with', true],
-            ['FOOBAR', 'foo',    'i;ascii-casemap', 'starts-with', true],
-            ['FOOBAR', 'BAR',    'i;ascii-casemap', 'starts-with', false],
-            ['FOOBAR', 'bar',    'i;ascii-casemap', 'starts-with', false],
-            ['FOOBAR', 'FOO',    'i;ascii-casemap', 'ends-with', false],
-            ['FOOBAR', 'foo',    'i;ascii-casemap', 'ends-with', false],
-            ['FOOBAR', 'BAR',    'i;ascii-casemap', 'ends-with', true],
-            ['FOOBAR', 'bar',    'i;ascii-casemap', 'ends-with', true],
+            array('FOOBAR', 'FOO',    'i;ascii-casemap', 'contains', true),
+            array('FOOBAR', 'foo',    'i;ascii-casemap', 'contains', true),
+            array('FÖÖBAR', 'FÖÖ',    'i;ascii-casemap', 'contains', true),
+            array('FÖÖBAR', 'föö',    'i;ascii-casemap', 'contains', false),
+            array('FOOBAR', 'FOOBAR', 'i;ascii-casemap', 'equals', true),
+            array('FOOBAR', 'fooBAR', 'i;ascii-casemap', 'equals', true),
+            array('FOOBAR', 'FOO',    'i;ascii-casemap', 'starts-with', true),
+            array('FOOBAR', 'foo',    'i;ascii-casemap', 'starts-with', true),
+            array('FOOBAR', 'BAR',    'i;ascii-casemap', 'starts-with', false),
+            array('FOOBAR', 'bar',    'i;ascii-casemap', 'starts-with', false),
+            array('FOOBAR', 'FOO',    'i;ascii-casemap', 'ends-with', false),
+            array('FOOBAR', 'foo',    'i;ascii-casemap', 'ends-with', false),
+            array('FOOBAR', 'BAR',    'i;ascii-casemap', 'ends-with', true),
+            array('FOOBAR', 'bar',    'i;ascii-casemap', 'ends-with', true),
 
-            ['FOOBAR', 'FOO',    'i;unicode-casemap', 'contains', true],
-            ['FOOBAR', 'foo',    'i;unicode-casemap', 'contains', true],
-            ['FÖÖBAR', 'FÖÖ',    'i;unicode-casemap', 'contains', true],
-            ['FÖÖBAR', 'föö',    'i;unicode-casemap', 'contains', true],
-            ['FOOBAR', 'FOOBAR', 'i;unicode-casemap', 'equals', true],
-            ['FOOBAR', 'fooBAR', 'i;unicode-casemap', 'equals', true],
-            ['FOOBAR', 'FOO',    'i;unicode-casemap', 'starts-with', true],
-            ['FOOBAR', 'foo',    'i;unicode-casemap', 'starts-with', true],
-            ['FOOBAR', 'BAR',    'i;unicode-casemap', 'starts-with', false],
-            ['FOOBAR', 'bar',    'i;unicode-casemap', 'starts-with', false],
-            ['FOOBAR', 'FOO',    'i;unicode-casemap', 'ends-with', false],
-            ['FOOBAR', 'foo',    'i;unicode-casemap', 'ends-with', false],
-            ['FOOBAR', 'BAR',    'i;unicode-casemap', 'ends-with', true],
-            ['FOOBAR', 'bar',    'i;unicode-casemap', 'ends-with', true],
-        ];
+            array('FOOBAR', 'FOO',    'i;unicode-casemap', 'contains', true),
+            array('FOOBAR', 'foo',    'i;unicode-casemap', 'contains', true),
+            array('FÖÖBAR', 'FÖÖ',    'i;unicode-casemap', 'contains', true),
+            array('FÖÖBAR', 'föö',    'i;unicode-casemap', 'contains', true),
+            array('FOOBAR', 'FOOBAR', 'i;unicode-casemap', 'equals', true),
+            array('FOOBAR', 'fooBAR', 'i;unicode-casemap', 'equals', true),
+            array('FOOBAR', 'FOO',    'i;unicode-casemap', 'starts-with', true),
+            array('FOOBAR', 'foo',    'i;unicode-casemap', 'starts-with', true),
+            array('FOOBAR', 'BAR',    'i;unicode-casemap', 'starts-with', false),
+            array('FOOBAR', 'bar',    'i;unicode-casemap', 'starts-with', false),
+            array('FOOBAR', 'FOO',    'i;unicode-casemap', 'ends-with', false),
+            array('FOOBAR', 'foo',    'i;unicode-casemap', 'ends-with', false),
+            array('FOOBAR', 'BAR',    'i;unicode-casemap', 'ends-with', true),
+            array('FOOBAR', 'bar',    'i;unicode-casemap', 'ends-with', true),
+        );
 
     }
 
     /**
      * @expectedException Sabre\DAV\Exception\BadRequest
      */
-    function testBadCollation() {
+    public function testBadCollation() {
 
-        StringUtil::textMatch('foobar', 'foo', 'blabla', 'contains');
+        StringUtil::textMatch('foobar','foo','blabla','contains');
 
     }
 
@@ -84,13 +77,13 @@ class StringUtilTest extends \PHPUnit_Framework_TestCase {
     /**
      * @expectedException Sabre\DAV\Exception\BadRequest
      */
-    function testBadMatchType() {
+    public function testBadMatchType() {
 
-        StringUtil::textMatch('foobar', 'foo', 'i;octet', 'booh');
+        StringUtil::textMatch('foobar','foo','i;octet','booh');
 
     }
 
-    function testEnsureUTF8_ascii() {
+    public function testEnsureUTF8_ascii() {
 
         $inputString = "harkema";
         $outputString = "harkema";
@@ -102,7 +95,7 @@ class StringUtilTest extends \PHPUnit_Framework_TestCase {
 
     }
 
-    function testEnsureUTF8_latin1() {
+    public function testEnsureUTF8_latin1() {
 
         $inputString = "m\xfcnster";
         $outputString = "münster";
@@ -114,7 +107,7 @@ class StringUtilTest extends \PHPUnit_Framework_TestCase {
 
     }
 
-    function testEnsureUTF8_utf8() {
+    public function testEnsureUTF8_utf8() {
 
         $inputString = "m\xc3\xbcnster";
         $outputString = "münster";

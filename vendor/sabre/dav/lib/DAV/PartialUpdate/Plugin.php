@@ -29,7 +29,7 @@ class Plugin extends DAV\ServerPlugin {
     /**
      * Reference to server
      *
-     * @var DAV\Server
+     * @var Sabre\DAV\Server
      */
     protected $server;
 
