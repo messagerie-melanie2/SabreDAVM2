@@ -74,10 +74,4 @@ class Config {
    * @var integer
    */
   const addToSyncToken = 10;
-
-  /**
-   * Version de Sabre/DAV utilisé
-   * @var string
-   */
-  const SabreDAV_Version = "3.0.9";
 }

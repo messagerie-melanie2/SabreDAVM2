@@ -10,6 +10,9 @@ class ComposerStaticInit1ac008f96caaac048a6ed52bd5c79cf8
         '383eaff206634a77a1be54e64e6459c7' => __DIR__ . '/..' . '/sabre/uri/lib/functions.php',
         '3569eecfeed3bcf0bad3c998a494ecb8' => __DIR__ . '/..' . '/sabre/xml/lib/Deserializer/functions.php',
         '93aa591bc4ca510c520999e34229ee79' => __DIR__ . '/..' . '/sabre/xml/lib/Serializer/functions.php',
+        '2b9d0f43f9552984cfa82fee95491826' => __DIR__ . '/..' . '/sabre/event/lib/coroutine.php',
+        'd81bab31d3feb45bfe2f283ea3c8fdf7' => __DIR__ . '/..' . '/sabre/event/lib/Loop/functions.php',
+        'a1cce3d26cc15c00fcd0b3354bd72c88' => __DIR__ . '/..' . '/sabre/event/lib/Promise/functions.php',
         'ebdb698ed4152ae445614b69b5e4bb6a' => __DIR__ . '/..' . '/sabre/http/lib/functions.php',
     );
 
@@ -25,6 +28,10 @@ class ComposerStaticInit1ac008f96caaac048a6ed52bd5c79cf8
             'Sabre\\DAVACL\\' => 13,
             'Sabre\\CardDAV\\' => 14,
             'Sabre\\CalDAV\\' => 13,
+        ),
+        'P' => 
+        array (
+            'Psr\\Log\\' => 8,
         ),
     );
 
@@ -64,6 +71,10 @@ class ComposerStaticInit1ac008f96caaac048a6ed52bd5c79cf8
         'Sabre\\CalDAV\\' => 
         array (
             0 => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV',
+        ),
+        'Psr\\Log\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/psr/log/Psr/Log',
         ),
     );
 

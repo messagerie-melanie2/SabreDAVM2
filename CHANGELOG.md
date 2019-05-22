@@ -24,7 +24,21 @@ A faire
 CalDAV - Liste des changements
 ==============================
 
-CalDAV - 0.6.1 (Pas encore publiée) [ Afficher les bogues ]
+CalDAV - 0.6.2 (Pas encore publiée) [ Afficher les bogues ]
+---
+- 0005003: [SabreDAV] Problème d'exception avec un organizer avec majuscule (thomas.payen) - résolu.
+- 0004985: [SabreDAV] Pour les non participants, forcer le ACCEPTED et le RSVP à FALSE (thomas.payen) - résolu.
+- 0004984: [SabreDAV] Les informations d'un owner en .-. ne sont pas correctement récupérées (thomas.payen) - résolu.
+- 0004977: [SabreDAV] Lightning ne gère pas correctement les différences entre current user et owner du calendrier (thomas.payen) - résolu.
+- 0004968: [SabreDAV] Lorsque l'on crée une invitation dans l'agenda de quelqu'un d'autre, l'ajouter aux participants (thomas.payen) - résolu.
+- 0004967: [SabreDAV] Cab SG: une modification d'occurrence ne semble pas être en .-. (thomas.payen) - résolu.
+- 0004946: [SabreDAV] Le VObject ne traite pas correctement le VFREEBUSY lors d'un Faked Master (thomas.payen) - résolu.
+- 0004872: [SabreDAV] Mise à jour de version de SabreDAV (thomas.payen) - résolu.
+- 0004938: [SabreDAV] Problème dans le chargement des disponibilités d'un événement récurrent sans master (thomas.payen) - résolu.
+
+[9 bogues]
+
+CalDAV - 0.6.1 (Publiée 12/04/2018) [ Afficher les bogues ]
 ---
 - 0004933: [SabreDAV] Si l'organisateur est vide, ne pas considérer que c'est une réunion (thomas.payen) - résolu.
 - 0004932: [SabreDAV] Problème d'affichage des disponibilités (thomas.payen) - résolu.

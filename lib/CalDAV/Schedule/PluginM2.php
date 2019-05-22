@@ -87,112 +87,112 @@ class PluginM2 extends Plugin {
      * @param VObject\Component $request
      * @return array
      */
-    protected function getFreeBusyForEmail($email, \DateTime $start, \DateTime $end, VObject\Component $request) {
-    	if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CalDAV/Schedule] PluginM2.getFreeBusyForEmail($email)");
+//     protected function getFreeBusyForEmail($email, \DateTime $start, \DateTime $end, VObject\Component $request) {
+//     	if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CalDAV/Schedule] PluginM2.getFreeBusyForEmail($email)");
     	
-      $caldavNS = '{' . Plugin::NS_CALDAV . '}';
+//       $caldavNS = '{' . Plugin::NS_CALDAV . '}';
 
-      $aclPlugin = $this->server->getPlugin('acl');
-      if (substr($email,0,7)==='mailto:') $email = substr($email,7);
+//       $aclPlugin = $this->server->getPlugin('acl');
+//       if (substr($email,0,7)==='mailto:') $email = substr($email,7);
 
-      $result = $aclPlugin->principalSearch(
-          ['{http://sabredav.org/ns}email-address' => $email],
-          [
-            '{DAV:}principal-URL', $caldavNS . 'calendar-home-set',
-            '{http://sabredav.org/ns}email-address',
-          ]
-      );
+//       $result = $aclPlugin->principalSearch(
+//           ['{http://sabredav.org/ns}email-address' => $email],
+//           [
+//             '{DAV:}principal-URL', $caldavNS . 'calendar-home-set',
+//             '{http://sabredav.org/ns}email-address',
+//           ]
+//       );
 
-      if (!count($result)) {
-        return [
-          'request-status' => '3.7;Could not find principal',
-          'href' => 'mailto:' . $email,
-        ];
-      }
+//       if (!count($result)) {
+//         return [
+//           'request-status' => '3.7;Could not find principal',
+//           'href' => 'mailto:' . $email,
+//         ];
+//       }
 
-      if (!isset($result[0][200][$caldavNS . 'calendar-home-set'])) {
-        return [
-          'request-status' => '3.7;No calendar-home-set property found',
-          'href' => 'mailto:' . $email,
-        ];
-      }
-      $homeSet = $result[0][200][$caldavNS . 'calendar-home-set']->getHref();
+//       if (!isset($result[0][200][$caldavNS . 'calendar-home-set'])) {
+//         return [
+//           'request-status' => '3.7;No calendar-home-set property found',
+//           'href' => 'mailto:' . $email,
+//         ];
+//       }
+//       $homeSet = $result[0][200][$caldavNS . 'calendar-home-set']->getHref();
 
-      // Grabbing the calendar list
-      $objects = [];
-      $calendarTimeZone = new DateTimeZone('UTC');
+//       // Grabbing the calendar list
+//       $objects = [];
+//       $calendarTimeZone = new DateTimeZone('UTC');
 
-      foreach($this->server->tree->getNodeForPath($homeSet)->getChildren() as $node) {
-        if (!$node instanceof ICalendar) {
-          continue;
-        }
+//       foreach($this->server->tree->getNodeForPath($homeSet)->getChildren() as $node) {
+//         if (!$node instanceof ICalendar) {
+//           continue;
+//         }
 
-        $sct = $caldavNS . 'schedule-calendar-transp';
-        $ctz = $caldavNS . 'calendar-timezone';
-        $props = $node->getProperties([$sct, $ctz]);
+//         $sct = $caldavNS . 'schedule-calendar-transp';
+//         $ctz = $caldavNS . 'calendar-timezone';
+//         $props = $node->getProperties([$sct, $ctz]);
 
-        if (isset($props[$sct]) && $props[$sct]->getValue() == ScheduleCalendarTransp::TRANSPARENT) {
-          // If a calendar is marked as 'transparent', it means we must
-          // ignore it for free-busy purposes.
-          continue;
-        }
+//         if (isset($props[$sct]) && $props[$sct]->getValue() == ScheduleCalendarTransp::TRANSPARENT) {
+//           // If a calendar is marked as 'transparent', it means we must
+//           // ignore it for free-busy purposes.
+//           continue;
+//         }
 
-        $aclPlugin->checkPrivileges($homeSet . $node->getName() ,$caldavNS . 'read-free-busy');
+//         $aclPlugin->checkPrivileges($homeSet . $node->getName() ,$caldavNS . 'read-free-busy');
 
-        if (isset($props[$ctz])) {
-          $vtimezoneObj = VObject\Reader::read($props[$ctz]);
-          $calendarTimeZone = $vtimezoneObj->VTIMEZONE->getTimeZone();
-        }
+//         if (isset($props[$ctz])) {
+//           $vtimezoneObj = VObject\Reader::read($props[$ctz]);
+//           $calendarTimeZone = $vtimezoneObj->VTIMEZONE->getTimeZone();
+//         }
 
-        // Getting the list of object uris within the time-range
-        $urls = $node->calendarQuery([
-              'name' => 'VCALENDAR',
-              'comp-filters' => [
-                [
-                  'name' => 'VEVENT',
-                  'comp-filters' => [],
-                  'prop-filters' => [],
-                  'is-not-defined' => false,
-                  'time-range' => [
-                    'start' => $start,
-                    'end' => $end,
-                  ],
-                ],
-              ],
-              'prop-filters' => [],
-              'is-not-defined' => false,
-              'time-range' => null,
-            ]);
+//         // Getting the list of object uris within the time-range
+//         $urls = $node->calendarQuery([
+//               'name' => 'VCALENDAR',
+//               'comp-filters' => [
+//                 [
+//                   'name' => 'VEVENT',
+//                   'comp-filters' => [],
+//                   'prop-filters' => [],
+//                   'is-not-defined' => false,
+//                   'time-range' => [
+//                     'start' => $start,
+//                     'end' => $end,
+//                   ],
+//                 ],
+//               ],
+//               'prop-filters' => [],
+//               'is-not-defined' => false,
+//               'time-range' => null,
+//             ]);
 
-        $calObjects = array_map(function($url) use ($node) {
-          $obj = $node->getChild($url)->get();
-          return $obj;
-        }, $urls);
+//         $calObjects = array_map(function($url) use ($node) {
+//           $obj = $node->getChild($url)->get();
+//           return $obj;
+//         }, $urls);
 
-          $objects = array_merge($objects,$calObjects);
+//           $objects = array_merge($objects,$calObjects);
 
-      }
+//       }
 
-      $vcalendar = new VObject\Component\VCalendar();
-      $vcalendar->METHOD = 'REPLY';
+//       $vcalendar = new VObject\Component\VCalendar();
+//       $vcalendar->METHOD = 'REPLY';
 
-      $generator = new VObject\FreeBusyGenerator();
-      $generator->setObjects($objects);
-      $generator->setTimeRange($start, $end);
-      $generator->setBaseObject($vcalendar);
-      $generator->setTimeZone($calendarTimeZone);
+//       $generator = new VObject\FreeBusyGenerator();
+//       $generator->setObjects($objects);
+//       $generator->setTimeRange($start, $end);
+//       $generator->setBaseObject($vcalendar);
+//       $generator->setTimeZone($calendarTimeZone);
 
-      $result = $generator->getResult();
+//       $result = $generator->getResult();
 
-      $vcalendar->VFREEBUSY->ATTENDEE = 'mailto:' . $email;
-      $vcalendar->VFREEBUSY->UID = (string)$request->VFREEBUSY->UID;
-      $vcalendar->VFREEBUSY->ORGANIZER = clone $request->VFREEBUSY->ORGANIZER;
+//       $vcalendar->VFREEBUSY->ATTENDEE = 'mailto:' . $email;
+//       $vcalendar->VFREEBUSY->UID = (string)$request->VFREEBUSY->UID;
+//       $vcalendar->VFREEBUSY->ORGANIZER = clone $request->VFREEBUSY->ORGANIZER;
 
-      return [
-        'calendar-data' => $result,
-        'request-status' => '2.0;Success',
-        'href' => 'mailto:' . $email,
-      ];
-    }
+//       return [
+//         'calendar-data' => $result,
+//         'request-status' => '2.0;Success',
+//         'href' => 'mailto:' . $email,
+//       ];
+//     }
 
 }

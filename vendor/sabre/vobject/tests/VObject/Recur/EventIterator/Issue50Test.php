@@ -2,11 +2,11 @@
 
 namespace Sabre\VObject;
 
-use
-    DateTime,
-    DateTimeZone;
+use DateTimeImmutable;
+use DateTimeZone;
+use PHPUnit\Framework\TestCase;
 
-class Issue50Test extends \PHPUnit_Framework_TestCase {
+class Issue50Test extends TestCase {
 
     function testExpand() {
 
@@ -106,8 +106,8 @@ ICS;
 
         $it = new Recur\EventIterator($vcal, '1aef0b27-3d92-4581-829a-11999dd36724');
 
-        $result = array();
-        foreach($it as $instance) {
+        $result = [];
+        foreach ($it as $instance) {
 
             $result[] = $instance;
 
@@ -115,13 +115,13 @@ ICS;
 
         $tz = new DateTimeZone('Europe/Brussels');
 
-        $this->assertEquals(array(
-            new DateTime('2013-07-15 09:00:00', $tz),
-            new DateTime('2013-07-16 07:00:00', $tz),
-            new DateTime('2013-07-17 07:00:00', $tz),
-            new DateTime('2013-07-18 09:00:00', $tz),
-            new DateTime('2013-07-19 07:00:00', $tz),
-        ), $result);
+        $this->assertEquals([
+            new DateTimeImmutable('2013-07-15 09:00:00', $tz),
+            new DateTimeImmutable('2013-07-16 07:00:00', $tz),
+            new DateTimeImmutable('2013-07-17 07:00:00', $tz),
+            new DateTimeImmutable('2013-07-18 09:00:00', $tz),
+            new DateTimeImmutable('2013-07-19 07:00:00', $tz),
+        ], $result);
 
     }
 

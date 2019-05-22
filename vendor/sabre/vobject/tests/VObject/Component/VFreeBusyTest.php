@@ -2,10 +2,11 @@
 
 namespace Sabre\VObject\Component;
 
+use PHPUnit\Framework\TestCase;
 use Sabre\VObject;
 use Sabre\VObject\Reader;
 
-class VFreeBusyTest extends \PHPUnit_Framework_TestCase {
+class VFreeBusyTest extends TestCase {
 
     function testIsFree() {
 
@@ -38,7 +39,7 @@ BLA;
 
     }
 
-    public function testValidate() {
+    function testValidate() {
 
         $input = <<<HI
 BEGIN:VCALENDAR
@@ -54,12 +55,12 @@ HI;
         $obj = Reader::read($input);
 
         $warnings = $obj->validate();
-        $messages = array();
-        foreach($warnings as $warning) {
+        $messages = [];
+        foreach ($warnings as $warning) {
             $messages[] = $warning['message'];
         }
 
-        $this->assertEquals(array(), $messages);
+        $this->assertEquals([], $messages);
 
     }
 

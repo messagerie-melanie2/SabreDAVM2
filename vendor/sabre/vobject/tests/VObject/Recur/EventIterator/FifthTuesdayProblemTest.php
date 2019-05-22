@@ -2,10 +2,11 @@
 
 namespace Sabre\VObject\Recur\EventIterator;
 
-use Sabre\VObject\Recur;
+use PHPUnit\Framework\TestCase;
 use Sabre\VObject\Reader;
+use Sabre\VObject\Recur;
 
-class FifthTuesdayProblemTest extends \PHPUnit_Framework_TestCase {
+class FifthTuesdayProblemTest extends TestCase {
 
     /**
      * A pretty slow test. Had to be marked as 'medium' for phpunit to not die
@@ -40,7 +41,7 @@ ICS;
         $vObject = Reader::read($ics);
         $it = new Recur\EventIterator($vObject, (string)$vObject->VEVENT->UID);
 
-        while($it->valid()) {
+        while ($it->valid()) {
             $it->next();
         }
 

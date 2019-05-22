@@ -2,9 +2,10 @@
 
 namespace Sabre\VObject\Property\VCard;
 
+use PHPUnit\Framework\TestCase;
 use Sabre\VObject;
 
-class LanguageTagTest extends \PHPUnit_Framework_TestCase {
+class LanguageTagTest extends TestCase {
 
     function testMimeDir() {
 
@@ -34,7 +35,7 @@ class LanguageTagTest extends \PHPUnit_Framework_TestCase {
         $this->assertInstanceOf('Sabre\VObject\Property\VCard\LanguageTag', $result->LANG);
         // This replicates what the vcard converter does and triggered a bug in
         // the past.
-        $result->LANG->setValue(array('de'));
+        $result->LANG->setValue(['de']);
 
         $this->assertEquals('de', $result->LANG->getValue());
 

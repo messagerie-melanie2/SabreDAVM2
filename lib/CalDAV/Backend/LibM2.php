@@ -80,6 +80,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
   protected $calendars_prop;
   /**
    * UID de l'utilisateur connecté (pas forcément le propriétaire de l'agenda)
+   * Dans le cas d'un objet de partage ne récupère que la partie gauche
    * @var string
    */
   protected $current_user;
@@ -97,6 +98,12 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
    * @var string
    */
   protected $current_share_object;
+  /**
+   * UID de l'utilisateur connecté (pas forcément le propriétaire de l'agenda)
+   * Récupère l'objet de partage complet s'il existe (contrairement a current_user)
+   * @var string
+   */
+  protected $current_full_user;
   /**
    * Utilisateur courant dans un objet User de l'ORM M2
    * @var \LibMelanie\Api\Melanie2\User
@@ -197,7 +204,9 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
   protected function setCurrentUser() {
     if (!isset($this->current_user)) {
       list($basename, $this->current_user) = \Sabre\Uri\split($this->server->getPlugin('auth')->getCurrentPrincipal());
-      //$this->current_user = $this->authBackend->getCurrentUser();
+      $this->current_full_user = $this->current_user;
+      $this->current_share_object = null;
+      $this->current_balp = null;
       if (strpos($this->current_user, '.-.') !== false) {
         // Gestion des boites partagées
         $this->current_share_object = $this->current_user;
@@ -213,6 +222,15 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
     }
   }
   /**
+   * Retourne le user courant
+   * 
+   * @return string
+   */
+  public function getCurrentUser() {
+    $this->setCurrentUser();
+    return $this->current_user;
+  }
+  /**
    * Récupère l'utilisateur lié au principalURI
    */
   protected function getUserFromPrincipalUri($principalUri) {
@@ -225,6 +243,14 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
       $username = $tmp[0];
     }
     return $username;
+  }
+  /**
+   * Récupère la racine liée au principalURI
+   */
+  protected function getRootFromPrincipalUri($principalUri) {
+    $var = explode('/', $principalUri);
+    $root = $var[0];
+    return $root;
   }
   /**
    * Charge la liste des calendriers de l'utilisateur connecté
@@ -350,7 +376,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
       $calendar = [
           'id' => $_calendar->id,
           'uri' => $_calendar->id,
-          'principaluri' => $principalUri,
+          'principaluri' => $this->calendars[$_calendar->id]->asRight(\LibMelanie\Config\ConfigMelanie::WRITE) ? $this->getRootFromPrincipalUri($principalUri) . '/' . $this->current_full_user : $principalUri,
           '{' . CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => '"'.$ctag.'"',
           '{' . CalDAV\Plugin::NS_CALDAV . '}supported-calendar-component-set' => new CalDAV\Xml\Property\SupportedCalendarComponentSet($components),
           '{' . CalDAV\Plugin::NS_CALDAV . '}schedule-calendar-transp' => new CalDAV\Xml\Property\ScheduleCalendarTransp($transp),
@@ -443,7 +469,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
       $result = [
         'id' => $this->calendars[$calendarId]->id,
         'uri' => $this->calendars[$calendarId]->id,
-        'principaluri' => $principalUri,
+        'principaluri' => $this->calendars[$calendarId]->asRight(\LibMelanie\Config\ConfigMelanie::WRITE) ? $this->getRootFromPrincipalUri($principalUri) . '/' . $this->current_full_user : $principalUri,
         '{' . CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => '"'.$ctag.'"',
         '{' . CalDAV\Plugin::NS_CALDAV . '}supported-calendar-component-set' => new CalDAV\Xml\Property\SupportedCalendarComponentSet($components),
         '{' . CalDAV\Plugin::NS_CALDAV . '}schedule-calendar-transp' =>  new CalDAV\Xml\Property\ScheduleCalendarTransp($transp),
@@ -458,6 +484,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
       if (!$this->calendars[$calendarId]->asRight(\LibMelanie\Config\ConfigMelanie::WRITE)) {
         $result['{http://sabredav.org/ns}read-only'] = 1;
       }
+      if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CalDAVBackend] LibM2.getCalendarForPrincipal($principalUri, $calendarId) : " . var_export($result, true));
       return $result;
     }
     return null;
@@ -718,19 +745,20 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
         $event = new \LibMelanie\Api\Melanie2\Event($this->user_melanie, $this->calendars[$calendarId]);
         $event->uid = $event_uid;
         $this->cache_events[$event_uid.$calendarId] = $event;
-        if (!$event->load()
-            && $calendarId == $this->user_melanie->uid
-            && $this->calendars[$calendarId]->owner == $calendarId) {
-          // Cas du calendrier principal, on gère les tâches
-          if (!isset($this->cache_tasks[$event_uid.$calendarId])) {
-            $taskslist = new \LibMelanie\Api\Melanie2\Taskslist($this->user_melanie);
-            $taskslist->id = $calendarId;
-            $task = new \LibMelanie\Api\Melanie2\Task($this->user_melanie, $taskslist);
-            $task->uid = $event_uid;
-            $this->cache_tasks[$event_uid.$calendarId] = $task;
-            $task->load();
-          }
-        }
+        if (!$event->load()) {
+          if ($calendarId == $this->user_melanie->uid
+              && $this->calendars[$calendarId]->owner == $calendarId) {
+            // Cas du calendrier principal, on gère les tâches
+            if (!isset($this->cache_tasks[$event_uid.$calendarId])) {
+              $taskslist = new \LibMelanie\Api\Melanie2\Taskslist($this->user_melanie);
+              $taskslist->id = $calendarId;
+              $task = new \LibMelanie\Api\Melanie2\Task($this->user_melanie, $taskslist);
+              $task->uid = $event_uid;
+              $this->cache_tasks[$event_uid.$calendarId] = $task;
+              $loaded = $task->load();
+            }
+          } 
+        }             
       }
       // Si l'évènement existe on retourne le resultat
       if (isset($this->cache_events[$event_uid.$calendarId])
@@ -978,11 +1006,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
           $task = new \LibMelanie\Api\Melanie2\Task($this->user_melanie, $taskslist);
           $task->uid = $event_uid;
         }
-        if (isset($this->current_balp)) {
-          $task->owner = $this->current_share_object;
-        } else {
-          $task->owner = $this->current_user;
-        }
+        $task->owner = $this->current_full_user;
         $task->ics = $calendarData;
         $task->modified = time();
         $task->id = md5(time().$task->uid.uniqid());
@@ -1002,11 +1026,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
           $event = new \LibMelanie\Api\Melanie2\Event($this->user_melanie, $this->calendars[$calendarId]);
           $event->uid = $event_uid;
         }
-        if (isset($this->current_balp)) {
-          $event->owner = $this->current_share_object;
-        } else {
-          $event->owner = $this->current_user;
-        }
+        $event->owner = $this->current_full_user;
         $event->ics = $calendarData;
         // MANTIS 0004663: Problème de création d'une exception d'une récurrence non présente
         if (!isset($event->end) && count($event->exceptions) > 0) {

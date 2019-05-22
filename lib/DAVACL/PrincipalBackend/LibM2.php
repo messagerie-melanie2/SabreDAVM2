@@ -70,7 +70,7 @@ class LibM2 extends AbstractBackend {
 	  '{DAV:}displayname' => ['ldapField' => 'cn'],/**
 	   * This is the users' primary email-address.
 	   */
-	  '{http://sabredav.org/ns}email-address' => ['ldapField' => 'mail']  		
+	  '{http://sabredav.org/ns}email-address' => ['ldapField' => 'mineqmelmailemission']  		
   ];
   /**
    * Ne pas faire de recherche du principal dans le LDAP
@@ -124,12 +124,6 @@ class LibM2 extends AbstractBackend {
   protected function getUserFromPrincipalUri($principalUri) {
     $var = explode('/', $principalUri);
     $username = $var[1];
-    // Si c'est une boite partagée, on s'authentifie sur l'utilisateur pas sur la bal
-    if (strpos($username, '.-.') !== false) {
-      // MANTIS 3791: Gestion de l'authentification via des boites partagées
-      $tmp = explode('.-.', $username, 2);
-      $username = $tmp[0];
-    }
     return $username;
   }
   /**
@@ -205,7 +199,11 @@ class LibM2 extends AbstractBackend {
     	$principal['{DAV:}displayname'] = $user_uid;
     }
     else {
-    	$infos = \LibMelanie\Ldap\Ldap::GetUserInfos($user_uid);
+      $filter = null;
+      if (strpos($user_uid, '.-.')) {
+        $filter = "(&(objectClass=mineqMelObjetPartage)(uid=$user_uid))";
+      }      
+      $infos = \LibMelanie\Ldap\Ldap::GetUserInfos($user_uid, $filter);
     	
     	if (isset($infos) && count($infos) > 0) {
     		foreach ($this->fieldMap as $key => $val) {
@@ -221,7 +219,8 @@ class LibM2 extends AbstractBackend {
     		}
     	}
     }
-    
+    if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG))
+      \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[PrincipalBackend] LibM2.getPrincipalByPath($path) principal: " . var_export($principal, true));
     return $principal;
   }
   /**
@@ -271,7 +270,12 @@ class LibM2 extends AbstractBackend {
     if ($this->server->httpRequest->getMethod() == 'POST') {
       if (isset($searchProperties)) {
         if (isset($searchProperties['{http://sabredav.org/ns}email-address'])) {
-          $infos = \LibMelanie\Ldap\Ldap::GetUserInfosFromEmail($searchProperties['{http://sabredav.org/ns}email-address']);
+          $email = $searchProperties['{http://sabredav.org/ns}email-address'];
+          $filter = null;
+          if (strpos($email, '.-.')) {
+            $filter = "(&(objectClass=mineqMelObjetPartage)(mineqmelmailemission=$email))";
+          }      
+          $infos = \LibMelanie\Ldap\Ldap::GetUserInfosFromEmail($email, $filter);
         }
       }
 
@@ -303,16 +307,26 @@ class LibM2 extends AbstractBackend {
   public function getGroupMembership($principal) {
     if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG))
       \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[PrincipalBackend] LibM2.getGroupMembership($principal)");
-
-  	// Get shared calendar
-  	$calendars = $this->calendarBackend->loadUserCalendars();
-  	$calendars_owners = [];
-  	$result = [];
-  	foreach ($calendars as $calendar) {
-  		if (! in_array("principals/".$calendar->owner, $result)) {
-  			$result[] = "principals/".$calendar->owner;
-  		}
-  	}
+    $username = $this->calendarBackend->getCurrentUser();
+    $result = [];
+    
+    // Get shared calendar
+    $calendars = $this->calendarBackend->loadUserCalendars();
+    $calendars_owners = [];
+    foreach ($calendars as $calendar) {
+      if (! in_array("principals/".$calendar->owner, $result)) {
+        $result[] = "principals/".$calendar->owner;
+      }
+    }
+    
+    $infos = \LibMelanie\Ldap\Ldap::GetUserBalEmission($username);
+    foreach ($infos as $info) {
+      if (isset($info['uid'][0])) {
+        $result[] = "principals/".$info['uid'][0];
+      }        
+    }
+    if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG))
+      \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[PrincipalBackend] LibM2.getGroupMembership($principal) result: " . var_export($result, 1));
     return $result;
   }
   /**
