@@ -608,7 +608,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
       foreach($this->cache_events as $_event) {
         $event = [
             'id'           => $_event->uid,
-            'uri'          => urlencode($_event->uid).'.ics',
+            'uri'          => $this->uidencode($_event->uid).'.ics',
             'lastmodified' => $_event->modified,
             'etag'         => '"' . md5($_event->modified) . '"',
             'calendarid'   => $_event->calendar,
@@ -633,7 +633,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
         foreach($this->cache_tasks as $_task) {
           $task = [
             'id'           => $_task->uid,
-            'uri'          => urlencode($_task->uid).'.ics',
+            'uri'          => $this->uidencode($_task->uid).'.ics',
             'lastmodified' => $_task->modified,
             'etag'         => '"' . md5($_task->modified) . '"',
             'calendarid'   => $_task->taskslist,
@@ -693,7 +693,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
     		// MANTIS 0004469: Générer des messages d'erreur quand l'utilisateur n'a pas les droits
     		throw new \Sabre\DAV\Exception\Forbidden();
     	}
-      $event_uid = urldecode(str_replace('.ics', '', $objectUri));
+      $event_uid = $this->uiddecode(str_replace('.ics', '', $objectUri));
       // Cherche si l'évènement n'est pas déjà dans le cache
       if (!isset($this->cache_events[$event_uid.$calendarId])) {
         $event = new \LibMelanie\Api\Melanie2\Event($this->user_melanie, $this->calendars[$calendarId]);
@@ -718,7 +718,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
           && $this->cache_events[$event_uid.$calendarId]->exists()) {
         $result = [
           'id'            => $this->cache_events[$event_uid.$calendarId]->uid,
-          'uri'           => urlencode($this->cache_events[$event_uid.$calendarId]->uid).'.ics',
+          'uri'           => $this->uidencode($this->cache_events[$event_uid.$calendarId]->uid).'.ics',
           'lastmodified'  => $this->cache_events[$event_uid.$calendarId]->modified,
           'etag'          => '"' . md5($this->cache_events[$event_uid.$calendarId]->modified) . '"',
           'calendarid'    => $this->cache_events[$event_uid.$calendarId]->calendar,
@@ -737,7 +737,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
           && $this->cache_tasks[$event_uid.$calendarId]->exists()) {
         $result = [
           'id'            => $this->cache_tasks[$event_uid.$calendarId]->uid,
-          'uri'           => urlencode($this->cache_tasks[$event_uid.$calendarId]->uid).'.ics',
+          'uri'           => $this->uidencode($this->cache_tasks[$event_uid.$calendarId]->uid).'.ics',
           'lastmodified'  => $this->cache_tasks[$event_uid.$calendarId]->modified,
           'etag'          => '"' . md5($this->cache_tasks[$event_uid.$calendarId]->modified) . '"',
           'calendarid'    => $this->cache_tasks[$event_uid.$calendarId]->taskslist,
@@ -771,7 +771,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
     $list_event_uid = [];
     // Remove .ics from the uri
     foreach ($uris as $uri) {
-        $list_event_uid[] = urldecode(str_replace('.ics', '', $uri));
+      $list_event_uid[] = $this->uiddecode(str_replace('.ics', '', $uri));
     }
 
     // Cherche si le calendrier est présent en mémoire
@@ -806,7 +806,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
 	        	}
             $event = [
               'id'           => $_event->uid,
-              'uri'          => urlencode($_event->uid).'.ics',
+              'uri'          => $this->uidencode($_event->uid).'.ics',
               'lastmodified' => $_event->modified,
               'etag'         => '"' . md5($_event->modified) . '"',
               'calendarid'   => $_event->calendar,
@@ -840,7 +840,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
           foreach($this->cache_tasks as $_task) {
             $task = [
               'id'           => $_task->uid,
-              'uri'          => urlencode($_task->uid).'.ics',
+              'uri'          => $this->uidencode($_task->uid).'.ics',
               'lastmodified' => $_task->modified,
               'etag'         => '"' . md5($_task->modified) . '"',
               'calendarid'   => $_task->taskslist,
@@ -873,7 +873,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
           foreach ($_events->getList(null, null, $operators, 'start') as $_event) {
             $event = [
               'id'           => $_event->uid,
-              'uri'          => urlencode($_event->uid).'.ics',
+              'uri'          => $this->uidencode($_event->uid).'.ics',
               'lastmodified' => $_event->modified,
               'etag'         => '"' . md5($_event->modified) . '"',
               'calendarid'   => $_event->calendar,
@@ -942,7 +942,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
           $is_task = true;
         }
       }
-      $event_uid = str_replace('.ics', '', urldecode($objectUri));
+      $event_uid = str_replace('.ics', '', $this->uiddecode($objectUri));
       if ($is_task) {
         // Cherche si la tâche n'est pas déjà dans le cache
         if (isset($this->cache_tasks[$event_uid.$calendarId])
@@ -1050,7 +1050,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
           $is_task = true;
         }
       }
-      $event_uid = str_replace('.ics', '', urldecode($objectUri));
+      $event_uid = str_replace('.ics', '', $this->uiddecode($objectUri));
       if ($is_task) {
         // Cherche si la tâche n'est pas déjà dans le cache
         if (isset($this->cache_tasks[$event_uid.$calendarId])
@@ -1134,7 +1134,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
     		throw new \Sabre\DAV\Exception\Forbidden();
     	}
       $event = new \LibMelanie\Api\Melanie2\Event($this->user_melanie, $this->calendars[$calendarId]);
-      $event->uid = str_replace('.ics', '', urldecode($objectUri));
+      $event->uid = str_replace('.ics', '', $this->uiddecode($objectUri));
       $res = false;
       if ($event->load()) {
         $exceptions = $event->exceptions;
@@ -1153,7 +1153,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
         $taskslist = new \LibMelanie\Api\Melanie2\Taskslist($this->user_melanie);
         $taskslist->id = $calendarId;
         $task = new \LibMelanie\Api\Melanie2\Task($this->user_melanie, $taskslist);
-        $task->uid = str_replace('.ics', '', urldecode($objectUri));
+        $task->uid = str_replace('.ics', '', $this->uiddecode($objectUri));
         $res = false;
         if ($task->load()) {
           // Suppression de la tâche
@@ -1279,7 +1279,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
           $this->cache_tasks = $taskslist->getAllTasks();
 
           foreach($this->cache_tasks as $task) {
-            $result[] = urlencode($task->uid) . '.ics';
+            $result[] = $this->uidencode($task->uid) . '.ics';
           }
         }
       }
@@ -1302,7 +1302,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
         }
 
         foreach($this->cache_events as $event) {
-          $result[] = urlencode($event->uid) . '.ics';
+          $result[] = $this->uidencode($event->uid) . '.ics';
         }
       }
     }
@@ -1344,7 +1344,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
       $_events->uid = $uid;
       $_events->calendar = $calendar_uids;
       foreach($_events->getList() as $_event) {
-        return $_event->calendar.'/'.urlencode($_event->uid).'.ics';
+        return $_event->calendar.'/'.$this->uidencode($_event->uid).'.ics';
       }
     }
     return null;
@@ -1607,5 +1607,26 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
    */
   public function createSchedulingObject($principalUri, $objectUri, $objectData) {
     if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CalDAVBackend] LibM2.createSchedulingObject($principalUri, $objectUri, $objectData)");
+  }
+  
+  /**
+   * Encodage d'un uid pour les uri (pour les / notamment)
+   * @param string $uid
+   * @return string
+   */
+  private function uidencode($uid) {
+    $search = ['/'];
+    $replace = ['%2F'];
+    return str_replace($search, $replace, $uid);
+  }
+  /**
+   * Décodage d'un uid pour les uri (pour les / notamment)
+   * @param string $uid
+   * @return string
+   */
+  private function uiddecode($uid) {
+    $search = ['%2F'];
+    $replace = ['/'];
+    return str_replace($search, $replace, $uid);
   }
 }

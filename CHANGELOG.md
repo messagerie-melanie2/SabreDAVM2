@@ -24,6 +24,13 @@ A faire
 CalDAV - Liste des changements
 ==============================
 
+CalDAV - 0.5.8 (Pas encore publiée) [ Afficher les bogues ]
+---
+- 0004725: [SabreDAV] Trouver un moyen de gérer les événements avec "/" dans l'uid (thomas.payen) - résolu.
+- 0004788: Problème dans le calcul de la taille/hash des pièces jointes
+
+[1 bogue]
+
 CalDAV - 0.5.7 (Publiée 18/12/2017) [ Afficher les bogues ]
 ---
 - 0004761: [SabreDAV] Le serveur sabredav ne retourne pas les bonnes valeurs de privilèges (thomas.payen) - résolu.
