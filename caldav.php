@@ -217,10 +217,27 @@ class CalDAV {
         if (isset($last_error['line'])) {
           $error .= ' Line:' . $last_error['line'];
         }
-        \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "$req $path [Shutdown] $error / Last request : " . var_export(\LibMelanie\Sql\Sql::getLastRequest(), true));
+        \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "$req $path [Shutdown] Error: $error");
+        \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "$req $path [Shutdown] Last SQL Request: " . var_export(\LibMelanie\Sql\Sql::getLastRequest(), true));
+        \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "$req $path [Shutdown] Last LDAP Request: " . \LibMelanie\Ldap\Ldap::getLastRequest());
+        // Cas du process bloqué après un "Maximum execution time" on lance un posix kill
+        if (strpos($last_error['message'], "Maximum execution time") === 0) {
+          \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "$req $path [Shutdown] XML Request: " . self::$server->httpRequest->getBodyAsString());
+          self::kill_on_exit();
+        }
       }
     }
   }
+  
+  /**
+   * Terminate Apache 2 child process after request has been
+   * done by sending a SIGTERM  POSIX signal (15).
+   */
+  private static function kill_on_exit() {
+    $pid = getmypid();
+    \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "$req $path [Shutdown] kill_on_exit() SIGTERM");
+    posix_kill($pid, SIGTERM);
+  } 
 }
 
 // Lancement du module CalDAV

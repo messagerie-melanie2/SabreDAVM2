@@ -24,6 +24,13 @@ A faire
 CalDAV - Liste des changements
 ==============================
 
+CalDAV - 0.6.1 (Pas encore publiée) [ Afficher les bogues ]
+---
+- 0004933: [SabreDAV] Si l'organisateur est vide, ne pas considérer que c'est une réunion (thomas.payen) - résolu.
+- 0004932: [SabreDAV] Problème d'affichage des disponibilités (thomas.payen) - résolu.
+
+[2 bogues]
+
 CalDAV - 0.6.0.1 (Publiée 22/02/2018) [ Afficher les bogues ]
 ---
 - 0004878: [SabreDAV] HOTFIX: Problème dans la récupération des freebusy (thomas.payen) - résolu.

@@ -304,23 +304,15 @@ class LibM2 extends AbstractBackend {
     if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG))
       \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[PrincipalBackend] LibM2.getGroupMembership($principal)");
 
-    // Requête POST on ne retourne que l'agenda de l'utilisateur
-    if ($this->server->httpRequest->getMethod() == 'POST') {
-    	$result = [
-    		$this->server->getPlugin('auth')->getCurrentPrincipal(),
-    	];
-    }
-    else {
-    	// Get shared calendar
-    	$calendars = $this->calendarBackend->loadUserCalendars();
-    	$calendars_owners = [];
-    	$result = [];
-    	foreach ($calendars as $calendar) {
-    		if (! in_array("principals/".$calendar->owner, $result)) {
-    			$result[] = "principals/".$calendar->owner;
-    		}
-    	}
-    }    
+  	// Get shared calendar
+  	$calendars = $this->calendarBackend->loadUserCalendars();
+  	$calendars_owners = [];
+  	$result = [];
+  	foreach ($calendars as $calendar) {
+  		if (! in_array("principals/".$calendar->owner, $result)) {
+  			$result[] = "principals/".$calendar->owner;
+  		}
+  	}
     return $result;
   }
   /**
