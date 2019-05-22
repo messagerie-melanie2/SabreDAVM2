@@ -24,7 +24,20 @@ A faire
 CalDAV - Liste des changements
 ==============================
 
-CalDAV - 0.5.9 (Pas encore publiée) [ Afficher les bogues ]
+CalDAV - 0.6 (Pas encore publiée) [ Afficher les bogues ]
+---
+- 0004875: [SabreDAV] La détermination du isSync ne fonctionne pas sur les synchros courantes (thomas.payen) - résolu.
+- 0004872: [SabreDAV] Mise à jour de version de SabreDAV (thomas.payen) - résolu.
+- 0004860: [SabreDAV] Mauvaise gestion des participants lors d'organisateur externe (thomas.payen) - résolu.
+- 0004843: [SabreDAV] Comportement de l'organisateur (thomas.payen) - résolu.
+- 0004849: [SabreDAV] Ajouter les UID dans les logs des méthodes REPORT (thomas.payen) - résolu.
+- 0004858: [SabreDAV] Erreur de timezone dans la récurrence (thomas.payen) - résolu.
+- 0004836: [SabreDAV] Problème de timezone du recurrence id lors d'un passage en journée entière (thomas.payen) - résolu.
+- 0004837: [SabreDAV] L'adresse mail associé à un agenda n'est potentiellement pas la bonne (thomas.payen) - résolu.
+
+[8 bogues]
+
+CalDAV - 0.5.9 (Publiée 18/01/2018) [ Afficher les bogues ]
 ---
 - 0004824: [SabreDAV] Problème d'optimisation des requêtes sync-collection (thomas.payen) - résolu.
 

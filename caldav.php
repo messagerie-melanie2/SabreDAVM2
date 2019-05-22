@@ -96,8 +96,7 @@ class CalDAV {
 
     // PAMELA 10/09/10 Traitement des PROPFIND
     // optimiser les PROPFIND qui ne demandent que le getctag
-    if ( self::$server->httpRequest->getMethod() == 'PROPFIND' || self::$server->httpRequest->getMethod() == 'REPORT')
-    {
+    if ( self::$server->httpRequest->getMethod() == 'PROPFIND' || self::$server->httpRequest->getMethod() == 'REPORT') {
       $server = self::$server;
       $v = $server->httpRequest->getBodyAsString();
       // XXX: Erreur si on récupère le body et que ce n'est pas du FastPropfind
@@ -108,7 +107,7 @@ class CalDAV {
         exit;
       }
       elseif (self::$server->httpRequest->getMethod() == 'REPORT' 
-      		&& strpos($v, '<sync-collection xmlns="DAV:"><sync-token/><sync-level>1</sync-level><prop><getcontenttype/><getetag/></prop></sync-collection>') !== false) {
+      		&& strpos($v, '</sync-level><prop><getcontenttype/><getetag/></prop></sync-collection>') !== false) {
       	self::$authBackend->setNoAuthReportMethod(true);
       	self::$principalBackend->setNoPrincipalSearch(true);
       	self::$calendarBackend->setIsSync(true);

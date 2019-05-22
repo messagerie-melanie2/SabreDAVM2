@@ -683,6 +683,10 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
    */
   public function getCalendarObject($calendarId, $objectUri) {
     if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CalDAVBackend] LibM2.getCalendarObject($calendarId,$objectUri)");
+    // MANTIS 0004849: Ajouter les UID dans les logs des méthodes REPORT
+    if ($this->server->httpRequest->getMethod() == 'REPORT' && !$this->isSync) {
+      \Lib\Log\Log::l(\Lib\Log\Log::INFO, "[REPORT] calendarId: $calendarId - objectUri: $objectUri");
+    }
     // User courant
     $this->setCurrentUser();
     // Cherche si le calendrier est présent en mémoire
@@ -781,6 +785,10 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
    */
   public function getMultipleCalendarObjects($calendarId, array $uris) {
     if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CalDAVBackend] LibM2.getMultipleCalendarObjects($calendarId, ".var_export($uris, true).")");
+    // MANTIS 0004849: Ajouter les UID dans les logs des méthodes REPORT
+    if ($this->server->httpRequest->getMethod() == 'REPORT' && !$this->isSync) {
+      \Lib\Log\Log::l(\Lib\Log\Log::INFO, "[REPORT] calendarId: $calendarId - objectUris: " . implode(', ', $uris));
+    }
     // User courant
     $this->setCurrentUser();
     $list_event_uid = [];
