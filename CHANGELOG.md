@@ -24,14 +24,22 @@ A faire
 CalDAV - Liste des changements
 ==============================
 
-
-CalDAV - 0.5.5 (Pas encore publiée) [ Afficher les bogues ]
+CalDAV - 0.5.6 (Pas encore publiée) [ Afficher les bogues ]
 ---
+- 0004763: [SabreDAV] Utilisation de l'ORM v0.4 (thomas.payen) - résolu.
+
+[1 bogue]
+
+CalDAV - 0.5.5 (Publiée 13/11/2017) [ Afficher les bogues ]
+---
+- 0004697: [SabreDAV] Timeout PHP lors d'une modification d'événement (thomas.payen) - résolu.
+- 0004741: [SabreDAV] Problème d'organisateur multiple dans des récurrences avec exceptions (thomas.payen) - résolu.
+- 0004739: [SabreDAV] Ne pas retourner les événements en 1970-01-01 (thomas.payen) - résolu.
 - 0004732: [SabreDAV] Filtrer les exceptions d'authentification (thomas.payen) - résolu.
 - 0004727: [SabreDAV] Ne pas retourner les occurrences sans date (thomas.payen) - résolu.
 - 0004728: [SabreDAV] Problème de génération du recurrence id (thomas.payen) - résolu.
 
-[3 bogues]
+[6 bogues]
 
 CalDAV - 0.5.4 (Publiée 02/11/2017) [ Afficher les bogues ]
 ---

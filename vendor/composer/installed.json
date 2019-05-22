@@ -5,12 +5,12 @@
         "version_normalized": "3.0.9.0",
         "source": {
             "type": "git",
-            "url": "https://github.com/sabre-io/dav.git",
+            "url": "https://github.com/fruux/sabre-dav.git",
             "reference": "b42593965211de1ce99f73bd3aede99c41258e08"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/sabre-io/dav/zipball/b42593965211de1ce99f73bd3aede99c41258e08",
+            "url": "https://api.github.com/repos/fruux/sabre-dav/zipball/b42593965211de1ce99f73bd3aede99c41258e08",
             "reference": "b42593965211de1ce99f73bd3aede99c41258e08",
             "shasum": ""
         },
@@ -88,12 +88,12 @@
         "version_normalized": "3.5.1.0",
         "source": {
             "type": "git",
-            "url": "https://github.com/sabre-io/vobject.git",
+            "url": "https://github.com/fruux/sabre-vobject.git",
             "reference": "5b92c27399a31c860877b9c29f4fcbb241069679"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/sabre-io/vobject/zipball/5b92c27399a31c860877b9c29f4fcbb241069679",
+            "url": "https://api.github.com/repos/fruux/sabre-vobject/zipball/5b92c27399a31c860877b9c29f4fcbb241069679",
             "reference": "5b92c27399a31c860877b9c29f4fcbb241069679",
             "shasum": ""
         },
@@ -156,12 +156,12 @@
         "version_normalized": "1.1.0.0",
         "source": {
             "type": "git",
-            "url": "https://github.com/sabre-io/uri.git",
+            "url": "https://github.com/fruux/sabre-uri.git",
             "reference": "9012116434d84ef6e5e37a89dfdbfbe2204a8704"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/sabre-io/uri/zipball/9012116434d84ef6e5e37a89dfdbfbe2204a8704",
+            "url": "https://api.github.com/repos/fruux/sabre-uri/zipball/9012116434d84ef6e5e37a89dfdbfbe2204a8704",
             "reference": "9012116434d84ef6e5e37a89dfdbfbe2204a8704",
             "shasum": ""
         },
@@ -209,12 +209,12 @@
         "version_normalized": "1.4.1.0",
         "source": {
             "type": "git",
-            "url": "https://github.com/sabre-io/xml.git",
+            "url": "https://github.com/fruux/sabre-xml.git",
             "reference": "59998046db252634259a878baf1af18159f508f3"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/sabre-io/xml/zipball/59998046db252634259a878baf1af18159f508f3",
+            "url": "https://api.github.com/repos/fruux/sabre-xml/zipball/59998046db252634259a878baf1af18159f508f3",
             "reference": "59998046db252634259a878baf1af18159f508f3",
             "shasum": ""
         },
@@ -274,12 +274,12 @@
         "version_normalized": "2.0.2.0",
         "source": {
             "type": "git",
-            "url": "https://github.com/sabre-io/event.git",
+            "url": "https://github.com/fruux/sabre-event.git",
             "reference": "337b6f5e10ea6e0b21e22c7e5788dd3883ae73ff"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/sabre-io/event/zipball/337b6f5e10ea6e0b21e22c7e5788dd3883ae73ff",
+            "url": "https://api.github.com/repos/fruux/sabre-event/zipball/337b6f5e10ea6e0b21e22c7e5788dd3883ae73ff",
             "reference": "337b6f5e10ea6e0b21e22c7e5788dd3883ae73ff",
             "shasum": ""
         },
@@ -327,12 +327,12 @@
         "version_normalized": "4.2.1.0",
         "source": {
             "type": "git",
-            "url": "https://github.com/sabre-io/http.git",
+            "url": "https://github.com/fruux/sabre-http.git",
             "reference": "2e93bc8321524c67be4ca5b8415daebd4c8bf85e"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/sabre-io/http/zipball/2e93bc8321524c67be4ca5b8415daebd4c8bf85e",
+            "url": "https://api.github.com/repos/fruux/sabre-http/zipball/2e93bc8321524c67be4ca5b8415daebd4c8bf85e",
             "reference": "2e93bc8321524c67be4ca5b8415daebd4c8bf85e",
             "shasum": ""
         },
@@ -377,63 +377,5 @@
         "keywords": [
             "http"
         ]
-    },
-    {
-        "name": "messagerie-melanie2/ORM-M2",
-        "version": "0.3.0.24",
-        "version_normalized": "0.3.0.24",
-        "source": {
-            "type": "git",
-            "url": "https://github.com/messagerie-melanie2/ORM-M2.git",
-            "reference": "dc9c982d0bb99650934c18e59df5b0422cecd932"
-        },
-        "dist": {
-            "type": "zip",
-            "url": "https://api.github.com/repos/messagerie-melanie2/ORM-M2/zipball/dc9c982d0bb99650934c18e59df5b0422cecd932",
-            "reference": "dc9c982d0bb99650934c18e59df5b0422cecd932",
-            "shasum": ""
-        },
-        "require": {
-            "ext-ldap": "*",
-            "ext-pgsql": "*",
-            "php": ">=5.3.1"
-        },
-        "require-dev": {
-            "composer/composer": "*"
-        },
-        "time": "2017-11-22T16:28:12+00:00",
-        "type": "library",
-        "installation-source": "dist",
-        "autoload": {
-            "files": [
-                "includes/includes_conf.php"
-            ],
-            "psr-4": {
-                "LibMelanie\\": "src/"
-            }
-        },
-        "license": [
-            "GPLv3"
-        ],
-        "authors": [
-            {
-                "name": "Thomas Payen",
-                "email": "thomas.payen@i-carre.net",
-                "homepage": "https://github.com/tpayen",
-                "role": "Developer"
-            }
-        ],
-        "description": "ORM pour l'accès aux données Mélanie2",
-        "homepage": "https://github.com/messagerie-melanie2/ORM-M2",
-        "keywords": [
-            "Addressbook",
-            "Calendar",
-            "ORM",
-            "Tasks"
-        ],
-        "support": {
-            "source": "https://github.com/messagerie-melanie2/ORM-M2/tree/0.3.0.24",
-            "issues": "https://github.com/messagerie-melanie2/ORM-M2/issues"
-        }
     }
 ]
