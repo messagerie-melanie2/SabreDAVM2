@@ -24,11 +24,19 @@ A faire
 CalDAV - Liste des changements
 ==============================
 
-CalDAV - 0.6.5 (Pas encore publiée) [ Afficher les bogues ]
+CalDAV - 0.6.6 (Pas encore publiée) [ Afficher les bogues ]
 ---
+- 0005239: [SabreDAV] Erreur lors de l'affichage en mode browser (thomas.payen) - résolu.
+- 0005227: [SabreDAV] Problème pour désactiver une alarme sur un événement récurrent (thomas.payen) - résolu.
+
+[2 bogues]
+
+CalDAV - 0.6.5 (Publiée 23/10/2018) [ Afficher les bogues ]
+---
+- 0005134: [SabreDAV] Problème de bouclage sur des événements créés (thomas.payen) - résolu.
 - 0005116: [SabreDAV] Mauvais affichage des disponibilités (thomas.payen) - résolu.
 
-[1 bogue]
+[2 bogues]
 
 CalDAV - 0.6.4 (Publiée 25/09/2018) [ Afficher les bogues ]
 ---

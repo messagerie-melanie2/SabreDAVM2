@@ -91,9 +91,13 @@ class PluginM2 extends Plugin {
     });
     // MANTIS 0005006: La gestion des réponses aux invitations pour les pools de secrétaires n'est pas satisfaisante
     $propFind->handle('{DAV:}current-user-principal', function() use ($node) {
-      if ($url = $this->getCurrentUserPrincipal()) {       
-        //return new Xml\Property\Principal(Xml\Property\Principal::HREF, $url . '/');
-        return new Xml\Property\Principal(Xml\Property\Principal::HREF, $node->getOwner() . '/');
+      if ($url = $this->getCurrentUserPrincipal()) {
+        if (method_exists($node, "getOwner")) {
+          return new Xml\Property\Principal(Xml\Property\Principal::HREF, $node->getOwner() . '/');
+        }
+        else {
+          return new Xml\Property\Principal(Xml\Property\Principal::HREF, $url . '/');
+        }
       } else {
         return new Xml\Property\Principal(Xml\Property\Principal::UNAUTHENTICATED);
       }

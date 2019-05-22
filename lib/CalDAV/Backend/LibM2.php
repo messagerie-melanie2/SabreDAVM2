@@ -1035,6 +1035,8 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
         }
         $task->owner = $this->current_full_user;
         $task->ics = $calendarData;
+        // MANTIS 0005134: Problème de bouclage sur des événements créés
+        $task->uid = $event_uid;
         $task->modified = time();
         $task->id = md5(time().$task->uid.uniqid());
         $res = $task->save();
@@ -1055,6 +1057,8 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
         }
         $event->owner = $this->current_full_user;
         $event->ics = $calendarData;
+        // MANTIS 0005134: Problème de bouclage sur des événements créés
+        $event->uid = $event_uid;
         // MANTIS 0004663: Problème de création d'une exception d'une récurrence non présente
         if (!isset($event->end) && count($event->exceptions) > 0) {
           $event->deleted = true;
@@ -1134,6 +1138,8 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
           $task->uid = $event_uid;
         }
         $task->ics = $calendarData;
+        // MANTIS 0005134: Problème de bouclage sur des événements créés
+        $task->uid = $event_uid;
         $task->modified = time();
         $res = $task->save();
         if (!is_null($res)) {
@@ -1156,6 +1162,8 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
             $event->owner = $this->user_melanie->uid;
           }
           $event->ics = $calendarData;
+          // MANTIS 0005134: Problème de bouclage sur des événements créés
+          $event->uid = $event_uid;
           $event->modified = time();
           $res = $event->save();
           if (!is_null($res)) {
@@ -1695,8 +1703,11 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
    * @return string
    */
   private function uiddecode($uid) {
-    $search = ['%2F'];
-    $replace = ['/'];
+    if (strpos($uid, '%25') !== false) {
+      $uid = preg_replace('/%[25]+40/', '%40', $uid);
+    }
+    $search = ['%2F','%40'];
+    $replace = ['/','@'];
     return str_replace($search, $replace, $uid);
   }
 }
