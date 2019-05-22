@@ -5,7 +5,7 @@ namespace Sabre\CardDAV\Xml\Property;
 use Sabre\CardDAV;
 use Sabre\DAV;
 
-class SupportedAddressDataTest extends DAV\Xml\XmlTest {
+class SupportedAddressDataDataTest extends DAV\Xml\XmlTest {
 
     function testSimple() {
 

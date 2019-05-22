@@ -2,10 +2,12 @@
 
 namespace Sabre\VObject\Property;
 
-use Sabre\VObject\Property;
+use
+    LogicException,
+    Sabre\VObject\Property;
 
 /**
- * BINARY property.
+ * BINARY property
  *
  * This object represents BINARY values.
  *
@@ -34,14 +36,13 @@ class Binary extends Property {
      * This may be either a single, or multiple strings in an array.
      *
      * @param string|array $value
-     *
      * @return void
      */
-    function setValue($value) {
+    public function setValue($value) {
 
-        if (is_array($value)) {
+        if(is_array($value)) {
 
-            if (count($value) === 1) {
+            if(count($value) === 1) {
                 $this->value = $value[0];
             } else {
                 throw new \InvalidArgumentException('The argument must either be a string or an array with only one child');
@@ -62,10 +63,9 @@ class Binary extends Property {
      * not yet done, but parameters are not included.
      *
      * @param string $val
-     *
      * @return void
      */
-    function setRawMimeDirValue($val) {
+    public function setRawMimeDirValue($val) {
 
         $this->value = base64_decode($val);
 
@@ -76,7 +76,7 @@ class Binary extends Property {
      *
      * @return string
      */
-    function getRawMimeDirValue() {
+    public function getRawMimeDirValue() {
 
         return base64_encode($this->value);
 
@@ -90,7 +90,7 @@ class Binary extends Property {
      *
      * @return string
      */
-    function getValueType() {
+    public function getValueType() {
 
         return 'BINARY';
 
@@ -103,9 +103,9 @@ class Binary extends Property {
      *
      * @return array
      */
-    function getJsonValue() {
+    public function getJsonValue() {
 
-        return [base64_encode($this->getValue())];
+        return array(base64_encode($this->getValue()));
 
     }
 
@@ -115,10 +115,9 @@ class Binary extends Property {
      * The value must always be an array.
      *
      * @param array $value
-     *
      * @return void
      */
-    function setJsonValue(array $value) {
+    public function setJsonValue(array $value) {
 
         $value = array_map('base64_decode', $value);
         parent::setJsonValue($value);

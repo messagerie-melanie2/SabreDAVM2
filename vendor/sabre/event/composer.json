@@ -7,13 +7,12 @@
         "Promise",
         "Hooks",
         "Plugin",
-        "Signal",
-        "Async"
+        "Signal"
     ],
     "homepage": "http://sabre.io/event/",
     "license": "BSD-3-Clause",
     "require": {
-        "php": ">=5.5"
+        "php": ">=5.4.1"
     },
     "authors": [
         {
@@ -30,15 +29,10 @@
     "autoload": {
         "psr-4": {
             "Sabre\\Event\\": "lib/"
-        },
-        "files" : [
-            "lib/coroutine.php",
-            "lib/Loop/functions.php",
-            "lib/Promise/functions.php"
-        ]
+        }
     },
     "require-dev": {
-        "sabre/cs": "~0.0.4",
+        "sabre/cs": "~0.0.1",
         "phpunit/phpunit" : "*"
     },
     "config" : {

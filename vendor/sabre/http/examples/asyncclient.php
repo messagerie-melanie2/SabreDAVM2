@@ -10,8 +10,8 @@
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-use Sabre\HTTP\Client;
 use Sabre\HTTP\Request;
+use Sabre\HTTP\Client;
 
 // Find the autoloader
 $paths = [

@@ -2,9 +2,7 @@
 
 namespace Sabre\VObject;
 
-use PHPUnit\Framework\TestCase;
-
-class TimeZoneUtilTest extends TestCase {
+class TimezoneUtilTest extends \PHPUnit_Framework_TestCase {
 
     function setUp() {
 
@@ -22,7 +20,7 @@ class TimeZoneUtilTest extends TestCase {
             $tz = new \DateTimeZone($timezoneName);
             $this->assertInstanceOf('DateTimeZone', $tz);
         } catch (\Exception $e) {
-            if (strpos($e->getMessage(), "Unknown or bad timezone") !== false) {
+            if (strpos($e->getMessage(), "Unknown or bad timezone")!==false) {
                 $this->markTestSkipped($timezoneName . ' is not (yet) supported in this PHP version. Update pecl/timezonedb');
             } else {
                 throw $e;
@@ -39,7 +37,7 @@ class TimeZoneUtilTest extends TestCase {
         // PHPUNit requires an array of arrays
         return array_map(
             function($value) {
-                return [$value];
+                return array($value);
             },
             TimeZoneUtil::$map
         );
@@ -191,7 +189,7 @@ HI;
         // PHPUNit requires an array of arrays
         return array_map(
             function($value) {
-                return [$value];
+                return array($value);
             },
             \DateTimeZone::listIdentifiers()
         );
@@ -203,7 +201,7 @@ HI;
         // PHPUNit requires an array of arrays
         return array_map(
             function($value) {
-                return [$value];
+                return array($value);
             },
             TimeZoneUtil::getIdentifiersBC()
         );
@@ -366,14 +364,6 @@ HI;
         $ex = new \DateTimeZone('America/New_York');
         $this->assertEquals($ex->getName(), $tz->getName());
 
-    }
-
-
-    function testPrefixedOffsetExchangeIdentifier()
-    {
-        $tz = TimeZoneUtil::getTimeZone('(UTC-05:00) Eastern Time (US & Canada)');
-        $ex = new \DateTimeZone('America/New_York');
-        $this->assertEquals($ex->getName(), $tz->getName());
     }
 
 }

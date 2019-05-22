@@ -4,7 +4,7 @@ namespace Sabre\CardDAV;
 
 use Sabre\DAV;
 use Sabre\DAV\Exception\ReportNotSupported;
-use Sabre\DAV\Xml\Property\LocalHref;
+use Sabre\DAV\Xml\Property\Href;
 use Sabre\DAVACL;
 use Sabre\HTTP;
 use Sabre\HTTP\RequestInterface;
@@ -43,7 +43,7 @@ class Plugin extends DAV\ServerPlugin {
     /**
      * Server class
      *
-     * @var DAV\Server
+     * @var Sabre\DAV\Server
      */
     protected $server;
 
@@ -156,11 +156,11 @@ class Plugin extends DAV\ServerPlugin {
             $path = $propFind->getPath();
 
             $propFind->handle('{' . self::NS_CARDDAV . '}addressbook-home-set', function() use ($path) {
-                return new LocalHref($this->getAddressBookHomeForPrincipal($path) . '/');
+                return new Href($this->getAddressBookHomeForPrincipal($path) . '/');
             });
 
             if ($this->directories) $propFind->handle('{' . self::NS_CARDDAV . '}directory-gateway', function() {
-                return new LocalHref($this->directories);
+                return new Href($this->directories);
             });
 
         }
@@ -188,10 +188,9 @@ class Plugin extends DAV\ServerPlugin {
      *
      * @param string $reportName
      * @param \DOMNode $dom
-     * @param mixed $path
      * @return bool
      */
-    function report($reportName, $dom, $path) {
+    function report($reportName, $dom) {
 
         switch ($reportName) {
             case '{' . self::NS_CARDDAV . '}addressbook-multiget' :
@@ -334,7 +333,12 @@ class Plugin extends DAV\ServerPlugin {
             $data = stream_get_contents($data);
         }
 
-        $before = $data;
+        $before = md5($data);
+
+        // Converting the data to unicode, if needed.
+        $data = DAV\StringUtil::ensureUTF8($data);
+
+        if (md5($data) !== $before) $modified = true;
 
         try {
 
@@ -361,60 +365,13 @@ class Plugin extends DAV\ServerPlugin {
             throw new DAV\Exception\UnsupportedMediaType('This collection can only support vcard objects.');
         }
 
-        $options = VObject\Node::PROFILE_CARDDAV;
-        $prefer = $this->server->getHTTPPrefer();
-
-        if ($prefer['handling'] !== 'strict') {
-            $options |= VObject\Node::REPAIR;
-        }
-
-        $messages = $vobj->validate($options);
-
-        $highestLevel = 0;
-        $warningMessage = null;
-
-        // $messages contains a list of problems with the vcard, along with
-        // their severity.
-        foreach ($messages as $message) {
-
-            if ($message['level'] > $highestLevel) {
-                // Recording the highest reported error level.
-                $highestLevel = $message['level'];
-                $warningMessage = $message['message'];
-            }
-
-            switch ($message['level']) {
-
-                case 1 :
-                    // Level 1 means that there was a problem, but it was repaired.
-                    $modified = true;
-                    break;
-                case 2 :
-                    // Level 2 means a warning, but not critical
-                    break;
-                case 3 :
-                    // Level 3 means a critical error
-                    throw new DAV\Exception\UnsupportedMediaType('Validation error in vCard: ' . $message['message']);
-
-            }
-
-        }
-        if ($warningMessage) {
-            $this->server->httpResponse->setHeader(
-                'X-Sabre-Ew-Gross',
-                'vCard validation warning: ' . $warningMessage
-            );
-
-            // Re-serializing object.
+        if (!isset($vobj->UID)) {
+            // No UID in vcards is invalid, but we'll just add it in anyway.
+            $vobj->add('UID', DAV\UUIDUtil::getUUID());
             $data = $vobj->serialize();
-            if (!$modified && strcmp($data, $before) !== 0) {
-                // This ensures that the system does not send an ETag back.
-                $modified = true;
-            }
+            $modified = true;
         }
 
-        // Destroy circular references to PHP will GC the object.
-        $vobj->destroy();
     }
 
 
@@ -490,8 +447,7 @@ class Plugin extends DAV\ServerPlugin {
 
                 $props[200]['{' . self::NS_CARDDAV . '}address-data'] = $this->convertVCard(
                     $props[200]['{' . self::NS_CARDDAV . '}address-data'],
-                    $vcardType,
-                    $report->addressDataProperties
+                    $vcardType
                 );
 
             }
@@ -518,9 +474,9 @@ class Plugin extends DAV\ServerPlugin {
      */
     function validateFilters($vcardData, array $filters, $test) {
 
+        $vcard = VObject\Reader::read($vcardData);
 
         if (!$filters) return true;
-        $vcard = VObject\Reader::read($vcardData);
 
         foreach ($filters as $filter) {
 
@@ -567,25 +523,13 @@ class Plugin extends DAV\ServerPlugin {
             // There are two conditions where we can already determine whether
             // or not this filter succeeds.
             if ($test === 'anyof' && $success) {
-
-                // Destroy circular references to PHP will GC the object.
-                $vcard->destroy();
-
                 return true;
             }
             if ($test === 'allof' && !$success) {
-
-                // Destroy circular references to PHP will GC the object.
-                $vcard->destroy();
-
                 return false;
             }
 
         } // foreach
-
-
-        // Destroy circular references to PHP will GC the object.
-        $vcard->destroy();
 
         // If we got all the way here, it means we haven't been able to
         // determine early if the test failed or not.
@@ -844,61 +788,28 @@ class Plugin extends DAV\ServerPlugin {
     /**
      * Converts a vcard blob to a different version, or jcard.
      *
-     * @param string|resource $data
+     * @param string $data
      * @param string $target
-     * @param array $propertiesFilter
      * @return string
      */
-    protected function convertVCard($data, $target, array $propertiesFilter = null) {
+    protected function convertVCard($data, $target) {
 
-        if (is_resource($data)) {
-            $data = stream_get_contents($data);
+        $data = VObject\Reader::read($data);
+        switch ($target) {
+            default :
+            case 'vcard3' :
+                $data = $data->convert(VObject\Document::VCARD30);
+                return $data->serialize();
+            case 'vcard4' :
+                $data = $data->convert(VObject\Document::VCARD40);
+                return $data->serialize();
+            case 'jcard' :
+                $data = $data->convert(VObject\Document::VCARD40);
+                return json_encode($data->jsonSerialize());
+
+        // @codeCoverageIgnoreStart
         }
-        $input = VObject\Reader::read($data);
-        if (!empty($propertiesFilter)) {
-            $propertiesFilter = array_merge(['UID', 'VERSION', 'FN'], $propertiesFilter);
-            $keys = array_unique(array_map(function($child) {
-                return $child->name;
-            }, $input->children()));
-            $keys = array_diff($keys, $propertiesFilter);
-            foreach ($keys as $key) {
-                unset($input->$key);
-            }
-            $data = $input->serialize();
-        }
-        $output = null;
-        try {
-
-            switch ($target) {
-                default :
-                case 'vcard3' :
-                    if ($input->getDocumentType() === VObject\Document::VCARD30) {
-                        // Do nothing
-                        return $data;
-                    }
-                    $output = $input->convert(VObject\Document::VCARD30);
-                    return $output->serialize();
-                case 'vcard4' :
-                    if ($input->getDocumentType() === VObject\Document::VCARD40) {
-                        // Do nothing
-                        return $data;
-                    }
-                    $output = $input->convert(VObject\Document::VCARD40);
-                    return $output->serialize();
-                case 'jcard' :
-                    $output = $input->convert(VObject\Document::VCARD40);
-                    return json_encode($output);
-
-            }
-
-        } finally {
-
-            // Destroy circular references to PHP will GC the object.
-            $input->destroy();
-            if (!is_null($output)) {
-                $output->destroy();
-            }
-        }
+        // @codeCoverageIgnoreEnd
 
     }
 

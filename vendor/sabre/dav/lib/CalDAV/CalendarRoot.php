@@ -22,7 +22,7 @@ class CalendarRoot extends \Sabre\DAVACL\AbstractPrincipalCollection {
     /**
      * CalDAV backend
      *
-     * @var Backend\BackendInterface
+     * @var Sabre\CalDAV\Backend\BackendInterface
      */
     protected $caldavBackend;
 

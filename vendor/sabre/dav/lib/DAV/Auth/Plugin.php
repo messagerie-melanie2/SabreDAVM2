@@ -2,11 +2,12 @@
 
 namespace Sabre\DAV\Auth;
 
+use Sabre\HTTP\RequestInterface;
+use Sabre\HTTP\ResponseInterface;
+use Sabre\HTTP\URLUtil;
 use Sabre\DAV\Exception\NotAuthenticated;
 use Sabre\DAV\Server;
 use Sabre\DAV\ServerPlugin;
-use Sabre\HTTP\RequestInterface;
-use Sabre\HTTP\ResponseInterface;
 
 /**
  * This plugin provides Authentication for a WebDAV server.
@@ -23,20 +24,6 @@ use Sabre\HTTP\ResponseInterface;
  * @license http://sabre.io/license/ Modified BSD License
  */
 class Plugin extends ServerPlugin {
-
-    /**
-     * By default this plugin will require that the user is authenticated,
-     * and refuse any access if the user is not authenticated.
-     *
-     * If this setting is set to false, we let the user through, whether they
-     * are authenticated or not.
-     *
-     * This is useful if you want to allow both authenticated and
-     * unauthenticated access to your server.
-     *
-     * @param bool
-     */
-    public $autoRequireLogin = true;
 
     /**
      * authentication backends
@@ -121,6 +108,27 @@ class Plugin extends ServerPlugin {
     }
 
     /**
+     * Returns the current username.
+     *
+     * This method is deprecated and is only kept for backwards compatibility
+     * purposes. Please switch to getCurrentPrincipal().
+     *
+     * @deprecated Will be removed in a future version!
+     * @return string|null
+     */
+    function getCurrentUser() {
+
+        // We just do a 'basename' on the principal to give back a sane value
+        // here.
+        list(, $userName) = URLUtil::splitPath(
+            $this->getCurrentPrincipal()
+        );
+
+        return $userName;
+
+    }
+
+    /**
      * This method is called before any HTTP method and forces users to be authenticated
      *
      * @param RequestInterface $request
@@ -146,50 +154,6 @@ class Plugin extends ServerPlugin {
             return;
 
         }
-
-        $authResult = $this->check($request, $response);
-
-        if ($authResult[0]) {
-            // Auth was successful
-            $this->currentPrincipal = $authResult[1];
-            $this->loginFailedReasons = null;
-            return;
-        }
-
-
-
-        // If we got here, it means that no authentication backend was
-        // successful in authenticating the user.
-        $this->currentPrincipal = null;
-        $this->loginFailedReasons = $authResult[1];
-
-        if ($this->autoRequireLogin) {
-            $this->challenge($request, $response);
-            throw new NotAuthenticated(implode(', ', $authResult[1]));
-        }
-
-    }
-
-    /**
-     * Checks authentication credentials, and logs the user in if possible.
-     *
-     * This method returns an array. The first item in the array is a boolean
-     * indicating if login was successful.
-     *
-     * If login was successful, the second item in the array will contain the
-     * current principal url/path of the logged in user.
-     *
-     * If login was not successful, the second item in the array will contain a
-     * an array with strings. The strings are a list of reasons why login was
-     * unsuccessful. For every auth backend there will be one reason, so usually
-     * there's just one.
-     *
-     * @param RequestInterface $request
-     * @param ResponseInterface $response
-     * @return array
-     */
-    function check(RequestInterface $request, ResponseInterface $response) {
-
         if (!$this->backends) {
             throw new \Sabre\DAV\Exception('No authentication backends were configured on this server.');
         }
@@ -208,56 +172,20 @@ class Plugin extends ServerPlugin {
             if ($result[0]) {
                 $this->currentPrincipal = $result[1];
                 // Exit early
-                return [true, $result[1]];
+                return;
             }
             $reasons[] = $result[1];
 
         }
 
-        return [false, $reasons];
-
-    }
-
-    /**
-     * This method sends authentication challenges to the user.
-     *
-     * This method will for example cause a HTTP Basic backend to set a
-     * WWW-Authorization header, indicating to the client that it should
-     * authenticate.
-     *
-     * @param RequestInterface $request
-     * @param ResponseInterface $response
-     * @return array
-     */
-    function challenge(RequestInterface $request, ResponseInterface $response) {
+        // If we got here, it means that no authentication backend was
+        // successful in authenticating the user.
+        $this->currentPrincipal = null;
 
         foreach ($this->backends as $backend) {
             $backend->challenge($request, $response);
         }
-
-    }
-
-    /**
-     * List of reasons why login failed for the last login operation.
-     *
-     * @var string[]|null
-     */
-    protected $loginFailedReasons;
-
-    /**
-     * Returns a list of reasons why login was unsuccessful.
-     *
-     * This method will return the login failed reasons for the last login
-     * operation. One for each auth backend.
-     *
-     * This method returns null if the last authentication attempt was
-     * successful, or if there was no authentication attempt yet.
-     *
-     * @return string[]|null
-     */
-    function getLoginFailedReasons() {
-
-        return $this->loginFailedReasons;
+        throw new NotAuthenticated(implode(', ', $reasons));
 
     }
 

@@ -2,15 +2,13 @@
 
 namespace Sabre\VObject;
 
-use PHPUnit\Framework\TestCase;
-
 /**
  * Google produces vcards with a weird escaping of urls.
  *
  * VObject will provide a workaround for this, so end-user still get expected
  * values.
  */
-class GoogleColonEscapingTest extends TestCase {
+class GoogleColonEscaping extends \PHPUnit_Framework_TestCase {
 
     function testDecode() {
 

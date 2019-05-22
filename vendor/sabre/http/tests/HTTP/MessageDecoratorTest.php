@@ -72,13 +72,10 @@ class MessageDecoratorTest extends \PHPUnit_Framework_TestCase {
             $this->outer->getHeaderAsArray('A')
         );
 
-        $success = $this->outer->removeHeader('a');
+        $this->outer->removeHeader('a');
 
-        $this->assertTrue($success);
         $this->assertNull($this->inner->getHeader('A'));
         $this->assertNull($this->outer->getHeader('A'));
-
-        $this->assertFalse($this->outer->removeHeader('i-dont-exist'));
     }
 
     function testHttpVersion() {

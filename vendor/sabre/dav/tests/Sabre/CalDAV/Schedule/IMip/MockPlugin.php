@@ -18,10 +18,10 @@ namespace Sabre\CalDAV\Schedule\IMip;
  */
 class MockPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin {
 
-    protected $emails = [];
+    protected $emails = array();
 
     /**
-     * This function is responsible for sending the actual email.
+     * This function is reponsible for sending the actual email.
      *
      * @param string $to Recipient email address
      * @param string $subject Subject of the email
@@ -31,16 +31,16 @@ class MockPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin {
      */
     protected function mail($to, $subject, $body, array $headers) {
 
-        $this->emails[] = [
-            'to'      => $to,
+        $this->emails[] = array(
+            'to' => $to,
             'subject' => $subject,
-            'body'    => $body,
+            'body' => $body,
             'headers' => $headers,
-        ];
+        );
 
     }
 
-    function getSentEmails() {
+    public function getSentEmails() {
 
         return $this->emails;
 

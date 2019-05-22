@@ -2,16 +2,15 @@
 
 namespace Sabre\VObject\Recur\EventIterator;
 
-use DateTime;
-use PHPUnit\Framework\TestCase;
-use Sabre\VObject\Reader;
+use
+    DateTime,
+    DateTimeZone,
+    Sabre\VObject\Reader;
 
 /**
  * This is a unittest for Issue #53.
  */
-class IncorrectExpandTest extends TestCase {
-
-    use \Sabre\VObject\PHPUnitAssertions;
+class RecurrenceIteratorIncorrectExpandTest extends \PHPUnit_Framework_TestCase {
 
     function testExpand() {
 
@@ -36,7 +35,9 @@ ICS;
         $vcal = Reader::read($input);
         $this->assertInstanceOf('Sabre\\VObject\\Component\\VCalendar', $vcal);
 
-        $vcal = $vcal->expand(new DateTime('2011-01-01'), new DateTime('2014-01-01'));
+        $vcal->expand(new DateTime('2011-01-01'), new DateTime('2014-01-01'));
+
+        $result = $vcal->serialize();
 
         $output = <<<ICS
 BEGIN:VCALENDAR
@@ -56,8 +57,8 @@ END:VEVENT
 END:VCALENDAR
 
 ICS;
-        $this->assertVObjectEqualsVObject($output, $vcal);
-
+        $this->assertEquals($output, str_replace("\r", "", $result));
+    
     }
 
 }

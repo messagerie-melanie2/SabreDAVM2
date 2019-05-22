@@ -2,13 +2,11 @@
 
 namespace Sabre\VObject\Recur;
 
-use DateTimeImmutable;
-use DateTimeInterface;
-use DateTimeZone;
 use InvalidArgumentException;
+use DateTime;
+use DateTimeZone;
 use Sabre\VObject\Component;
 use Sabre\VObject\Component\VEvent;
-use Sabre\VObject\Settings;
 
 /**
  * This class is used to determine new for a recurring event, when the next
@@ -43,8 +41,6 @@ use Sabre\VObject\Settings;
  *     * BYSETPOS
  *   * FREQ=YEARLY
  *     * BYMONTH
- *     * BYYEARDAY
- *     * BYWEEKNO
  *     * BYMONTHDAY (only if BYMONTH is also set)
  *     * BYDAY (only if BYMONTH is also set)
  *
@@ -75,7 +71,7 @@ class EventIterator implements \Iterator {
     protected $allDay = false;
 
     /**
-     * Creates the iterator.
+     * Creates the iterator
      *
      * There's three ways to set up the iterator.
      *
@@ -93,9 +89,9 @@ class EventIterator implements \Iterator {
      * @param DateTimeZone $timeZone Reference timezone for floating dates and
      *                               times.
      */
-    function __construct($input, $uid = null, DateTimeZone $timeZone = null) {
+    public function __construct($input, $uid = null, DateTimeZone $timeZone = null) {
 
-        if (is_null($timeZone)) {
+        if (is_null($this->timeZone)) {
             $timeZone = new DateTimeZone('UTC');
         }
         $this->timeZone = $timeZone;
@@ -104,7 +100,7 @@ class EventIterator implements \Iterator {
             $events = $input;
         } elseif ($input instanceof VEvent) {
             // Single instance mode.
-            $events = [$input];
+            $events = array($input);
         } else {
             // Calendar + UID mode.
             $uid = (string)$uid;
@@ -118,7 +114,7 @@ class EventIterator implements \Iterator {
 
         }
 
-        foreach ($events as $vevent) {
+        foreach($events as $vevent) {
 
             if (!isset($vevent->{'RECURRENCE-ID'})) {
 
@@ -153,9 +149,9 @@ class EventIterator implements \Iterator {
 
         if (isset($this->masterEvent->EXDATE)) {
 
-            foreach ($this->masterEvent->EXDATE as $exDate) {
+            foreach($this->masterEvent->EXDATE as $exDate) {
 
-                foreach ($exDate->getDateTimes($this->timeZone) as $dt) {
+                foreach($exDate->getDateTimes($this->timeZone) as $dt) {
                     $this->exceptions[$dt->getTimeStamp()] = true;
                 }
 
@@ -170,7 +166,7 @@ class EventIterator implements \Iterator {
         } elseif (isset($this->masterEvent->DURATION)) {
             $duration = $this->masterEvent->DURATION->getDateInterval();
             $end = clone $this->startDate;
-            $end = $end->add($duration);
+            $end->add($duration);
             $this->eventDuration = $end->getTimeStamp() - $this->startDate->getTimeStamp();
         } elseif ($this->allDay) {
             $this->eventDuration = 3600 * 24;
@@ -190,10 +186,10 @@ class EventIterator implements \Iterator {
             );
         } else {
             $this->recurIterator = new RRuleIterator(
-                [
-                    'FREQ'  => 'DAILY',
+                array(
+                    'FREQ' => 'DAILY',
                     'COUNT' => 1,
-                ],
+                ),
                 $this->startDate
             );
         }
@@ -208,9 +204,9 @@ class EventIterator implements \Iterator {
     /**
      * Returns the date for the current position of the iterator.
      *
-     * @return DateTimeImmutable
+     * @return DateTime
      */
-    function current() {
+    public function current() {
 
         if ($this->currentDate) {
             return clone $this->currentDate;
@@ -222,9 +218,9 @@ class EventIterator implements \Iterator {
      * This method returns the start date for the current iteration of the
      * event.
      *
-     * @return DateTimeImmutable
+     * @return DateTime
      */
-    function getDtStart() {
+    public function getDtStart() {
 
         if ($this->currentDate) {
             return clone $this->currentDate;
@@ -236,15 +232,16 @@ class EventIterator implements \Iterator {
      * This method returns the end date for the current iteration of the
      * event.
      *
-     * @return DateTimeImmutable
+     * @return DateTime
      */
-    function getDtEnd() {
+    public function getDtEnd() {
 
         if (!$this->valid()) {
-            return;
+            return null;
         }
         $end = clone $this->currentDate;
-        return $end->modify('+' . $this->eventDuration . ' seconds');
+        $end->modify('+' . $this->eventDuration . ' seconds');
+        return $end;
 
     }
 
@@ -256,7 +253,7 @@ class EventIterator implements \Iterator {
      *
      * @return VEvent
      */
-    function getEventObject() {
+    public function getEventObject() {
 
         if ($this->currentOverriddenEvent) {
             return $this->currentOverriddenEvent;
@@ -295,7 +292,7 @@ class EventIterator implements \Iterator {
      *
      * @return int
      */
-    function key() {
+    public function key() {
 
         // The counter is always 1 ahead.
         return $this->counter - 1;
@@ -308,11 +305,8 @@ class EventIterator implements \Iterator {
      *
      * @return bool
      */
-    function valid() {
+    public function valid() {
 
-        if ($this->counter > Settings::$maxRecurrences && Settings::$maxRecurrences !== -1) {
-            throw new MaxInstancesExceededException('Recurring events are only allowed to generate ' . Settings::$maxRecurrences);
-        }
         return !!$this->currentDate;
 
     }
@@ -320,14 +314,14 @@ class EventIterator implements \Iterator {
     /**
      * Sets the iterator back to the starting point.
      */
-    function rewind() {
+    public function rewind() {
 
         $this->recurIterator->rewind();
         // re-creating overridden event index.
-        $index = [];
-        foreach ($this->overriddenEvents as $key => $event) {
+        $index = array();
+        foreach($this->overriddenEvents as $key=>$event) {
             $stamp = $event->DTSTART->getDateTime($this->timeZone)->getTimeStamp();
-            $index[$stamp][] = $key;
+            $index[$stamp] = $key;
         }
         krsort($index);
         $this->counter = 0;
@@ -346,7 +340,7 @@ class EventIterator implements \Iterator {
      *
      * @return void
      */
-    function next() {
+    public function next() {
 
         $this->currentOverriddenEvent = null;
         $this->counter++;
@@ -365,7 +359,7 @@ class EventIterator implements \Iterator {
                 }
                 $nextDate = $this->recurIterator->current();
                 $this->recurIterator->next();
-            } while (isset($this->exceptions[$nextDate->getTimeStamp()]));
+            } while(isset($this->exceptions[$nextDate->getTimeStamp()]));
 
         }
 
@@ -374,9 +368,8 @@ class EventIterator implements \Iterator {
         // overridden event may cut ahead.
         if ($this->overriddenEventsIndex) {
 
-            $offsets = end($this->overriddenEventsIndex);
+            $offset = end($this->overriddenEventsIndex);
             $timestamp = key($this->overriddenEventsIndex);
-            $offset = end($offsets);
             if (!$nextDate || $timestamp < $nextDate->getTimeStamp()) {
                 // Overridden event comes first.
                 $this->currentOverriddenEvent = $this->overriddenEvents[$offset];
@@ -386,10 +379,7 @@ class EventIterator implements \Iterator {
                 $this->currentDate = $this->currentOverriddenEvent->DTSTART->getDateTime($this->timeZone);
 
                 // Ensuring that this item will only be used once.
-                array_pop($this->overriddenEventsIndex[$timestamp]);
-                if (!$this->overriddenEventsIndex[$timestamp]) {
-                    array_pop($this->overriddenEventsIndex);
-                }
+                array_pop($this->overriddenEventsIndex);
 
                 // Exit point!
                 return;
@@ -405,11 +395,11 @@ class EventIterator implements \Iterator {
     /**
      * Quickly jump to a date in the future.
      *
-     * @param DateTimeInterface $dateTime
+     * @param DateTime $dateTime
      */
-    function fastForward(DateTimeInterface $dateTime) {
+    public function fastForward(DateTime $dateTime) {
 
-        while ($this->valid() && $this->getDtEnd() <= $dateTime) {
+        while($this->valid() && $this->getDtEnd() < $dateTime ) {
             $this->next();
         }
 
@@ -420,14 +410,14 @@ class EventIterator implements \Iterator {
      *
      * @return bool
      */
-    function isInfinite() {
+    public function isInfinite() {
 
         return $this->recurIterator->isInfinite();
 
     }
 
     /**
-     * RRULE parser.
+     * RRULE parser
      *
      * @var RRuleIterator
      */
@@ -452,12 +442,12 @@ class EventIterator implements \Iterator {
      *
      * @var array
      */
-    protected $overriddenEvents = [];
+    protected $overriddenEvents = array();
 
     /**
      * Overridden event index.
      *
-     * Key is timestamp, value is the list of indexes of the item in the $overriddenEvent
+     * Key is timestamp, value is the index of the item in the $overriddenEvent
      * property.
      *
      * @var array
@@ -470,10 +460,10 @@ class EventIterator implements \Iterator {
      *
      * @var array
      */
-    protected $exceptions = [];
+    protected $exceptions = array();
 
     /**
-     * Internal event counter.
+     * Internal event counter
      *
      * @var int
      */
@@ -482,14 +472,14 @@ class EventIterator implements \Iterator {
     /**
      * The very start of the iteration process.
      *
-     * @var DateTimeImmutable
+     * @var DateTime
      */
     protected $startDate;
 
     /**
-     * Where we are currently in the iteration process.
+     * Where we are currently in the iteration process
      *
-     * @var DateTimeImmutable
+     * @var DateTime
      */
     protected $currentDate;
 
@@ -499,15 +489,8 @@ class EventIterator implements \Iterator {
      * Sometimes we need to temporary store the next date, because an
      * overridden event came before.
      *
-     * @var DateTimeImmutable
+     * @var DateTime
      */
     protected $nextDate;
-
-    /**
-     * The event that overwrites the current iteration
-     *
-     * @var VEVENT
-     */
-    protected $currentOverriddenEvent;
 
 }

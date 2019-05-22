@@ -2,12 +2,10 @@
 
 namespace Sabre\VObject;
 
-use PHPUnit\Framework\TestCase;
-
 /**
  * Assorted vcard 2.1 tests.
  */
-class VCard21Test extends TestCase {
+class VCard21Test extends \PHPUnit_Framework_TestCase {
 
     function testPropertyWithNoName() {
 
@@ -20,7 +18,7 @@ END:VCARD\r
 VCF;
 
         $vobj = Reader::read($input);
-        $output = $vobj->serialize();
+        $output = $vobj->serialize($input);
 
         $this->assertEquals($input, $output);
 
@@ -37,7 +35,7 @@ END:VCARD
 VCF;
 
         $vobj = Reader::read($input);
-        $output = $vobj->serialize();
+        $output = $vobj->serialize($input);
 
         $expected = <<<VCF
 BEGIN:VCARD\r

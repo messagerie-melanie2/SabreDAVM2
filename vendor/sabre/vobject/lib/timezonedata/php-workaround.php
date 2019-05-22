@@ -1,8 +1,7 @@
 <?php
-
 /**
  * A list of PHP timezones that were supported until 5.5.9, removed in
- * PHP 5.5.10 and re-introduced in PHP 5.5.17.
+ * PHP 5.5.10 and re-introduced in PHP 5.5.17
  *
  * DateTimeZone::listIdentifiers(DateTimeZone::ALL_WITH_BC) returns them,
  * but they are invalid for new DateTimeZone(). Fixed in PHP 5.5.17.
@@ -14,7 +13,7 @@
  * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-return [
+return array(
     'CST6CDT'   => 'America/Chicago',
     'Cuba'      => 'America/Havana',
     'Egypt'     => 'Africa/Cairo',
@@ -43,4 +42,4 @@ return [
     'Universal' => 'UTC',
     'W-SU'      => 'Europe/Moscow',
     'Zulu'      => 'UTC',
-];
+);

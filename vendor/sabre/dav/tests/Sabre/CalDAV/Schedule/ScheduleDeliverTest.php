@@ -3,11 +3,8 @@
 namespace Sabre\CalDAV\Schedule;
 
 use Sabre\HTTP\Request;
-use Sabre\VObject;
 
 class ScheduleDeliverTest extends \Sabre\DAVServerTest {
-
-    use VObject\PHPUnitAssertions;
 
     public $setupCalDAV = true;
     public $setupCalDAVScheduling = true;
@@ -17,11 +14,11 @@ class ScheduleDeliverTest extends \Sabre\DAVServerTest {
     public $caldavCalendars = [
         [
             'principaluri' => 'principals/user1',
-            'uri'          => 'cal',
+            'uri' => 'cal',
         ],
         [
             'principaluri' => 'principals/user2',
-            'uri'          => 'cal',
+            'uri' => 'cal',
         ],
     ];
 
@@ -51,18 +48,16 @@ ICS;
 
         $expected = <<<ICS
 BEGIN:VCALENDAR
-VERSION:2.0
 BEGIN:VEVENT
 UID:foo
 DTSTART:20140811T230000Z
 ORGANIZER:mailto:user1.sabredav@sabredav.org
 ATTENDEE;SCHEDULE-STATUS=1.2:mailto:user2.sabredav@sabredav.org
-DTSTAMP:**ANY**
 END:VEVENT
 END:VCALENDAR
 ICS;
 
-        $this->assertVObjectEqualsVObject(
+        $this->assertVObjEquals(
             $expected,
             $newObject
         );
@@ -73,7 +68,6 @@ ICS;
 
         $newObject = <<<ICS
 BEGIN:VCALENDAR
-VERSION:2.0
 BEGIN:VEVENT
 UID:foo
 DTSTART:20140811T230000Z
@@ -120,7 +114,6 @@ END:VCALENDAR
 ICS;
         $oldObject = <<<ICS
 BEGIN:VCALENDAR
-VERSION:2.0
 BEGIN:VEVENT
 UID:foo
 DTSTART:20140811T230000Z
@@ -134,18 +127,16 @@ ICS;
 
         $expected = <<<ICS
 BEGIN:VCALENDAR
-VERSION:2.0
 BEGIN:VEVENT
 UID:foo
 DTSTART:20140811T230000Z
 ORGANIZER:mailto:user1.sabredav@sabredav.org
 ATTENDEE;SCHEDULE-STATUS=1.2:mailto:user2.sabredav@sabredav.org
-DTSTAMP:**ANY**
 END:VEVENT
 END:VCALENDAR
 ICS;
 
-        $this->assertVObjectEqualsVObject(
+        $this->assertVObjEquals(
             $expected,
             $newObject
         );
@@ -332,7 +323,6 @@ ICS;
 
         $expected = <<<ICS
 BEGIN:VCALENDAR
-VERSION:2.0
 BEGIN:VEVENT
 UID:foo
 DTSTART:20140811T230000Z
@@ -340,12 +330,11 @@ ORGANIZER;SCHEDULE-STATUS=1.2:mailto:user2.sabredav@sabredav.org
 ATTENDEE;PARTSTAT=ACCEPTED:mailto:user2.sabredav@sabredav.org
 ATTENDEE;PARTSTAT=ACCEPTED:mailto:user1.sabredav@sabredav.org
 ATTENDEE:mailto:user3.sabredav@sabredav.org
-DTSTAMP:**ANY**
 END:VEVENT
 END:VCALENDAR
 ICS;
 
-        $this->assertVObjectEqualsVObject(
+        $this->assertVObjEquals(
             $expected,
             $newObject
         );
@@ -371,18 +360,16 @@ ICS;
 
         $expected = <<<ICS
 BEGIN:VCALENDAR
-VERSION:2.0
 BEGIN:VEVENT
 UID:foo
 DTSTART:20140811T230000Z
 ORGANIZER:mailto:user1.sabredav@sabredav.org
 ATTENDEE;SCHEDULE-STATUS=3.7:mailto:user3.sabredav@sabredav.org
-DTSTAMP:**ANY**
 END:VEVENT
 END:VCALENDAR
 ICS;
 
-        $this->assertVObjectEqualsVObject(
+        $this->assertVObjEquals(
             $expected,
             $newObject
         );
@@ -409,18 +396,16 @@ ICS;
 
         $expected = <<<ICS
 BEGIN:VCALENDAR
-VERSION:2.0
 BEGIN:VEVENT
 UID:foo
 DTSTART:20140811T230000Z
 ORGANIZER:mailto:user1.sabredav@sabredav.org
 ATTENDEE;SCHEDULE-STATUS=5.2:mailto:user2.sabredav@sabredav.org
-DTSTAMP:**ANY**
 END:VEVENT
 END:VCALENDAR
 ICS;
 
-        $this->assertVObjectEqualsVObject(
+        $this->assertVObjEquals(
             $expected,
             $newObject
         );
@@ -447,18 +432,16 @@ ICS;
 
         $expected = <<<ICS
 BEGIN:VCALENDAR
-VERSION:2.0
 BEGIN:VEVENT
 UID:foo
 DTSTART:20140811T230000Z
 ORGANIZER:mailto:user1.sabredav@sabredav.org
 ATTENDEE;SCHEDULE-STATUS=5.2:mailto:user2.sabredav@sabredav.org
-DTSTAMP:**ANY**
 END:VEVENT
 END:VCALENDAR
 ICS;
 
-        $this->assertVObjectEqualsVObject(
+        $this->assertVObjEquals(
             $expected,
             $newObject
         );
@@ -484,18 +467,16 @@ ICS;
 
         $expected = <<<ICS
 BEGIN:VCALENDAR
-VERSION:2.0
 BEGIN:VEVENT
 UID:foo
 DTSTART:20140811T230000Z
 ORGANIZER:mailto:user1.sabredav@sabredav.org
 ATTENDEE;SCHEDULE-STATUS=5.2:mailto:user2.sabredav@sabredav.org
-DTSTAMP:**ANY**
 END:VEVENT
 END:VCALENDAR
 ICS;
 
-        $this->assertVObjectEqualsVObject(
+        $this->assertVObjEquals(
             $expected,
             $newObject
         );
@@ -519,18 +500,16 @@ ICS;
 
         $expected = <<<ICS
 BEGIN:VCALENDAR
-VERSION:2.0
 BEGIN:VEVENT
 UID:foo
 DTSTART:20140811T230000Z
 ORGANIZER:mailto:user1.sabredav@sabredav.org
 ATTENDEE;SCHEDULE-STATUS=5.2:mailto:user2.sabredav@sabredav.org
-DTSTAMP:**ANY**
 END:VEVENT
 END:VCALENDAR
 ICS;
 
-        $this->assertVObjectEqualsVObject(
+        $this->assertVObjEquals(
             $expected,
             $newObject
         );
@@ -556,18 +535,16 @@ ICS;
 
         $expected = <<<ICS
 BEGIN:VCALENDAR
-VERSION:2.0
 BEGIN:VEVENT
 UID:foo
 DTSTART:20140811T230000Z
 ORGANIZER:mailto:user1.sabredav@sabredav.org
 ATTENDEE;SCHEDULE-STATUS=5.2:mailto:user2.sabredav@sabredav.org
-DTSTAMP:**ANY**
 END:VEVENT
 END:VCALENDAR
 ICS;
 
-        $this->assertVObjectEqualsVObject(
+        $this->assertVObjEquals(
             $expected,
             $newObject
         );
@@ -580,14 +557,14 @@ ICS;
 
         $this->server->httpRequest->setUrl($this->calendarObjectUri);
         if ($disableScheduling) {
-            $this->server->httpRequest->setHeader('Schedule-Reply', 'F');
+            $this->server->httpRequest->setHeader('Schedule-Reply','F');
         }
 
         if ($oldObject && $newObject) {
             // update
             $this->putPath($this->calendarObjectUri, $oldObject);
 
-            $stream = fopen('php://memory', 'r+');
+            $stream = fopen('php://memory','r+');
             fwrite($stream, $newObject);
             rewind($stream);
             $modified = false;
@@ -612,7 +589,7 @@ ICS;
         } else {
 
             // create
-            $stream = fopen('php://memory', 'r+');
+            $stream = fopen('php://memory','r+');
             fwrite($stream, $newObject);
             rewind($stream);
             $modified = false;
@@ -658,9 +635,30 @@ ICS;
 
     function assertItemsInInbox($user, $count) {
 
-        $inboxNode = $this->server->tree->getNodeForPath('calendars/' . $user . '/inbox');
+        $inboxNode = $this->server->tree->getNodeForPath('calendars/'.$user.'/inbox');
         $this->assertEquals($count, count($inboxNode->getChildren()));
 
     }
 
+    function assertVObjEquals($expected, $actual) {
+
+        $format = function($data) {
+
+            $data = trim($data, "\r\n");
+            $data = str_replace("\r","", $data);
+            // Unfolding lines.
+            $data = str_replace("\n ", "", $data);
+
+            return $data;
+
+        };
+
+        $this->assertEquals(
+            $format($expected),
+            $format($actual)
+        );
+
+    }
+
 }
+

@@ -2,12 +2,14 @@
 
 namespace Sabre\VObject\Recur;
 
-use DateTimeInterface;
+use DateTime;
+use InvalidArgumentException;
 use Iterator;
 use Sabre\VObject\DateTimeParser;
 
+
 /**
- * RRuleParser.
+ * RRuleParser
  *
  * This class receives an RRULE string, and allows you to iterate to get a list
  * of dates in that recurrence.
@@ -25,9 +27,9 @@ class RDateIterator implements Iterator {
      * Creates the Iterator.
      *
      * @param string|array $rrule
-     * @param DateTimeInterface $start
+     * @param DateTime $start
      */
-    function __construct($rrule, DateTimeInterface $start) {
+    public function __construct($rrule, DateTime $start) {
 
         $this->startDate = $start;
         $this->parseRDate($rrule);
@@ -37,9 +39,9 @@ class RDateIterator implements Iterator {
 
     /* Implementation of the Iterator interface {{{ */
 
-    function current() {
+    public function current() {
 
-        if (!$this->valid()) return;
+        if (!$this->valid()) return null;
         return clone $this->currentDate;
 
     }
@@ -49,7 +51,7 @@ class RDateIterator implements Iterator {
      *
      * @return int
      */
-    function key() {
+    public function key() {
 
         return $this->counter;
 
@@ -61,7 +63,7 @@ class RDateIterator implements Iterator {
      *
      * @return bool
      */
-    function valid() {
+    public function valid() {
 
         return ($this->counter <= count($this->dates));
 
@@ -72,7 +74,7 @@ class RDateIterator implements Iterator {
      *
      * @return void
      */
-    function rewind() {
+    public function rewind() {
 
         $this->currentDate = clone $this->startDate;
         $this->counter = 0;
@@ -84,15 +86,14 @@ class RDateIterator implements Iterator {
      *
      * @return void
      */
-    function next() {
+    public function next() {
 
         $this->counter++;
         if (!$this->valid()) return;
 
         $this->currentDate =
             DateTimeParser::parse(
-                $this->dates[$this->counter - 1],
-                $this->startDate->getTimezone()
+                $this->dates[$this->counter-1]
             );
 
     }
@@ -104,7 +105,7 @@ class RDateIterator implements Iterator {
      *
      * @return bool
      */
-    function isInfinite() {
+    public function isInfinite() {
 
         return false;
 
@@ -114,13 +115,12 @@ class RDateIterator implements Iterator {
      * This method allows you to quickly go to the next occurrence after the
      * specified date.
      *
-     * @param DateTimeInterface $dt
-     *
+     * @param DateTime $dt
      * @return void
      */
-    function fastForward(DateTimeInterface $dt) {
+    public function fastForward(\DateTime $dt) {
 
-        while ($this->valid() && $this->currentDate < $dt) {
+        while($this->valid() && $this->currentDate < $dt ) {
             $this->next();
         }
 
@@ -131,7 +131,7 @@ class RDateIterator implements Iterator {
      *
      * All calculations are based on this initial date.
      *
-     * @var DateTimeInterface
+     * @var DateTime
      */
     protected $startDate;
 
@@ -139,7 +139,7 @@ class RDateIterator implements Iterator {
      * The date of the current iteration. You can get this by calling
      * ->current().
      *
-     * @var DateTimeInterface
+     * @var DateTime
      */
     protected $currentDate;
 
@@ -159,7 +159,6 @@ class RDateIterator implements Iterator {
      * class with all the values.
      *
      * @param string|array $rrule
-     *
      * @return void
      */
     protected function parseRDate($rdate) {
@@ -171,12 +170,5 @@ class RDateIterator implements Iterator {
         $this->dates = $rdate;
 
     }
-
-    /**
-     * Array with the RRULE dates
-     *
-     * @var array
-     */
-    protected $dates = [];
 
 }

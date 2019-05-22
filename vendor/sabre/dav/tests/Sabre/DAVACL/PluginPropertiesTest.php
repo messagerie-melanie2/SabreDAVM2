@@ -10,14 +10,6 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
     function testPrincipalCollectionSet() {
 
         $plugin = new Plugin();
-        $plugin->allowUnauthenticatedAccess = false;
-        $plugin->setDefaultACL([
-            [
-                'principal' => '{DAV:}all',
-                'privilege' => '{DAV:}all',
-            ],
-        ]);
-        //Anyone can do anything
         $plugin->principalCollectionSet = [
             'principals1',
             'principals2',
@@ -33,8 +25,8 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
         $result = $server->getPropertiesForPath('', $requestedProperties);
         $result = $result[0];
 
-        $this->assertEquals(1, count($result[200]));
-        $this->assertArrayHasKey('{DAV:}principal-collection-set', $result[200]);
+        $this->assertEquals(1,count($result[200]));
+        $this->assertArrayHasKey('{DAV:}principal-collection-set',$result[200]);
         $this->assertInstanceOf('Sabre\\DAV\\Xml\\Property\\Href', $result[200]['{DAV:}principal-collection-set']);
 
         $expected = [
@@ -51,15 +43,9 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
     function testCurrentUserPrincipal() {
 
         $fakeServer = new DAV\Server();
-        $plugin = new DAV\Auth\Plugin(new DAV\Auth\Backend\Mock());
+        $plugin = new DAV\Auth\Plugin(new DAV\Auth\Backend\Mock(),'realm');
         $fakeServer->addPlugin($plugin);
         $plugin = new Plugin();
-        $plugin->setDefaultACL([
-            [
-                'principal' => '{DAV:}all',
-                'privilege' => '{DAV:}all',
-            ],
-        ]);
         $fakeServer->addPlugin($plugin);
 
 
@@ -70,8 +56,8 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
         $result = $fakeServer->getPropertiesForPath('', $requestedProperties);
         $result = $result[0];
 
-        $this->assertEquals(1, count($result[200]));
-        $this->assertArrayHasKey('{DAV:}current-user-principal', $result[200]);
+        $this->assertEquals(1,count($result[200]));
+        $this->assertArrayHasKey('{DAV:}current-user-principal',$result[200]);
         $this->assertInstanceOf('Sabre\DAVACL\Xml\Property\Principal', $result[200]['{DAV:}current-user-principal']);
         $this->assertEquals(Xml\Property\Principal::UNAUTHENTICATED, $result[200]['{DAV:}current-user-principal']->getType());
 
@@ -81,8 +67,8 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
         $result = $fakeServer->getPropertiesForPath('', $requestedProperties);
         $result = $result[0];
 
-        $this->assertEquals(1, count($result[200]));
-        $this->assertArrayHasKey('{DAV:}current-user-principal', $result[200]);
+        $this->assertEquals(1,count($result[200]));
+        $this->assertArrayHasKey('{DAV:}current-user-principal',$result[200]);
         $this->assertInstanceOf('Sabre\DAVACL\Xml\Property\Principal', $result[200]['{DAV:}current-user-principal']);
         $this->assertEquals(Xml\Property\Principal::HREF, $result[200]['{DAV:}current-user-principal']->getType());
         $this->assertEquals('principals/admin/', $result[200]['{DAV:}current-user-principal']->getHref());
@@ -92,13 +78,6 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
     function testSupportedPrivilegeSet() {
 
         $plugin = new Plugin();
-        $plugin->allowUnauthenticatedAccess = false;
-        $plugin->setDefaultACL([
-            [
-                'principal' => '{DAV:}all',
-                'privilege' => '{DAV:}all',
-            ],
-        ]);
         $server = new DAV\Server();
         $server->addPlugin($plugin);
 
@@ -109,8 +88,8 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
         $result = $server->getPropertiesForPath('', $requestedProperties);
         $result = $result[0];
 
-        $this->assertEquals(1, count($result[200]));
-        $this->assertArrayHasKey('{DAV:}supported-privilege-set', $result[200]);
+        $this->assertEquals(1,count($result[200]));
+        $this->assertArrayHasKey('{DAV:}supported-privilege-set',$result[200]);
         $this->assertInstanceOf('Sabre\\DAVACL\\Xml\\Property\\SupportedPrivilegeSet', $result[200]['{DAV:}supported-privilege-set']);
 
         $server = new DAV\Server();
@@ -119,25 +98,26 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
         $result = $server->xml->write('{DAV:}root', $prop);
 
         $xpaths = [
-            '/d:root'                                                                                                                 => 1,
-            '/d:root/d:supported-privilege'                                                                                           => 1,
-            '/d:root/d:supported-privilege/d:privilege'                                                                               => 1,
-            '/d:root/d:supported-privilege/d:privilege/d:all'                                                                         => 1,
-            '/d:root/d:supported-privilege/d:abstract'                                                                                => 0,
-            '/d:root/d:supported-privilege/d:supported-privilege'                                                                     => 2,
-            '/d:root/d:supported-privilege/d:supported-privilege/d:privilege'                                                         => 2,
-            '/d:root/d:supported-privilege/d:supported-privilege/d:privilege/d:read'                                                  => 1,
-            '/d:root/d:supported-privilege/d:supported-privilege/d:privilege/d:write'                                                 => 1,
-            '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege'                                               => 7,
-            '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege/d:privilege'                                   => 7,
-            '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege/d:privilege/d:read-acl'                        => 1,
+            '/d:root' => 1,
+            '/d:root/d:supported-privilege' => 1,
+            '/d:root/d:supported-privilege/d:privilege' => 1,
+            '/d:root/d:supported-privilege/d:privilege/d:all' => 1,
+            '/d:root/d:supported-privilege/d:abstract' => 1,
+            '/d:root/d:supported-privilege/d:supported-privilege' => 2,
+            '/d:root/d:supported-privilege/d:supported-privilege/d:privilege' => 2,
+            '/d:root/d:supported-privilege/d:supported-privilege/d:privilege/d:read' => 1,
+            '/d:root/d:supported-privilege/d:supported-privilege/d:privilege/d:write' => 1,
+            '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege' => 8,
+            '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege/d:privilege' => 8,
+            '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege/d:privilege/d:read-acl' => 1,
             '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege/d:privilege/d:read-current-user-privilege-set' => 1,
-            '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege/d:privilege/d:write-content'                   => 1,
-            '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege/d:privilege/d:write-properties'                => 1,
-            '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege/d:privilege/d:bind'                            => 1,
-            '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege/d:privilege/d:unbind'                          => 1,
-            '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege/d:privilege/d:unlock'                          => 1,
-            '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege/d:abstract'                                    => 0,
+            '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege/d:privilege/d:write-content' => 1,
+            '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege/d:privilege/d:write-properties' => 1,
+            '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege/d:privilege/d:write-acl' => 1,
+            '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege/d:privilege/d:bind' => 1,
+            '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege/d:privilege/d:unbind' => 1,
+            '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege/d:privilege/d:unlock' => 1,
+            '/d:root/d:supported-privilege/d:supported-privilege/d:supported-privilege/d:abstract' => 0,
         ];
 
 
@@ -146,10 +126,10 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
         $dom2->loadXML($result);
 
         $dxpath = new \DOMXPath($dom2);
-        $dxpath->registerNamespace('d', 'DAV:');
-        foreach ($xpaths as $xpath => $count) {
+        $dxpath->registerNamespace('d','DAV:');
+        foreach($xpaths as $xpath=>$count) {
 
-            $this->assertEquals($count, $dxpath->query($xpath)->length, 'Looking for : ' . $xpath . ', we could only find ' . $dxpath->query($xpath)->length . ' elements, while we expected ' . $count . ' Full XML: ' . $result);
+            $this->assertEquals($count, $dxpath->query($xpath)->length, 'Looking for : ' . $xpath . ', we could only find ' . $dxpath->query($xpath)->length . ' elements, while we expected ' . $count. ' Full XML: ' . $result);
 
         }
 
@@ -158,13 +138,6 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
     function testACL() {
 
         $plugin = new Plugin();
-        $plugin->allowUnauthenticatedAccess = false;
-        $plugin->setDefaultACL([
-            [
-                'principal' => '{DAV:}all',
-                'privilege' => '{DAV:}all',
-            ],
-        ]);
 
         $nodes = [
             new MockACLNode('foo', [
@@ -174,14 +147,14 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
                 ]
             ]),
             new DAV\SimpleCollection('principals', [
-                $principal = new MockPrincipal('admin', 'principals/admin'),
+                $principal = new MockPrincipal('admin','principals/admin'),
             ]),
 
         ];
 
         $server = new DAV\Server($nodes);
         $server->addPlugin($plugin);
-        $authPlugin = new DAV\Auth\Plugin(new DAV\Auth\Backend\Mock());
+        $authPlugin = new DAV\Auth\Plugin(new DAV\Auth\Backend\Mock(),'realm');
         $server->addPlugin($authPlugin);
 
         // Force login
@@ -194,8 +167,8 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
         $result = $server->getPropertiesForPath('foo', $requestedProperties);
         $result = $result[0];
 
-        $this->assertEquals(1, count($result[200]), 'The {DAV:}acl property did not return from the list. Full list: ' . print_r($result, true));
-        $this->assertArrayHasKey('{DAV:}acl', $result[200]);
+        $this->assertEquals(1,count($result[200]),'The {DAV:}acl property did not return from the list. Full list: ' . print_r($result, true));
+        $this->assertArrayHasKey('{DAV:}acl',$result[200]);
         $this->assertInstanceOf('Sabre\\DAVACL\\Xml\Property\\Acl', $result[200]['{DAV:}acl']);
 
     }
@@ -203,7 +176,6 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
     function testACLRestrictions() {
 
         $plugin = new Plugin();
-        $plugin->allowUnauthenticatedAccess = false;
 
         $nodes = [
             new MockACLNode('foo', [
@@ -213,14 +185,14 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
                 ]
             ]),
             new DAV\SimpleCollection('principals', [
-                $principal = new MockPrincipal('admin', 'principals/admin'),
+                $principal = new MockPrincipal('admin','principals/admin'),
             ]),
 
         ];
 
         $server = new DAV\Server($nodes);
         $server->addPlugin($plugin);
-        $authPlugin = new DAV\Auth\Plugin(new DAV\Auth\Backend\Mock());
+        $authPlugin = new DAV\Auth\Plugin(new DAV\Auth\Backend\Mock(),'realm');
         $server->addPlugin($authPlugin);
 
         // Force login
@@ -233,8 +205,8 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
         $result = $server->getPropertiesForPath('foo', $requestedProperties);
         $result = $result[0];
 
-        $this->assertEquals(1, count($result[200]), 'The {DAV:}acl-restrictions property did not return from the list. Full list: ' . print_r($result, true));
-        $this->assertArrayHasKey('{DAV:}acl-restrictions', $result[200]);
+        $this->assertEquals(1,count($result[200]),'The {DAV:}acl-restrictions property did not return from the list. Full list: ' . print_r($result, true));
+        $this->assertArrayHasKey('{DAV:}acl-restrictions',$result[200]);
         $this->assertInstanceOf('Sabre\\DAVACL\\Xml\\Property\\AclRestrictions', $result[200]['{DAV:}acl-restrictions']);
 
     }
@@ -243,21 +215,14 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
 
         $tree = [
             new DAV\SimpleCollection('principals', [
-                $principal = new MockPrincipal('user', 'principals/user'),
+                $principal = new MockPrincipal('user','principals/user'),
             ])
         ];
 
         $fakeServer = new DAV\Server($tree);
-        //$plugin = new DAV\Auth\Plugin(new DAV\Auth\MockBackend())
+        //$plugin = new DAV\Auth\Plugin(new DAV\Auth\MockBackend(),'realm');
         //$fakeServer->addPlugin($plugin);
         $plugin = new Plugin();
-        $plugin->allowUnauthenticatedAccess = false;
-        $plugin->setDefaultACL([
-            [
-                'principal' => '{DAV:}all',
-                'privilege' => '{DAV:}all',
-            ],
-        ]);
         $fakeServer->addPlugin($plugin);
 
         $requestedProperties = [
@@ -278,21 +243,14 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
 
         $tree = [
             new DAV\SimpleCollection('principals', [
-                $principal = new MockPrincipal('user', 'principals/user'),
+                $principal = new MockPrincipal('user','principals/user'),
             ]),
         ];
 
         $fakeServer = new DAV\Server($tree);
-        //$plugin = new DAV\Auth\Plugin(new DAV\Auth\MockBackend());
+        //$plugin = new DAV\Auth\Plugin(new DAV\Auth\MockBackend(),'realm');
         //$fakeServer->addPlugin($plugin);
         $plugin = new Plugin();
-        $plugin->allowUnauthenticatedAccess = false;
-        $plugin->setDefaultACL([
-            [
-                'principal' => '{DAV:}all',
-                'privilege' => '{DAV:}all',
-            ],
-        ]);
         $fakeServer->addPlugin($plugin);
 
         $requestedProperties = [
@@ -314,21 +272,14 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
 
         $tree = [
             new DAV\SimpleCollection('principals', [
-                $principal = new MockPrincipal('user', 'principals/user'),
+                $principal = new MockPrincipal('user','principals/user'),
             ]),
         ];
 
         $fakeServer = new DAV\Server($tree);
-        //$plugin = new DAV\Auth\Plugin(new DAV\Auth\MockBackend());
+        //$plugin = new DAV\Auth\Plugin(new DAV\Auth\MockBackend(),'realm');
         //$fakeServer->addPlugin($plugin);
         $plugin = new Plugin();
-        $plugin->allowUnauthenticatedAccess = false;
-        $plugin->setDefaultACL([
-            [
-                'principal' => '{DAV:}all',
-                'privilege' => '{DAV:}all',
-            ],
-        ]);
         $fakeServer->addPlugin($plugin);
 
         $requestedProperties = [
@@ -350,20 +301,13 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
 
         $tree = [
             new DAV\SimpleCollection('principals', [
-                $principal = new MockPrincipal('user', 'principals/user'),
+                $principal = new MockPrincipal('user','principals/user'),
             ]),
         ];
 
         $fakeServer = new DAV\Server($tree);
         $plugin = new Plugin();
-        $plugin->allowUnauthenticatedAccess = false;
         $fakeServer->addPlugin($plugin);
-        $plugin->setDefaultACL([
-            [
-                'principal' => '{DAV:}all',
-                'privilege' => '{DAV:}all',
-            ],
-        ]);
 
         $requestedProperties = [
             '{DAV:}group-membership',
@@ -384,20 +328,13 @@ class PluginPropertiesTest extends \PHPUnit_Framework_TestCase {
 
         $tree = [
             new DAV\SimpleCollection('principals', [
-                $principal = new MockPrincipal('user', 'principals/user'),
+                $principal = new MockPrincipal('user','principals/user'),
             ]),
         ];
 
         $fakeServer = new DAV\Server($tree);
         $plugin = new Plugin();
-        $plugin->allowUnauthenticatedAccess = false;
         $fakeServer->addPlugin($plugin);
-        $plugin->setDefaultACL([
-            [
-                'principal' => '{DAV:}all',
-                'privilege' => '{DAV:}all',
-            ],
-        ]);
 
         $requestedProperties = [
             '{DAV:}displayname',

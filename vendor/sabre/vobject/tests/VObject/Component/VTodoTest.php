@@ -2,72 +2,72 @@
 
 namespace Sabre\VObject\Component;
 
-use PHPUnit\Framework\TestCase;
-use Sabre\VObject\Component;
-use Sabre\VObject\Reader;
+use
+    Sabre\VObject\Component,
+    Sabre\VObject\Reader;
 
-class VTodoTest extends TestCase {
+class VTodoTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @dataProvider timeRangeTestData
      */
-    function testInTimeRange(VTodo $vtodo, $start, $end, $outcome) {
+    public function testInTimeRange(VTodo $vtodo,$start,$end,$outcome) {
 
         $this->assertEquals($outcome, $vtodo->isInTimeRange($start, $end));
 
     }
 
-    function timeRangeTestData() {
+    public function timeRangeTestData() {
 
-        $tests = [];
+        $tests = array();
 
         $calendar = new VCalendar();
 
         $vtodo = $calendar->createComponent('VTODO');
         $vtodo->DTSTART = '20111223T120000Z';
-        $tests[] = [$vtodo, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true];
-        $tests[] = [$vtodo, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false];
+        $tests[] = array($vtodo, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true);
+        $tests[] = array($vtodo, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false);
 
         $vtodo2 = clone $vtodo;
         $vtodo2->DURATION = 'P1D';
-        $tests[] = [$vtodo2, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true];
-        $tests[] = [$vtodo2, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false];
+        $tests[] = array($vtodo2, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true);
+        $tests[] = array($vtodo2, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false);
 
         $vtodo3 = clone $vtodo;
         $vtodo3->DUE = '20111225';
-        $tests[] = [$vtodo3, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true];
-        $tests[] = [$vtodo3, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false];
+        $tests[] = array($vtodo3, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true);
+        $tests[] = array($vtodo3, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false);
 
         $vtodo4 = $calendar->createComponent('VTODO');
         $vtodo4->DUE = '20111225';
-        $tests[] = [$vtodo4, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true];
-        $tests[] = [$vtodo4, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false];
+        $tests[] = array($vtodo4, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true);
+        $tests[] = array($vtodo4, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false);
 
         $vtodo5 = $calendar->createComponent('VTODO');
         $vtodo5->COMPLETED = '20111225';
-        $tests[] = [$vtodo5, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true];
-        $tests[] = [$vtodo5, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false];
+        $tests[] = array($vtodo5, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true);
+        $tests[] = array($vtodo5, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false);
 
         $vtodo6 = $calendar->createComponent('VTODO');
         $vtodo6->CREATED = '20111225';
-        $tests[] = [$vtodo6, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true];
-        $tests[] = [$vtodo6, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false];
+        $tests[] = array($vtodo6, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true);
+        $tests[] = array($vtodo6, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false);
 
         $vtodo7 = $calendar->createComponent('VTODO');
         $vtodo7->CREATED = '20111225';
         $vtodo7->COMPLETED = '20111226';
-        $tests[] = [$vtodo7, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true];
-        $tests[] = [$vtodo7, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false];
+        $tests[] = array($vtodo7, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true);
+        $tests[] = array($vtodo7, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false);
 
         $vtodo7 = $calendar->createComponent('VTODO');
-        $tests[] = [$vtodo7, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true];
-        $tests[] = [$vtodo7, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), true];
+        $tests[] = array($vtodo7, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true);
+        $tests[] = array($vtodo7, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), true);
 
         return $tests;
 
     }
 
-    function testValidate() {
+    public function testValidate() {
 
         $input = <<<HI
 BEGIN:VCALENDAR
@@ -83,16 +83,16 @@ HI;
         $obj = Reader::read($input);
 
         $warnings = $obj->validate();
-        $messages = [];
-        foreach ($warnings as $warning) {
+        $messages = array();
+        foreach($warnings as $warning) {
             $messages[] = $warning['message'];
         }
 
-        $this->assertEquals([], $messages);
+        $this->assertEquals(array(), $messages);
 
     }
 
-    function testValidateInvalid() {
+    public function testValidateInvalid() {
 
         $input = <<<HI
 BEGIN:VCALENDAR
@@ -106,19 +106,19 @@ HI;
         $obj = Reader::read($input);
 
         $warnings = $obj->validate();
-        $messages = [];
-        foreach ($warnings as $warning) {
+        $messages = array();
+        foreach($warnings as $warning) {
             $messages[] = $warning['message'];
         }
 
-        $this->assertEquals([
+        $this->assertEquals(array(
             "UID MUST appear exactly once in a VTODO component",
             "DTSTAMP MUST appear exactly once in a VTODO component",
-        ], $messages);
+        ), $messages);
 
     }
 
-    function testValidateDUEDTSTARTMisMatch() {
+    public function testValidateDUEDTSTARTMisMatch() {
 
         $input = <<<HI
 BEGIN:VCALENDAR
@@ -136,18 +136,18 @@ HI;
         $obj = Reader::read($input);
 
         $warnings = $obj->validate();
-        $messages = [];
-        foreach ($warnings as $warning) {
+        $messages = array();
+        foreach($warnings as $warning) {
             $messages[] = $warning['message'];
         }
 
-        $this->assertEquals([
+        $this->assertEquals(array(
             "The value type (DATE or DATE-TIME) must be identical for DUE and DTSTART",
-        ], $messages);
+        ), $messages);
 
     }
 
-    function testValidateDUEbeforeDTSTART() {
+    public function testValidateDUEbeforeDTSTART() {
 
         $input = <<<HI
 BEGIN:VCALENDAR
@@ -165,15 +165,16 @@ HI;
         $obj = Reader::read($input);
 
         $warnings = $obj->validate();
-        $messages = [];
-        foreach ($warnings as $warning) {
+        $messages = array();
+        foreach($warnings as $warning) {
             $messages[] = $warning['message'];
         }
 
-        $this->assertEquals([
+        $this->assertEquals(array(
             "DUE must occur after DTSTART",
-        ], $messages);
+        ), $messages);
 
     }
 
 }
+

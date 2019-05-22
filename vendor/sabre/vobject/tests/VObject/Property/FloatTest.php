@@ -2,10 +2,9 @@
 
 namespace Sabre\VObject\Property;
 
-use PHPUnit\Framework\TestCase;
 use Sabre\VObject;
 
-class FloatTest extends TestCase {
+class FloatTest extends \PHPUnit_Framework_TestCase {
 
     function testMimeDir() {
 
@@ -16,10 +15,10 @@ class FloatTest extends TestCase {
 
         $this->assertInstanceOf('Sabre\VObject\Property\FloatValue', $result->{'X-FLOAT'});
 
-        $this->assertEquals([
+        $this->assertEquals(array(
             0.234,
             1.245,
-        ], $result->{'X-FLOAT'}->getParts());
+        ), $result->{'X-FLOAT'}->getParts());
 
         $this->assertEquals(
             $input,

@@ -44,7 +44,7 @@ interface MessageInterface {
     /**
      * Updates the body resource with a new stream.
      *
-     * @param resource|string $body
+     * @param resource $body
      * @return void
      */
     function setBody($body);
@@ -153,7 +153,6 @@ interface MessageInterface {
      * This method should return true if the header was successfully deleted,
      * and false if the header did not exist.
      *
-     * @param string $name
      * @return bool
      */
     function removeHeader($name);

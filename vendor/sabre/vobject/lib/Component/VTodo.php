@@ -2,11 +2,10 @@
 
 namespace Sabre\VObject\Component;
 
-use DateTimeInterface;
 use Sabre\VObject;
 
 /**
- * VTodo component.
+ * VTodo component
  *
  * This component contains some additional functionality specific for VTODOs.
  *
@@ -23,22 +22,22 @@ class VTodo extends VObject\Component {
      * The rules used to determine if an event falls within the specified
      * time-range is based on the CalDAV specification.
      *
-     * @param DateTimeInterface $start
-     * @param DateTimeInterface $end
-     *
+     * @param DateTime $start
+     * @param DateTime $end
      * @return bool
      */
-    function isInTimeRange(DateTimeInterface $start, DateTimeInterface $end) {
+    public function isInTimeRange(\DateTime $start, \DateTime $end) {
 
-        $dtstart = isset($this->DTSTART) ? $this->DTSTART->getDateTime() : null;
-        $duration = isset($this->DURATION) ? VObject\DateTimeParser::parseDuration($this->DURATION) : null;
-        $due = isset($this->DUE) ? $this->DUE->getDateTime() : null;
-        $completed = isset($this->COMPLETED) ? $this->COMPLETED->getDateTime() : null;
-        $created = isset($this->CREATED) ? $this->CREATED->getDateTime() : null;
+        $dtstart = isset($this->DTSTART)?$this->DTSTART->getDateTime():null;
+        $duration = isset($this->DURATION)?VObject\DateTimeParser::parseDuration($this->DURATION):null;
+        $due = isset($this->DUE)?$this->DUE->getDateTime():null;
+        $completed = isset($this->COMPLETED)?$this->COMPLETED->getDateTime():null;
+        $created = isset($this->CREATED)?$this->CREATED->getDateTime():null;
 
         if ($dtstart) {
             if ($duration) {
-                $effectiveEnd = $dtstart->add($duration);
+                $effectiveEnd = clone $dtstart;
+                $effectiveEnd->add($duration);
                 return $start <= $effectiveEnd && $end > $dtstart;
             } elseif ($due) {
                 return
@@ -81,44 +80,44 @@ class VTodo extends VObject\Component {
      *
      * @var array
      */
-    function getValidationRules() {
+    public function getValidationRules() {
 
-        return [
-            'UID'     => 1,
+        return array(
+            'UID' => 1,
             'DTSTAMP' => 1,
 
-            'CLASS'         => '?',
-            'COMPLETED'     => '?',
-            'CREATED'       => '?',
-            'DESCRIPTION'   => '?',
-            'DTSTART'       => '?',
-            'GEO'           => '?',
+            'CLASS' => '?',
+            'COMPLETED' => '?',
+            'CREATED' => '?',
+            'DESCRIPTION' => '?',
+            'DTSTART' => '?',
+            'GEO' => '?',
             'LAST-MODIFIED' => '?',
-            'LOCATION'      => '?',
-            'ORGANIZER'     => '?',
-            'PERCENT'       => '?',
-            'PRIORITY'      => '?',
+            'LOCATION' => '?',
+            'ORGANIZER' => '?',
+            'PERCENT' => '?',
+            'PRIORITY' => '?',
             'RECURRENCE-ID' => '?',
-            'SEQUENCE'      => '?',
-            'STATUS'        => '?',
-            'SUMMARY'       => '?',
-            'URL'           => '?',
+            'SEQUENCE' => '?',
+            'STATUS' => '?',
+            'SUMMARY' => '?',
+            'URL' => '?',
 
-            'RRULE'    => '?',
-            'DUE'      => '?',
+            'RRULE' => '?',
+            'DUE' => '?',
             'DURATION' => '?',
 
-            'ATTACH'         => '*',
-            'ATTENDEE'       => '*',
-            'CATEGORIES'     => '*',
-            'COMMENT'        => '*',
-            'CONTACT'        => '*',
-            'EXDATE'         => '*',
+            'ATTACH' => '*',
+            'ATTENDEE' => '*',
+            'CATEGORIES' => '*',
+            'COMMENT' => '*',
+            'CONTACT' => '*',
+            'EXDATE' => '*',
             'REQUEST-STATUS' => '*',
-            'RELATED-TO'     => '*',
-            'RESOURCES'      => '*',
-            'RDATE'          => '*',
-        ];
+            'RELATED-TO' => '*',
+            'RESOURCES' => '*',
+            'RDATE' => '*',
+        );
 
     }
 
@@ -141,10 +140,9 @@ class VTodo extends VObject\Component {
      *   3 - A severe issue.
      *
      * @param int $options
-     *
      * @return array
      */
-    function validate($options = 0) {
+    public function validate($options = 0) {
 
         $result = parent::validate($options);
         if (isset($this->DUE) && isset($this->DTSTART)) {
@@ -154,39 +152,25 @@ class VTodo extends VObject\Component {
 
             if ($due->getValueType() !== $dtStart->getValueType()) {
 
-                $result[] = [
+                $result[] = array(
                     'level'   => 3,
                     'message' => 'The value type (DATE or DATE-TIME) must be identical for DUE and DTSTART',
-                    'node'    => $due,
-                ];
+                    'node' => $due,
+                );
 
             } elseif ($due->getDateTime() < $dtStart->getDateTime()) {
 
-                $result[] = [
+                $result[] = array(
                     'level'   => 3,
                     'message' => 'DUE must occur after DTSTART',
-                    'node'    => $due,
-                ];
+                    'node' => $due,
+                );
 
             }
 
         }
 
         return $result;
-
-    }
-
-    /**
-     * This method should return a list of default property values.
-     *
-     * @return array
-     */
-    protected function getDefaults() {
-
-        return [
-            'UID'     => 'sabre-vobject-' . VObject\UUIDUtil::getUUID(),
-            'DTSTAMP' => date('Ymd\\THis\\Z'),
-        ];
 
     }
 

@@ -2,12 +2,12 @@
 
 namespace Sabre\VObject\Property\VCard;
 
-use Sabre\VObject\DateTimeParser;
-use Sabre\VObject\Property\Text;
-use Sabre\Xml;
+use
+    Sabre\VObject\DateTimeParser,
+    Sabre\VObject\Property\Text;
 
 /**
- * TimeStamp property.
+ * TimeStamp property
  *
  * This object encodes TIMESTAMP values.
  *
@@ -33,9 +33,9 @@ class TimeStamp extends Text {
      *
      * @return string
      */
-    function getValueType() {
+    public function getValueType() {
 
-        return 'TIMESTAMP';
+        return "TIMESTAMP";
 
     }
 
@@ -46,7 +46,7 @@ class TimeStamp extends Text {
      *
      * @return array
      */
-    function getJsonValue() {
+    public function getJsonValue() {
 
         $parts = DateTimeParser::parseVCardDateTime($this->getValue());
 
@@ -60,27 +60,10 @@ class TimeStamp extends Text {
 
         // Timezone
         if (!is_null($parts['timezone'])) {
-            $dateStr .= $parts['timezone'];
+            $dateStr.=$parts['timezone'];
         }
 
-        return [$dateStr];
-
-    }
-
-    /**
-     * This method serializes only the value of a property. This is used to
-     * create xCard or xCal documents.
-     *
-     * @param Xml\Writer $writer  XML writer.
-     *
-     * @return void
-     */
-    protected function xmlSerializeValue(Xml\Writer $writer) {
-
-        // xCard is the only XML and JSON format that has the same date and time
-        // format than vCard.
-        $valueType = strtolower($this->getValueType());
-        $writer->writeElement($valueType, $this->getValue());
+        return array($dateStr);
 
     }
 }

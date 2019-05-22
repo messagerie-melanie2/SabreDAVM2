@@ -2,9 +2,7 @@
 
 namespace Sabre\VObject;
 
-use PHPUnit\Framework\TestCase;
-
-class AttachIssueTest extends TestCase {
+class AttachIssueTest extends \PHPUnit_Framework_TestCase {
 
     function testRead() {
 

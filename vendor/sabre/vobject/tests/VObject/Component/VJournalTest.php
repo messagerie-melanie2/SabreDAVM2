@@ -2,22 +2,21 @@
 
 namespace Sabre\VObject\Component;
 
-use PHPUnit\Framework\TestCase;
 use Sabre\VObject\Component;
 use Sabre\VObject\Reader;
 
-class VJournalTest extends TestCase {
+class VJournalTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @dataProvider timeRangeTestData
      */
-    function testInTimeRange(VJournal $vtodo, $start, $end, $outcome) {
+    public function testInTimeRange(VJournal $vtodo,$start,$end,$outcome) {
 
         $this->assertEquals($outcome, $vtodo->isInTimeRange($start, $end));
 
     }
 
-    function testValidate() {
+    public function testValidate() {
 
         $input = <<<HI
 BEGIN:VCALENDAR
@@ -33,16 +32,16 @@ HI;
         $obj = Reader::read($input);
 
         $warnings = $obj->validate();
-        $messages = [];
-        foreach ($warnings as $warning) {
+        $messages = array();
+        foreach($warnings as $warning) {
             $messages[] = $warning['message'];
         }
 
-        $this->assertEquals([], $messages);
+        $this->assertEquals(array(), $messages);
 
     }
 
-    function testValidateBroken() {
+    public function testValidateBroken() {
 
         $input = <<<HI
 BEGIN:VCALENDAR
@@ -60,38 +59,38 @@ HI;
         $obj = Reader::read($input);
 
         $warnings = $obj->validate();
-        $messages = [];
-        foreach ($warnings as $warning) {
+        $messages = array();
+        foreach($warnings as $warning) {
             $messages[] = $warning['message'];
         }
 
         $this->assertEquals(
-            ["URL MUST NOT appear more than once in a VJOURNAL component"],
+            array("URL MUST NOT appear more than once in a VJOURNAL component"),
             $messages
         );
 
     }
 
-    function timeRangeTestData() {
+    public function timeRangeTestData() {
 
         $calendar = new VCalendar();
 
-        $tests = [];
+        $tests = array();
 
         $vjournal = $calendar->createComponent('VJOURNAL');
         $vjournal->DTSTART = '20111223T120000Z';
-        $tests[] = [$vjournal, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true];
-        $tests[] = [$vjournal, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false];
+        $tests[] = array($vjournal, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true);
+        $tests[] = array($vjournal, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false);
 
         $vjournal2 = $calendar->createComponent('VJOURNAL');
         $vjournal2->DTSTART = '20111223';
         $vjournal2->DTSTART['VALUE'] = 'DATE';
-        $tests[] = [$vjournal2, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true];
-        $tests[] = [$vjournal2, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false];
+        $tests[] = array($vjournal2, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), true);
+        $tests[] = array($vjournal2, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false);
 
         $vjournal3 = $calendar->createComponent('VJOURNAL');
-        $tests[] = [$vjournal3, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), false];
-        $tests[] = [$vjournal3, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false];
+        $tests[] = array($vjournal3, new \DateTime('2011-01-01'), new \DateTime('2012-01-01'), false);
+        $tests[] = array($vjournal3, new \DateTime('2011-01-01'), new \DateTime('2011-11-01'), false);
 
         return $tests;
     }
@@ -99,3 +98,4 @@ HI;
 
 
 }
+

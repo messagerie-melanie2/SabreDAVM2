@@ -320,10 +320,12 @@ class LibM2 extends AbstractBackend {
     }
     
     $infos = \LibMelanie\Ldap\Ldap::GetUserBalEmission($username);
-    foreach ($infos as $info) {
-      if (isset($info['uid'][0])) {
-        $result[] = "principals/".$info['uid'][0];
-      }        
+    if (is_array($infos) && count($infos) > 0) {
+      foreach ($infos as $info) {
+        if (isset($info['uid'][0])) {
+          $result[] = "principals/".$info['uid'][0];
+        }
+      }
     }
     if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG))
       \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[PrincipalBackend] LibM2.getGroupMembership($principal) result: " . var_export($result, 1));

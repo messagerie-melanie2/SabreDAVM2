@@ -2,11 +2,11 @@
 
 namespace Sabre\CalDAV\Xml\Property;
 
-use Sabre\CalDAV\Plugin;
-use Sabre\Xml\Deserializer;
 use Sabre\Xml\Element;
 use Sabre\Xml\Reader;
 use Sabre\Xml\Writer;
+use Sabre\Xml\Element\Elements;
+use Sabre\CalDAV\Plugin;
 
 /**
  * schedule-calendar-transp property.
@@ -62,12 +62,12 @@ class ScheduleCalendarTransp implements Element {
     }
 
     /**
-     * The xmlSerialize method is called during xml writing.
+     * The xmlSerialize metod is called during xml writing.
      *
      * Use the $writer argument to write its own xml serialization.
      *
      * An important note: do _not_ create a parent element. Any element
-     * implementing XmlSerializable should only ever write what's considered
+     * implementing XmlSerializble should only ever write what's considered
      * its 'inner xml'.
      *
      * The parent of the current element is responsible for writing a
@@ -96,7 +96,7 @@ class ScheduleCalendarTransp implements Element {
     /**
      * The deserialize method is called during xml parsing.
      *
-     * This method is called statically, this is because in theory this method
+     * This method is called statictly, this is because in theory this method
      * may be used as a type of constructor, or factory method.
      *
      * Often you want to return an instance of the current class, but you are
@@ -116,13 +116,23 @@ class ScheduleCalendarTransp implements Element {
      */
     static function xmlDeserialize(Reader $reader) {
 
-        $elems = Deserializer\enum($reader, Plugin::NS_CALDAV);
+        $elems = Elements::xmlDeserialize($reader);
 
-        if (in_array('transparent', $elems)) {
-            $value = self::TRANSPARENT;
-        } else {
-            $value = self::OPAQUE;
+        $value = null;
+
+        foreach ($elems as $elem) {
+            switch ($elem) {
+                case '{' . Plugin::NS_CALDAV . '}opaque' :
+                    $value = self::OPAQUE;
+                    break;
+                case '{' . Plugin::NS_CALDAV . '}transparent' :
+                    $value = self::TRANSPARENT;
+                    break;
+            }
         }
+        if (is_null($value))
+           return null;
+
         return new self($value);
 
     }

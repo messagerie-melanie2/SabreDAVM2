@@ -2,10 +2,11 @@
 
 namespace Sabre\VObject\Parser;
 
-use Sabre\VObject\Component\VCalendar;
-use Sabre\VObject\Component\VCard;
-use Sabre\VObject\EofException;
-use Sabre\VObject\ParseException;
+use
+    Sabre\VObject\Component\VCalendar,
+    Sabre\VObject\Component\VCard,
+    Sabre\VObject\ParseException,
+    Sabre\VObject\EofException;
 
 /**
  * Json Parser.
@@ -19,14 +20,14 @@ use Sabre\VObject\ParseException;
 class Json extends Parser {
 
     /**
-     * The input data.
+     * The input data
      *
      * @var array
      */
     protected $input;
 
     /**
-     * Root component.
+     * Root component
      *
      * @var Document
      */
@@ -41,11 +42,10 @@ class Json extends Parser {
      * If either input or options are not supplied, the defaults will be used.
      *
      * @param resource|string|array|null $input
-     * @param int $options
-     *
-     * @return Sabre\VObject\Document
+     * @param int|null $options
+     * @return array
      */
-    function parse($input = null, $options = 0) {
+    public function parse($input = null, $options = null) {
 
         if (!is_null($input)) {
             $this->setInput($input);
@@ -54,25 +54,25 @@ class Json extends Parser {
             throw new EofException('End of input stream, or no input supplied');
         }
 
-        if (0 !== $options) {
+        if (!is_null($options)) {
             $this->options = $options;
         }
 
-        switch ($this->input[0]) {
+        switch($this->input[0]) {
             case 'vcalendar' :
-                $this->root = new VCalendar([], false);
+                $this->root = new VCalendar(array(), false);
                 break;
             case 'vcard' :
-                $this->root = new VCard([], false);
+                $this->root = new VCard(array(), false);
                 break;
             default :
                 throw new ParseException('The root component must either be a vcalendar, or a vcard');
 
         }
-        foreach ($this->input[1] as $prop) {
+        foreach($this->input[1] as $prop) {
             $this->root->add($this->parseProperty($prop));
         }
-        if (isset($this->input[2])) foreach ($this->input[2] as $comp) {
+        if (isset($this->input[2])) foreach($this->input[2] as $comp) {
             $this->root->add($this->parseComponent($comp));
         }
 
@@ -84,13 +84,12 @@ class Json extends Parser {
     }
 
     /**
-     * Parses a component.
+     * Parses a component
      *
      * @param array $jComp
-     *
      * @return \Sabre\VObject\Component
      */
-    function parseComponent(array $jComp) {
+    public function parseComponent(array $jComp) {
 
         // We can remove $self from PHP 5.4 onward.
         $self = $this;
@@ -111,7 +110,7 @@ class Json extends Parser {
                 $jComp[2]
             );
 
-        } else $components = [];
+        } else $components = array();
 
         return $this->root->createComponent(
             $jComp[0],
@@ -125,10 +124,9 @@ class Json extends Parser {
      * Parses properties.
      *
      * @param array $jProp
-     *
      * @return \Sabre\VObject\Property
      */
-    function parseProperty(array $jProp) {
+    public function parseProperty(array $jProp) {
 
         list(
             $propertyName,
@@ -176,13 +174,12 @@ class Json extends Parser {
     }
 
     /**
-     * Sets the input data.
+     * Sets the input data
      *
      * @param resource|string|array $input
-     *
      * @return void
      */
-    function setInput($input) {
+    public function setInput($input) {
 
         if (is_resource($input)) {
             $input = stream_get_contents($input);

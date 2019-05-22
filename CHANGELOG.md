@@ -24,7 +24,13 @@ A faire
 CalDAV - Liste des changements
 ==============================
 
-CalDAV - 0.6.2 (Pas encore publiée) [ Afficher les bogues ]
+CalDAV - 0.6.2.1 (Pas encore publiée) [ Afficher les bogues ]
+---
+- 0005004: [SabreDAV] Bloquer le mode allowUnauthenticatedAccess (thomas.payen) - résolu.
+
+[1 bogue]
+
+CalDAV - 0.6.2 (Publiée 14/06/2018) [ Afficher les bogues ]
 ---
 - 0005003: [SabreDAV] Problème d'exception avec un organizer avec majuscule (thomas.payen) - résolu.
 - 0004985: [SabreDAV] Pour les non participants, forcer le ACCEPTED et le RSVP à FALSE (thomas.payen) - résolu.

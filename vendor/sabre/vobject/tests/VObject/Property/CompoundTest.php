@@ -2,18 +2,17 @@
 
 namespace Sabre\VObject\Property;
 
-use PHPUnit\Framework\TestCase;
 use Sabre\VObject\Component\VCard;
 
-class CompoundTest extends TestCase {
+class CompoundTest extends \PHPUnit_Framework_TestCase {
 
     function testSetParts() {
 
-        $arr = [
+        $arr = array(
             'ABC, Inc.',
             'North American Division',
             'Marketing;Sales',
-        ];
+        );
 
         $vcard = new VCard();
         $elem = $vcard->createProperty('ORG');

@@ -4,13 +4,10 @@ php:
   - 5.5
   - 5.6
   - 7
-  - 7.1
   - hhvm
 
 matrix:
   fast_finish: true
-  allow_failures:
-  - php: hhvm
 
 env:
   matrix:
@@ -19,8 +16,7 @@ env:
 
 
 before_script:
-    - rm -f ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini
-#    - composer self-update
+    - composer self-update
     - composer update --prefer-source $PREFER_LOWEST
 
 script:

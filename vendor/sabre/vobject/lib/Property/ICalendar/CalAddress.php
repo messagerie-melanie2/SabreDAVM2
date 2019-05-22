@@ -6,7 +6,7 @@ use
     Sabre\VObject\Property\Text;
 
 /**
- * CalAddress property.
+ * CalAddress property
  *
  * This object encodes CAL-ADDRESS values, as defined in rfc5545
  *
@@ -32,7 +32,7 @@ class CalAddress extends Text {
      *
      * @return string
      */
-    function getValueType() {
+    public function getValueType() {
 
         return 'CAL-ADDRESS';
 
@@ -48,7 +48,7 @@ class CalAddress extends Text {
      *
      * @return string
      */
-    function getNormalizedValue() {
+    public function getNormalizedValue() {
 
         $input = $this->getValue();
         if (!strpos($input, ':')) {

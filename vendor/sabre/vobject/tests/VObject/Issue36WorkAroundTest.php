@@ -2,9 +2,7 @@
 
 namespace Sabre\VObject;
 
-use PHPUnit\Framework\TestCase;
-
-class Issue36WorkAroundTest extends TestCase {
+class Issue36WorkAroundTest extends \PHPUnit_Framework_TestCase {
 
     function testWorkaround() {
 
@@ -33,8 +31,8 @@ ICS;
         $obj = Reader::read($event);
 
         // If this does not throw an exception, it's all good.
-        $it = new Recur\EventIterator($obj, '1833bd44-188b-405c-9f85-1a12105318aa');
-        $this->assertInstanceOf('Sabre\\VObject\\Recur\\EventIterator', $it);
+        $it = new Recur\EventIterator($obj,'1833bd44-188b-405c-9f85-1a12105318aa');
+        $this->assertInstanceOf('Sabre\\VObject\\Recur\EventIterator', $it);
 
     }
 

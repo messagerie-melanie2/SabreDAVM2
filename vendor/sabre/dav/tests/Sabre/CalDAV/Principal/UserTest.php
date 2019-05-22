@@ -1,7 +1,6 @@
 <?php
 
 namespace Sabre\CalDAV\Principal;
-
 use Sabre\DAVACL;
 
 class UserTest extends \PHPUnit_Framework_TestCase {
@@ -9,18 +8,18 @@ class UserTest extends \PHPUnit_Framework_TestCase {
     function getInstance() {
 
         $backend = new DAVACL\PrincipalBackend\Mock();
-        $backend->addPrincipal([
+        $backend->addPrincipal(array(
             'uri' => 'principals/user/calendar-proxy-read',
-        ]);
-        $backend->addPrincipal([
+        ));
+        $backend->addPrincipal(array(
             'uri' => 'principals/user/calendar-proxy-write',
-        ]);
-        $backend->addPrincipal([
+        ));
+        $backend->addPrincipal(array(
             'uri' => 'principals/user/random',
-        ]);
-        return new User($backend, [
+        ));
+        return new User($backend, array(
             'uri' => 'principals/user',
-        ]);
+        ));
 
     }
 
@@ -101,23 +100,23 @@ class UserTest extends \PHPUnit_Framework_TestCase {
 
     function testGetACL() {
 
-        $expected = [
-            [
-                'privilege' => '{DAV:}all',
-                'principal' => '{DAV:}owner',
+        $expected = array(
+            array(
+                'privilege' => '{DAV:}read',
+                'principal' => '{DAV:}authenticated',
                 'protected' => true,
-            ],
-            [
+            ),
+            array(
                 'privilege' => '{DAV:}read',
                 'principal' => 'principals/user/calendar-proxy-read',
                 'protected' => true,
-            ],
-            [
+            ),
+            array(
                 'privilege' => '{DAV:}read',
                 'principal' => 'principals/user/calendar-proxy-write',
                 'protected' => true,
-            ],
-        ];
+            ),
+        );
 
         $u = $this->getInstance();
         $this->assertEquals($expected, $u->getACL());

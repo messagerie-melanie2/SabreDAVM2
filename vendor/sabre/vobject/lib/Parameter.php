@@ -2,11 +2,11 @@
 
 namespace Sabre\VObject;
 
-use ArrayIterator;
-use Sabre\Xml;
+use
+    ArrayObject;
 
 /**
- * VObject Parameter.
+ * VObject Parameter
  *
  * This class represents a parameter. A parameter is always tied to a property.
  * In the case of:
@@ -20,7 +20,7 @@ use Sabre\Xml;
 class Parameter extends Node {
 
     /**
-     * Parameter name.
+     * Parameter name
      *
      * @var string
      */
@@ -36,7 +36,7 @@ class Parameter extends Node {
     public $noName = false;
 
     /**
-     * Parameter value.
+     * Parameter value
      *
      * @var string
      */
@@ -50,7 +50,7 @@ class Parameter extends Node {
      * @param string $name
      * @param string $value
      */
-    function __construct(Document $root, $name, $value = null) {
+    public function __construct(Document $root, $name, $value = null) {
 
         $this->name = strtoupper($name);
         $this->root = $root;
@@ -79,11 +79,10 @@ class Parameter extends Node {
      * used, but we like to be complete.
      *
      * @param string $value
-     *
      * @return string
      */
-    static function guessParameterNameByValue($value) {
-        switch (strtoupper($value)) {
+    public static function guessParameterNameByValue($value) {
+        switch(strtoupper($value)) {
 
             // Encodings
             case '7-BIT' :
@@ -97,13 +96,13 @@ class Parameter extends Node {
             case 'HOME' :
             case 'PREF' :
 
-            // Delivery Label Type
+                // Delivery Label Type
             case 'DOM' :
             case 'INTL' :
             case 'POSTAL' :
             case 'PARCEL' :
 
-            // Telephone types
+                // Telephone types
             case 'VOICE' :
             case 'FAX' :
             case 'MSG' :
@@ -115,7 +114,7 @@ class Parameter extends Node {
             case 'ISDN' :
             case 'VIDEO' :
 
-            // EMAIL types (lol)
+                // EMAIL types (lol)
             case 'AOL' :
             case 'APPLELINK' :
             case 'ATTMAIL' :
@@ -129,7 +128,7 @@ class Parameter extends Node {
             case 'TLX' :
             case 'X400' :
 
-            // Photo / Logo format types
+                // Photo / Logo format types
             case 'GIF' :
             case 'CGM' :
             case 'WMF' :
@@ -137,7 +136,7 @@ class Parameter extends Node {
             case 'DIB' :
             case 'PICT' :
             case 'TIFF' :
-            case 'PDF' :
+            case 'PDF ':
             case 'PS' :
             case 'JPEG' :
             case 'MPEG' :
@@ -145,12 +144,12 @@ class Parameter extends Node {
             case 'AVI' :
             case 'QTIME' :
 
-            // Sound Digital Audio Type
+                // Sound Digital Audio Type
             case 'WAVE' :
             case 'PCM' :
             case 'AIFF' :
 
-            // Key types
+                // Key types
             case 'X509' :
             case 'PGP' :
                 $name = 'TYPE';
@@ -177,27 +176,26 @@ class Parameter extends Node {
      * This may be either a single, or multiple strings in an array.
      *
      * @param string|array $value
-     *
      * @return void
      */
-    function setValue($value) {
+    public function setValue($value) {
 
         $this->value = $value;
 
     }
 
     /**
-     * Returns the current value.
+     * Returns the current value
      *
      * This method will always return a string, or null. If there were multiple
-     * values, it will automatically concatenate them (separated by comma).
+     * values, it will automatically concatinate them (separated by comma).
      *
      * @return string|null
      */
-    function getValue() {
+    public function getValue() {
 
         if (is_array($this->value)) {
-            return implode(',', $this->value);
+            return implode(',' , $this->value);
         } else {
             return $this->value;
         }
@@ -208,10 +206,9 @@ class Parameter extends Node {
      * Sets multiple values for this parameter.
      *
      * @param array $value
-     *
      * @return void
      */
-    function setParts(array $value) {
+    public function setParts(array $value) {
 
         $this->value = $value;
 
@@ -224,29 +221,28 @@ class Parameter extends Node {
      *
      * @return array
      */
-    function getParts() {
+    public function getParts() {
 
         if (is_array($this->value)) {
             return $this->value;
         } elseif (is_null($this->value)) {
-            return [];
+            return array();
         } else {
-            return [$this->value];
+            return array($this->value);
         }
 
     }
 
     /**
-     * Adds a value to this parameter.
+     * Adds a value to this parameter
      *
      * If the argument is specified as an array, all items will be added to the
      * parameter value list.
      *
      * @param string|array $part
-     *
      * @return void
      */
-    function addValue($part) {
+    public function addValue($part) {
 
         if (is_null($this->value)) {
             $this->value = $part;
@@ -264,10 +260,9 @@ class Parameter extends Node {
      * 'WORK' or 'FAX'.
      *
      * @param string $value
-     *
      * @return bool
      */
-    function has($value) {
+    public function has($value) {
 
         return in_array(
             strtolower($value),
@@ -281,11 +276,11 @@ class Parameter extends Node {
      *
      * @return string
      */
-    function serialize() {
+    public function serialize() {
 
         $value = $this->getParts();
 
-        if (count($value) === 0) {
+        if (count($value)===0) {
             return $this->name . '=';
         }
 
@@ -299,7 +294,7 @@ class Parameter extends Node {
             $value,
             function($out, $item) {
 
-                if (!is_null($out)) $out .= ',';
+                if (!is_null($out)) $out.=',';
 
                 // If there's no special characters in the string, we'll use the simple
                 // format.
@@ -318,17 +313,17 @@ class Parameter extends Node {
                 // severaly trips on + characters not being quoted, so we
                 // added + as well.
                 if (!preg_match('#(?: [\n":;\^,\+] )#x', $item)) {
-                    return $out . $item;
+                    return $out.$item;
                 } else {
                     // Enclosing in double-quotes, and using RFC6868 for encoding any
                     // special characters
-                    $out .= '"' . strtr(
+                    $out.='"' . strtr(
                         $item,
-                        [
+                        array(
                             '^'  => '^^',
                             "\n" => '^n',
                             '"'  => '^\'',
-                        ]
+                        )
                     ) . '"';
                     return $out;
                 }
@@ -340,54 +335,38 @@ class Parameter extends Node {
 
     /**
      * This method returns an array, with the representation as it should be
-     * encoded in JSON. This is used to create jCard or jCal documents.
+     * encoded in json. This is used to create jCard or jCal documents.
      *
      * @return array
      */
-    function jsonSerialize() {
+    public function jsonSerialize() {
 
         return $this->value;
 
     }
 
     /**
-     * This method serializes the data into XML. This is used to create xCard or
-     * xCal documents.
-     *
-     * @param Xml\Writer $writer  XML writer.
-     *
-     * @return void
-     */
-    function xmlSerialize(Xml\Writer $writer) {
-
-        foreach (explode(',', $this->value) as $value) {
-            $writer->writeElement('text', $value);
-        }
-
-    }
-
-    /**
-     * Called when this object is being cast to a string.
+     * Called when this object is being cast to a string
      *
      * @return string
      */
-    function __toString() {
+    public function __toString() {
 
         return (string)$this->getValue();
 
     }
 
     /**
-     * Returns the iterator for this object.
+     * Returns the iterator for this object
      *
      * @return ElementList
      */
-    function getIterator() {
+    public function getIterator() {
 
         if (!is_null($this->iterator))
             return $this->iterator;
 
-        return $this->iterator = new ArrayIterator((array)$this->value);
+        return $this->iterator = new ArrayObject((array)$this->value);
 
     }
 

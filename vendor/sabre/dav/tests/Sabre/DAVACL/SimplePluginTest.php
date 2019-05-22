@@ -5,6 +5,7 @@ namespace Sabre\DAVACL;
 use Sabre\DAV;
 use Sabre\HTTP;
 
+
 require_once 'Sabre/DAVACL/MockPrincipal.php';
 require_once 'Sabre/DAVACL/MockACLNode.php';
 
@@ -13,22 +14,21 @@ class SimplePluginTest extends \PHPUnit_Framework_TestCase {
     function testValues() {
 
         $aclPlugin = new Plugin();
-        $this->assertEquals('acl', $aclPlugin->getPluginName());
+        $this->assertEquals('acl',$aclPlugin->getPluginName());
         $this->assertEquals(
-            ['access-control', 'calendarserver-principal-property-search'],
+            array('access-control', 'calendarserver-principal-property-search'),
             $aclPlugin->getFeatures()
         );
 
         $this->assertEquals(
-            [
+            array(
                 '{DAV:}expand-property',
-                '{DAV:}principal-match',
                 '{DAV:}principal-property-search',
                 '{DAV:}principal-search-property-set'
-            ],
+            ),
             $aclPlugin->getSupportedReportSet(''));
 
-        $this->assertEquals(['ACL'], $aclPlugin->getMethods(''));
+        $this->assertEquals(array('ACL'), $aclPlugin->getMethods(''));
 
 
         $this->assertEquals(
@@ -39,84 +39,90 @@ class SimplePluginTest extends \PHPUnit_Framework_TestCase {
 
     function testGetFlatPrivilegeSet() {
 
-        $expected = [
-            '{DAV:}all' => [
-                'privilege'  => '{DAV:}all',
-                'abstract'   => false,
-                'aggregates' => [
+        $expected = array(
+            '{DAV:}all' => array(
+                'privilege' => '{DAV:}all',
+                'abstract' => true,
+                'aggregates' => array(
                     '{DAV:}read',
                     '{DAV:}write',
-                ],
-                'concrete' => '{DAV:}all',
-            ],
-            '{DAV:}read' => [
-                'privilege'  => '{DAV:}read',
-                'abstract'   => false,
-                'aggregates' => [
+                ),
+                'concrete' => null,
+            ),
+            '{DAV:}read' => array(
+                'privilege' => '{DAV:}read',
+                'abstract' => false,
+                'aggregates' => array(
                     '{DAV:}read-acl',
                     '{DAV:}read-current-user-privilege-set',
-                ],
+                ),
                 'concrete' => '{DAV:}read',
-            ],
-            '{DAV:}read-acl' => [
-                'privilege'  => '{DAV:}read-acl',
-                'abstract'   => false,
-                'aggregates' => [],
-                'concrete'   => '{DAV:}read-acl',
-            ],
-            '{DAV:}read-current-user-privilege-set' => [
-                'privilege'  => '{DAV:}read-current-user-privilege-set',
-                'abstract'   => false,
-                'aggregates' => [],
-                'concrete'   => '{DAV:}read-current-user-privilege-set',
-            ],
-            '{DAV:}write' => [
-                'privilege'  => '{DAV:}write',
-                'abstract'   => false,
-                'aggregates' => [
+            ),
+            '{DAV:}read-acl' => array(
+                'privilege' => '{DAV:}read-acl',
+                'abstract' => false,
+                'aggregates' => array(),
+                'concrete' => '{DAV:}read-acl',
+            ),
+            '{DAV:}read-current-user-privilege-set' => array(
+                'privilege' => '{DAV:}read-current-user-privilege-set',
+                'abstract' => false,
+                'aggregates' => array(),
+                'concrete' => '{DAV:}read-current-user-privilege-set',
+            ),
+            '{DAV:}write' => array(
+                'privilege' => '{DAV:}write',
+                'abstract' => false,
+                'aggregates' => array(
+                    '{DAV:}write-acl',
                     '{DAV:}write-properties',
                     '{DAV:}write-content',
-                    '{DAV:}unlock',
                     '{DAV:}bind',
                     '{DAV:}unbind',
-                ],
+                    '{DAV:}unlock',
+                ),
                 'concrete' => '{DAV:}write',
-            ],
-            '{DAV:}write-properties' => [
-                'privilege'  => '{DAV:}write-properties',
-                'abstract'   => false,
-                'aggregates' => [],
-                'concrete'   => '{DAV:}write-properties',
-            ],
-            '{DAV:}write-content' => [
-                'privilege'  => '{DAV:}write-content',
-                'abstract'   => false,
-                'aggregates' => [],
-                'concrete'   => '{DAV:}write-content',
-            ],
-            '{DAV:}unlock' => [
-                'privilege'  => '{DAV:}unlock',
-                'abstract'   => false,
-                'aggregates' => [],
-                'concrete'   => '{DAV:}unlock',
-            ],
-            '{DAV:}bind' => [
-                'privilege'  => '{DAV:}bind',
-                'abstract'   => false,
-                'aggregates' => [],
-                'concrete'   => '{DAV:}bind',
-            ],
-            '{DAV:}unbind' => [
-                'privilege'  => '{DAV:}unbind',
-                'abstract'   => false,
-                'aggregates' => [],
-                'concrete'   => '{DAV:}unbind',
-            ],
+            ),
+            '{DAV:}write-acl' => array(
+                'privilege' => '{DAV:}write-acl',
+                'abstract' => false,
+                'aggregates' => array(),
+                'concrete' => '{DAV:}write-acl',
+            ),
+            '{DAV:}write-properties' => array(
+                'privilege' => '{DAV:}write-properties',
+                'abstract' => false,
+                'aggregates' => array(),
+                'concrete' => '{DAV:}write-properties',
+            ),
+            '{DAV:}write-content' => array(
+                'privilege' => '{DAV:}write-content',
+                'abstract' => false,
+                'aggregates' => array(),
+                'concrete' => '{DAV:}write-content',
+            ),
+            '{DAV:}unlock' => array(
+                'privilege' => '{DAV:}unlock',
+                'abstract' => false,
+                'aggregates' => array(),
+                'concrete' => '{DAV:}unlock',
+            ),
+            '{DAV:}bind' => array(
+                'privilege' => '{DAV:}bind',
+                'abstract' => false,
+                'aggregates' => array(),
+                'concrete' => '{DAV:}bind',
+            ),
+            '{DAV:}unbind' => array(
+                'privilege' => '{DAV:}unbind',
+                'abstract' => false,
+                'aggregates' => array(),
+                'concrete' => '{DAV:}unbind',
+            ),
 
-        ];
+        );
 
         $plugin = new Plugin();
-        $plugin->allowUnauthenticatedAccess = false;
         $server = new DAV\Server();
         $server->addPlugin($plugin);
         $this->assertEquals($expected, $plugin->getFlatPrivilegeSet(''));
@@ -126,196 +132,196 @@ class SimplePluginTest extends \PHPUnit_Framework_TestCase {
     function testCurrentUserPrincipalsNotLoggedIn() {
 
         $acl = new Plugin();
-        $acl->allowUnauthenticatedAccess = false;
         $server = new DAV\Server();
         $server->addPlugin($acl);
 
-        $this->assertEquals([], $acl->getCurrentUserPrincipals());
+        $this->assertEquals(array(),$acl->getCurrentUserPrincipals());
 
     }
 
     function testCurrentUserPrincipalsSimple() {
 
-        $tree = [
+        $tree = array(
 
-            new DAV\SimpleCollection('principals', [
-                new MockPrincipal('admin', 'principals/admin'),
-            ])
+            new DAV\SimpleCollection('principals', array(
+                new MockPrincipal('admin','principals/admin'),
+            ))
 
-        ];
+        );
 
         $acl = new Plugin();
-        $acl->allowUnauthenticatedAccess = false;
         $server = new DAV\Server($tree);
         $server->addPlugin($acl);
 
-        $auth = new DAV\Auth\Plugin(new DAV\Auth\Backend\Mock());
+        $auth = new DAV\Auth\Plugin(new DAV\Auth\Backend\Mock(),'SabreDAV');
         $server->addPlugin($auth);
 
         //forcing login
         $auth->beforeMethod(new HTTP\Request(), new HTTP\Response());
 
-        $this->assertEquals(['principals/admin'], $acl->getCurrentUserPrincipals());
+        $this->assertEquals(array('principals/admin'),$acl->getCurrentUserPrincipals());
 
     }
 
     function testCurrentUserPrincipalsGroups() {
 
-        $tree = [
+        $tree = array(
 
-            new DAV\SimpleCollection('principals', [
-                new MockPrincipal('admin', 'principals/admin', ['principals/administrators', 'principals/everyone']),
-                new MockPrincipal('administrators', 'principals/administrators', ['principals/groups'], ['principals/admin']),
-                new MockPrincipal('everyone', 'principals/everyone', [], ['principals/admin']),
-                new MockPrincipal('groups', 'principals/groups', [], ['principals/administrators']),
-            ])
+            new DAV\SimpleCollection('principals', array(
+                new MockPrincipal('admin','principals/admin',array('principals/administrators', 'principals/everyone')),
+                new MockPrincipal('administrators','principals/administrators',array('principals/groups'), array('principals/admin')),
+                new MockPrincipal('everyone','principals/everyone',array(), array('principals/admin')),
+                new MockPrincipal('groups','principals/groups',array(), array('principals/administrators')),
+            ))
 
-        ];
+        );
 
         $acl = new Plugin();
-        $acl->allowUnauthenticatedAccess = false;
         $server = new DAV\Server($tree);
         $server->addPlugin($acl);
 
-        $auth = new DAV\Auth\Plugin(new DAV\Auth\Backend\Mock());
+        $auth = new DAV\Auth\Plugin(new DAV\Auth\Backend\Mock(),'SabreDAV');
         $server->addPlugin($auth);
 
         //forcing login
         $auth->beforeMethod(new HTTP\Request(), new HTTP\Response());
 
-        $expected = [
+        $expected = array(
             'principals/admin',
             'principals/administrators',
             'principals/everyone',
             'principals/groups',
-        ];
+        );
 
-        $this->assertEquals($expected, $acl->getCurrentUserPrincipals());
+        $this->assertEquals($expected,$acl->getCurrentUserPrincipals());
 
         // The second one should trigger the cache and be identical
-        $this->assertEquals($expected, $acl->getCurrentUserPrincipals());
+        $this->assertEquals($expected,$acl->getCurrentUserPrincipals());
 
     }
 
     function testGetACL() {
 
-        $acl = [
-            [
+        $acl = array(
+            array(
                 'principal' => 'principals/admin',
                 'privilege' => '{DAV:}read',
-            ],
-            [
+            ),
+            array(
                 'principal' => 'principals/admin',
                 'privilege' => '{DAV:}write',
-            ],
-        ];
+            ),
+        );
 
 
-        $tree = [
-            new MockACLNode('foo', $acl),
-        ];
+        $tree = array(
+            new MockACLNode('foo',$acl),
+        );
 
         $server = new DAV\Server($tree);
         $aclPlugin = new Plugin();
-        $aclPlugin->allowUnauthenticatedAccess = false;
         $server->addPlugin($aclPlugin);
 
-        $this->assertEquals($acl, $aclPlugin->getACL('foo'));
+        $this->assertEquals($acl,$aclPlugin->getACL('foo'));
 
     }
 
     function testGetCurrentUserPrivilegeSet() {
 
-        $acl = [
-            [
+        $acl = array(
+            array(
                 'principal' => 'principals/admin',
                 'privilege' => '{DAV:}read',
-            ],
-            [
+            ),
+            array(
                 'principal' => 'principals/user1',
                 'privilege' => '{DAV:}read',
-            ],
-            [
+            ),
+            array(
                 'principal' => 'principals/admin',
                 'privilege' => '{DAV:}write',
-            ],
-        ];
+            ),
+        );
 
 
-        $tree = [
-            new MockACLNode('foo', $acl),
+        $tree = array(
+            new MockACLNode('foo',$acl),
 
-            new DAV\SimpleCollection('principals', [
-                new MockPrincipal('admin', 'principals/admin'),
-            ]),
+            new DAV\SimpleCollection('principals', array(
+                new MockPrincipal('admin','principals/admin'),
+            )),
 
-        ];
+        );
 
         $server = new DAV\Server($tree);
         $aclPlugin = new Plugin();
-        $aclPlugin->allowUnauthenticatedAccess = false;
         $server->addPlugin($aclPlugin);
 
-        $auth = new DAV\Auth\Plugin(new DAV\Auth\Backend\Mock());
+        $auth = new DAV\Auth\Plugin(new DAV\Auth\Backend\Mock(),'SabreDAV');
         $server->addPlugin($auth);
 
         //forcing login
         $auth->beforeMethod(new HTTP\Request(), new HTTP\Response());
 
-        $expected = [
+        $expected = array(
             '{DAV:}write',
+            '{DAV:}write-acl',
             '{DAV:}write-properties',
             '{DAV:}write-content',
+            '{DAV:}bind',
+            '{DAV:}unbind',
             '{DAV:}unlock',
-            '{DAV:}write-acl',
             '{DAV:}read',
             '{DAV:}read-acl',
             '{DAV:}read-current-user-privilege-set',
-        ];
+        );
 
-        $this->assertEquals($expected, $aclPlugin->getCurrentUserPrivilegeSet('foo'));
+        $this->assertEquals($expected,$aclPlugin->getCurrentUserPrivilegeSet('foo'));
 
     }
 
     function testCheckPrivileges() {
 
-        $acl = [
-            [
+        $acl = array(
+            array(
                 'principal' => 'principals/admin',
                 'privilege' => '{DAV:}read',
-            ],
-            [
+            ),
+            array(
                 'principal' => 'principals/user1',
                 'privilege' => '{DAV:}read',
-            ],
-            [
+            ),
+            array(
                 'principal' => 'principals/admin',
                 'privilege' => '{DAV:}write',
-            ],
-        ];
+            ),
+        );
 
 
-        $tree = [
-            new MockACLNode('foo', $acl),
+        $tree = array(
+            new MockACLNode('foo',$acl),
 
-            new DAV\SimpleCollection('principals', [
-                new MockPrincipal('admin', 'principals/admin'),
-            ]),
+            new DAV\SimpleCollection('principals', array(
+                new MockPrincipal('admin','principals/admin'),
+            )),
 
-        ];
+        );
 
         $server = new DAV\Server($tree);
         $aclPlugin = new Plugin();
-        $aclPlugin->allowUnauthenticatedAccess = false;
         $server->addPlugin($aclPlugin);
 
-        $auth = new DAV\Auth\Plugin(new DAV\Auth\Backend\Mock());
+        $auth = new DAV\Auth\Plugin(new DAV\Auth\Backend\Mock(),'SabreDAV');
         $server->addPlugin($auth);
 
         //forcing login
         //$auth->beforeMethod('GET','/');
 
-        $this->assertFalse($aclPlugin->checkPrivileges('foo', ['{DAV:}read'], Plugin::R_PARENT, false));
+        $this->assertFalse($aclPlugin->checkPrivileges('foo', array('{DAV:}read'), Plugin::R_PARENT, false));
 
     }
 }
+
+
+
+

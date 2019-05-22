@@ -1,11 +1,11 @@
 CREATE TABLE calendarobjects (
-    id integer primary key asc NOT NULL,
-    calendardata blob NOT NULL,
-    uri text NOT NULL,
-    calendarid integer NOT NULL,
-    lastmodified integer NOT NULL,
-    etag text NOT NULL,
-    size integer NOT NULL,
+    id integer primary key asc,
+    calendardata blob,
+    uri text,
+    calendarid integer,
+    lastmodified integer,
+    etag text,
+    size integer,
     componenttype text,
     firstoccurence integer,
     lastoccurence integer,
@@ -13,46 +13,34 @@ CREATE TABLE calendarobjects (
 );
 
 CREATE TABLE calendars (
-    id integer primary key asc NOT NULL,
-    synctoken integer DEFAULT 1 NOT NULL,
-    components text NOT NULL
-);
-
-CREATE TABLE calendarinstances (
-    id integer primary key asc NOT NULL,
-    calendarid integer NOT NULL,
-    principaluri text NULL,
-    access integer COMMENT '1 = owner, 2 = read, 3 = readwrite' NOT NULL DEFAULT '1',
+    id integer primary key asc,
+    principaluri text,
     displayname text,
-    uri text NOT NULL,
+    uri text,
+    synctoken integer,
     description text,
     calendarorder integer,
     calendarcolor text,
     timezone text,
-    transparent bool,
-    share_href text,
-    share_displayname text,
-    share_invitestatus integer DEFAULT '2',
-    UNIQUE (principaluri, uri),
-    UNIQUE (calendarid, principaluri),
-    UNIQUE (calendarid, share_href)
+    components text,
+    transparent bool
 );
 
 CREATE TABLE calendarchanges (
-    id integer primary key asc NOT NULL,
+    id integer primary key asc,
     uri text,
-    synctoken integer NOT NULL,
-    calendarid integer NOT NULL,
-    operation integer NOT NULL
+    synctoken integer,
+    calendarid integer,
+    operation integer
 );
 
 CREATE INDEX calendarid_synctoken ON calendarchanges (calendarid, synctoken);
 
 CREATE TABLE calendarsubscriptions (
-    id integer primary key asc NOT NULL,
-    uri text NOT NULL,
-    principaluri text NOT NULL,
-    source text NOT NULL,
+    id integer primary key asc,
+    uri text,
+    principaluri text,
+    source text,
     displayname text,
     refreshrate text,
     calendarorder integer,
@@ -64,13 +52,13 @@ CREATE TABLE calendarsubscriptions (
 );
 
 CREATE TABLE schedulingobjects (
-    id integer primary key asc NOT NULL,
-    principaluri text NOT NULL,
+    id integer primary key asc,
+    principaluri text,
     calendardata blob,
-    uri text NOT NULL,
+    uri text,
     lastmodified integer,
-    etag text NOT NULL,
-    size integer NOT NULL
+    etag text,
+    size integer
 );
 
 CREATE INDEX principaluri_uri ON calendarsubscriptions (principaluri, uri);

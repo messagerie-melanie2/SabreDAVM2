@@ -2,11 +2,10 @@
 
 namespace Sabre\VObject\Property;
 
-use Sabre\VObject\Parameter;
 use Sabre\VObject\Property;
 
 /**
- * URI property.
+ * URI property
  *
  * This object encodes URI values. vCard 2.1 calls these URL.
  *
@@ -32,32 +31,9 @@ class Uri extends Text {
      *
      * @return string
      */
-    function getValueType() {
+    public function getValueType() {
 
-        return 'URI';
-
-    }
-
-    /**
-     * Returns an iterable list of children.
-     *
-     * @return array
-     */
-    function parameters() {
-
-        $parameters = parent::parameters();
-        if (!isset($parameters['VALUE']) && in_array($this->name, ['URL', 'PHOTO'])) {
-            // If we are encoding a URI value, and this URI value has no
-            // VALUE=URI parameter, we add it anyway.
-            //
-            // This is not required by any spec, but both Apple iCal and Apple
-            // AddressBook (at least in version 10.8) will trip over this if
-            // this is not set, and so it improves compatibility.
-            //
-            // See Issue #227 and #235
-            $parameters['VALUE'] = new Parameter($this->root, 'VALUE', 'URI');
-        }
-        return $parameters;
+        return "URI";
 
     }
 
@@ -68,10 +44,9 @@ class Uri extends Text {
      * not yet done, but parameters are not included.
      *
      * @param string $val
-     *
      * @return void
      */
-    function setRawMimeDirValue($val) {
+    public function setRawMimeDirValue($val) {
 
         // Normally we don't need to do any type of unescaping for these
         // properties, however.. we've noticed that Google Contacts
@@ -85,19 +60,19 @@ class Uri extends Text {
             $regex = '#  (?: (\\\\ (?: \\\\ | : ) ) ) #x';
             $matches = preg_split($regex, $val, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
             $newVal = '';
-            foreach ($matches as $match) {
-                switch ($match) {
+            foreach($matches as $match) {
+                switch($match) {
                     case '\:' :
-                        $newVal .= ':';
+                        $newVal.=':';
                         break;
                     default :
-                        $newVal .= $match;
+                        $newVal.=$match;
                         break;
                 }
             }
             $this->value = $newVal;
         } else {
-            $this->value = strtr($val, ['\,' => ',']);
+            $this->value = $val;
         }
 
     }
@@ -107,15 +82,13 @@ class Uri extends Text {
      *
      * @return string
      */
-    function getRawMimeDirValue() {
+    public function getRawMimeDirValue() {
 
         if (is_array($this->value)) {
-            $value = $this->value[0];
+            return $this->value[0];
         } else {
-            $value = $this->value;
+            return $this->value;
         }
-
-        return strtr($value, [',' => '\,']);
 
     }
 

@@ -7,14 +7,8 @@ use Exception;
 /**
  * An implementation of the Promise pattern.
  *
- * A promise represents the result of an asynchronous operation.
- * At any given point a promise can be in one of three states:
- *
- * 1. Pending (the promise does not have a result yet).
- * 2. Fulfilled (the asynchronous operation has completed with a result).
- * 3. Rejected (the asynchronous operation has completed with an error).
- *
- * To get a callback when the operation has finished, use the `then` method.
+ * Promises basically allow you to avoid what is commonly called 'callback
+ * hell'. It allows for easily chaining of asynchronous operations.
  *
  * @copyright Copyright (C) 2013-2015 fruux GmbH (https://fruux.com/).
  * @author Evert Pot (http://evertpot.com/)
@@ -23,17 +17,17 @@ use Exception;
 class Promise {
 
     /**
-     * The asynchronous operation is pending.
+     * Pending promise. No result yet.
      */
     const PENDING = 0;
 
     /**
-     * The asynchronous operation has completed, and has a result.
+     * The promise has been fulfilled. It was successful.
      */
     const FULFILLED = 1;
 
     /**
-     * The asynchronous operation has completed with an error.
+     * The promise was rejected. The operation failed.
      */
     const REJECTED = 2;
 
@@ -42,7 +36,25 @@ class Promise {
      *
      * @var int
      */
-    public $state = self::PENDING;
+    protected $state = self::PENDING;
+
+    /**
+     * A list of subscribers. Subscribers are the callbacks that want us to let
+     * them know if the callback was fulfilled or rejected.
+     *
+     * @var array
+     */
+    protected $subscribers = [];
+
+    /**
+     * The result of the promise.
+     *
+     * If the promise was fulfilled, this will be the result value. If the
+     * promise was rejected, this is most commonly an exception.
+     *
+     * @var mixed
+     */
+    protected $value = null;
 
     /**
      * Creates the promise.
@@ -91,25 +103,15 @@ class Promise {
      */
     function then(callable $onFulfilled = null, callable $onRejected = null) {
 
-        // This new subPromise will be returned from this function, and will
-        // be fulfilled with the result of the onFulfilled or onRejected event
-        // handlers.
         $subPromise = new self();
-
         switch ($this->state) {
             case self::PENDING :
-                // The operation is pending, so we keep a reference to the
-                // event handlers so we can call them later.
                 $this->subscribers[] = [$subPromise, $onFulfilled, $onRejected];
                 break;
             case self::FULFILLED :
-                // The async operation is already fulfilled, so we trigger the
-                // onFulfilled callback asap.
                 $this->invokeCallback($subPromise, $onFulfilled);
                 break;
             case self::REJECTED :
-                // The async operation failed, so we call teh onRejected
-                // callback asap.
                 $this->invokeCallback($subPromise, $onRejected);
                 break;
         }
@@ -120,13 +122,13 @@ class Promise {
     /**
      * Add a callback for when this promise is rejected.
      *
-     * Its usage is identical to then(). However, the otherwise() function is
-     * preferred.
+     * I would have used the word 'catch', but it's a reserved word in PHP, so
+     * we're not allowed to call our function that.
      *
      * @param callable $onRejected
      * @return Promise
      */
-    function otherwise(callable $onRejected) {
+    function error(callable $onRejected) {
 
         return $this->then(null, $onRejected);
 
@@ -152,9 +154,6 @@ class Promise {
     /**
      * Marks this promise as rejected, and set it's rejection reason.
      *
-     * While it's possible to use any PHP value as the reason, it's highly
-     * recommended to use an Exception for this.
-     *
      * @param mixed $reason
      * @return void
      */
@@ -171,72 +170,41 @@ class Promise {
     }
 
     /**
-     * Stops execution until this promise is resolved.
+     * It's possible to send an array of promises to the all method. This
+     * method returns a promise that will be fulfilled, only if all the passed
+     * promises are fulfilled.
      *
-     * This method stops exection completely. If the promise is successful with
-     * a value, this method will return this value. If the promise was
-     * rejected, this method will throw an exception.
-     *
-     * This effectively turns the asynchronous operation into a synchronous
-     * one. In PHP it might be useful to call this on the last promise in a
-     * chain.
-     *
-     * @throws Exception
-     * @return mixed
+     * @param Promise[] $promises
+     * @return Promise
      */
-    function wait() {
+    static function all(array $promises) {
 
-        $hasEvents = true;
-        while ($this->state === self::PENDING) {
+        return new self(function($success, $fail) use ($promises) {
 
-            if (!$hasEvents) {
-                throw new \LogicException('There were no more events in the loop. This promise will never be fulfilled.');
+            $successCount = 0;
+            $completeResult = [];
+
+            foreach ($promises as $promiseIndex => $subPromise) {
+
+                $subPromise->then(
+                    function($result) use ($promiseIndex, &$completeResult, &$successCount, $success, $promises) {
+                        $completeResult[$promiseIndex] = $result;
+                        $successCount++;
+                        if ($successCount === count($promises)) {
+                            $success($completeResult);
+                        }
+                        return $result;
+                    }
+                )->error(
+                    function($reason) use ($fail) {
+                        $fail($reason);
+                    }
+                );
+
             }
-
-            // As long as the promise is not fulfilled, we tell the event loop
-            // to handle events, and to block.
-            $hasEvents = Loop\tick(true);
-
-        }
-
-        if ($this->state === self::FULFILLED) {
-            // If the state of this promise is fulfilled, we can return the value.
-            return $this->value;
-        } else {
-            // If we got here, it means that the asynchronous operation
-            // errored. Therefore we need to throw an exception.
-            $reason = $this->value;
-            if ($reason instanceof Exception) {
-                throw $reason;
-            } elseif (is_scalar($reason)) {
-                throw new Exception($reason);
-            } else {
-                $type = is_object($reason) ? get_class($reason) : gettype($reason);
-                throw new Exception('Promise was rejected with reason of type: ' . $type);
-            }
-        }
-
+        });
 
     }
-
-
-    /**
-     * A list of subscribers. Subscribers are the callbacks that want us to let
-     * them know if the callback was fulfilled or rejected.
-     *
-     * @var array
-     */
-    protected $subscribers = [];
-
-    /**
-     * The result of the promise.
-     *
-     * If the promise was fulfilled, this will be the result value. If the
-     * promise was rejected, this property hold the rejection reason.
-     *
-     * @var mixed
-     */
-    protected $value = null;
 
     /**
      * This method is used to call either an onFulfilled or onRejected callback.
@@ -249,72 +217,27 @@ class Promise {
      * @param callable $callBack
      * @return void
      */
-    private function invokeCallback(Promise $subPromise, callable $callBack = null) {
+    protected function invokeCallback(Promise $subPromise, callable $callBack = null) {
 
-        // We use 'nextTick' to ensure that the event handlers are always
-        // triggered outside of the calling stack in which they were originally
-        // passed to 'then'.
-        //
-        // This makes the order of execution more predictable.
-        Loop\nextTick(function() use ($callBack, $subPromise) {
-            if (is_callable($callBack)) {
-                try {
-
-                    $result = $callBack($this->value);
-                    if ($result instanceof self) {
-                        // If the callback (onRejected or onFulfilled)
-                        // returned a promise, we only fulfill or reject the
-                        // chained promise once that promise has also been
-                        // resolved.
-                        $result->then([$subPromise, 'fulfill'], [$subPromise, 'reject']);
-                    } else {
-                        // If the callback returned any other value, we
-                        // immediately fulfill the chained promise.
-                        $subPromise->fulfill($result);
-                    }
-                } catch (Exception $e) {
-                    // If the event handler threw an exception, we need to make sure that
-                    // the chained promise is rejected as well.
-                    $subPromise->reject($e);
-                }
-            } else {
-                if ($this->state === self::FULFILLED) {
-                    $subPromise->fulfill($this->value);
+        if (is_callable($callBack)) {
+            try {
+                $result = $callBack($this->value);
+                if ($result instanceof self) {
+                    $result->then([$subPromise, 'fulfill'], [$subPromise, 'reject']);
                 } else {
-                    $subPromise->reject($this->value);
+                    $subPromise->fulfill($result);
                 }
+            } catch (Exception $e) {
+                $subPromise->reject($e);
             }
-        });
+        } else {
+            if ($this->state === self::FULFILLED) {
+                $subPromise->fulfill($this->value);
+            } else {
+                $subPromise->reject($this->value);
+            }
+        }
     }
 
-    /**
-     * Alias for 'otherwise'.
-     *
-     * This function is now deprecated and will be removed in a future version.
-     *
-     * @param callable $onRejected
-     * @deprecated
-     * @return Promise
-     */
-    function error(callable $onRejected) {
-
-        return $this->otherwise($onRejected);
-
-    }
-
-    /**
-     * Deprecated.
-     *
-     * Please use Sabre\Event\Promise::all
-     *
-     * @param Promise[] $promises
-     * @deprecated
-     * @return Promise
-     */
-    static function all(array $promises) {
-
-        return Promise\all($promises);
-
-    }
 
 }

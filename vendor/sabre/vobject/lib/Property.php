@@ -2,10 +2,8 @@
 
 namespace Sabre\VObject;
 
-use Sabre\Xml;
-
 /**
- * Property.
+ * Property
  *
  * A property is always in a KEY:VALUE structure, and may optionally contain
  * parameters.
@@ -35,14 +33,14 @@ abstract class Property extends Node {
     public $group;
 
     /**
-     * List of parameters.
+     * List of parameters
      *
      * @var array
      */
-    public $parameters = [];
+    public $parameters = array();
 
     /**
-     * Current value.
+     * Current value
      *
      * @var mixed
      */
@@ -66,17 +64,16 @@ abstract class Property extends Node {
      * @param string|array|null $value
      * @param array $parameters List of parameters
      * @param string $group The vcard property group
-     *
      * @return void
      */
-    function __construct(Component $root, $name, $value = null, array $parameters = [], $group = null) {
+    function __construct(Component $root, $name, $value = null, array $parameters = array(), $group = null) {
 
         $this->name = $name;
         $this->group = $group;
 
         $this->root = $root;
 
-        foreach ($parameters as $k => $v) {
+        foreach($parameters as $k=>$v) {
             $this->add($k, $v);
         }
 
@@ -92,7 +89,6 @@ abstract class Property extends Node {
      * This may be either a single, or multiple strings in an array.
      *
      * @param string|array $value
-     *
      * @return void
      */
     function setValue($value) {
@@ -115,12 +111,12 @@ abstract class Property extends Node {
     function getValue() {
 
         if (is_array($this->value)) {
-            if (count($this->value) == 0) {
-                return;
-            } elseif (count($this->value) === 1) {
+            if (count($this->value)==0) {
+                return null;
+            } elseif (count($this->value)===1) {
                 return $this->value[0];
             } else {
-                return $this->getRawMimeDirValue();
+                return $this->getRawMimeDirValue($this->value);
             }
         } else {
             return $this->value;
@@ -132,7 +128,6 @@ abstract class Property extends Node {
      * Sets a multi-valued property.
      *
      * @param array $parts
-     *
      * @return void
      */
     function setParts(array $parts) {
@@ -152,17 +147,17 @@ abstract class Property extends Node {
     function getParts() {
 
         if (is_null($this->value)) {
-            return [];
+            return array();
         } elseif (is_array($this->value)) {
             return $this->value;
         } else {
-            return [$this->value];
+            return array($this->value);
         }
 
     }
 
     /**
-     * Adds a new parameter.
+     * Adds a new parameter, and returns the new item.
      *
      * If a parameter with same name already existed, the values will be
      * combined.
@@ -170,6 +165,7 @@ abstract class Property extends Node {
      *
      * @param string $name
      * @param string|null|array $value
+     * @return Node
      */
     function add($name, $value = null) {
         $noName = false;
@@ -189,7 +185,7 @@ abstract class Property extends Node {
     }
 
     /**
-     * Returns an iterable list of children.
+     * Returns an iterable list of children
      *
      * @return array
      */
@@ -216,7 +212,6 @@ abstract class Property extends Node {
      * not yet done, but parameters are not included.
      *
      * @param string $val
-     *
      * @return void
      */
     abstract function setRawMimeDirValue($val);
@@ -238,31 +233,32 @@ abstract class Property extends Node {
         $str = $this->name;
         if ($this->group) $str = $this->group . '.' . $this->name;
 
-        foreach ($this->parameters() as $param) {
+        foreach($this->parameters as $param) {
 
-            $str .= ';' . $param->serialize();
+            $str.=';' . $param->serialize();
 
         }
 
-        $str .= ':' . $this->getRawMimeDirValue();
+        $str.=':' . $this->getRawMimeDirValue();
 
-        $str = \preg_replace(
-            '/(
-                (?:^.)?         # 1 additional byte in first line because of missing single space (see next line)
-                .{1,74}         # max 75 bytes per line (1 byte is used for a single space added after every CRLF)
-                (?![\x80-\xbf]) # prevent splitting multibyte characters
-            )/x',
-            "$1\r\n ",
-            $str
-        );
+        $out = '';
+        while(strlen($str)>0) {
+            if (strlen($str)>75) {
+                $out.= mb_strcut($str,0,75,'utf-8') . "\r\n";
+                $str = ' ' . mb_strcut($str,75,strlen($str),'utf-8');
+            } else {
+                $out.=$str . "\r\n";
+                $str='';
+                break;
+            }
+        }
 
-        // remove single space after last CRLF
-        return \substr($str, 0, -1);
+        return $out;
 
     }
 
     /**
-     * Returns the value, in the format it should be encoded for JSON.
+     * Returns the value, in the format it should be encoded for json.
      *
      * This method must always return an array.
      *
@@ -275,17 +271,16 @@ abstract class Property extends Node {
     }
 
     /**
-     * Sets the JSON value, as it would appear in a jCard or jCal object.
+     * Sets the json value, as it would appear in a jCard or jCal object.
      *
      * The value must always be an array.
      *
      * @param array $value
-     *
      * @return void
      */
     function setJsonValue(array $value) {
 
-        if (count($value) === 1) {
+        if (count($value)===1) {
             $this->setValue(reset($value));
         } else {
             $this->setValue($value);
@@ -295,15 +290,15 @@ abstract class Property extends Node {
 
     /**
      * This method returns an array, with the representation as it should be
-     * encoded in JSON. This is used to create jCard or jCal documents.
+     * encoded in json. This is used to create jCard or jCal documents.
      *
      * @return array
      */
     function jsonSerialize() {
 
-        $parameters = [];
+        $parameters = array();
 
-        foreach ($this->parameters as $parameter) {
+        foreach($this->parameters as $parameter) {
             if ($parameter->name === 'VALUE') {
                 continue;
             }
@@ -316,93 +311,15 @@ abstract class Property extends Node {
         }
 
         return array_merge(
-            [
+            array(
                 strtolower($this->name),
                 (object)$parameters,
                 strtolower($this->getValueType()),
-            ],
+            ),
             $this->getJsonValue()
         );
     }
 
-    /**
-     * Hydrate data from a XML subtree, as it would appear in a xCard or xCal
-     * object.
-     *
-     * @param array $value
-     *
-     * @return void
-     */
-    function setXmlValue(array $value) {
-
-        $this->setJsonValue($value);
-
-    }
-
-    /**
-     * This method serializes the data into XML. This is used to create xCard or
-     * xCal documents.
-     *
-     * @param Xml\Writer $writer  XML writer.
-     *
-     * @return void
-     */
-    function xmlSerialize(Xml\Writer $writer) {
-
-        $parameters = [];
-
-        foreach ($this->parameters as $parameter) {
-
-            if ($parameter->name === 'VALUE') {
-                continue;
-            }
-
-            $parameters[] = $parameter;
-
-        }
-
-        $writer->startElement(strtolower($this->name));
-
-        if (!empty($parameters)) {
-
-            $writer->startElement('parameters');
-
-            foreach ($parameters as $parameter) {
-
-                $writer->startElement(strtolower($parameter->name));
-                $writer->write($parameter);
-                $writer->endElement();
-
-            }
-
-            $writer->endElement();
-
-        }
-
-        $this->xmlSerializeValue($writer);
-        $writer->endElement();
-
-    }
-
-    /**
-     * This method serializes only the value of a property. This is used to
-     * create xCard or xCal documents.
-     *
-     * @param Xml\Writer $writer  XML writer.
-     *
-     * @return void
-     */
-    protected function xmlSerializeValue(Xml\Writer $writer) {
-
-        $valueType = strtolower($this->getValueType());
-
-        foreach ($this->getJsonValue() as $values) {
-            foreach ((array)$values as $value) {
-                $writer->writeElement($valueType, $value);
-            }
-        }
-
-    }
 
     /**
      * Called when this object is being cast to a string.
@@ -422,10 +339,9 @@ abstract class Property extends Node {
     /* ArrayAccess interface {{{ */
 
     /**
-     * Checks if an array element exists.
+     * Checks if an array element exists
      *
      * @param mixed $name
-     *
      * @return bool
      */
     function offsetExists($name) {
@@ -434,7 +350,7 @@ abstract class Property extends Node {
 
         $name = strtoupper($name);
 
-        foreach ($this->parameters as $parameter) {
+        foreach($this->parameters as $parameter) {
             if ($parameter->name == $name) return true;
         }
         return false;
@@ -447,7 +363,6 @@ abstract class Property extends Node {
      * If the parameter does not exist, null is returned.
      *
      * @param string $name
-     *
      * @return Node
      */
     function offsetGet($name) {
@@ -456,7 +371,7 @@ abstract class Property extends Node {
         $name = strtoupper($name);
 
         if (!isset($this->parameters[$name])) {
-            return;
+            return null;
         }
 
         return $this->parameters[$name];
@@ -464,11 +379,10 @@ abstract class Property extends Node {
     }
 
     /**
-     * Creates a new parameter.
+     * Creates a new parameter
      *
      * @param string $name
      * @param mixed $value
-     *
      * @return void
      */
     function offsetSet($name, $value) {
@@ -488,10 +402,9 @@ abstract class Property extends Node {
     }
 
     /**
-     * Removes one or more parameters with the specified name.
+     * Removes one or more parameters with the specified name
      *
      * @param string $name
-     *
      * @return void
      */
     function offsetUnset($name) {
@@ -518,7 +431,7 @@ abstract class Property extends Node {
      */
     function __clone() {
 
-        foreach ($this->parameters as $key => $child) {
+        foreach($this->parameters as $key=>$child) {
             $this->parameters[$key] = clone $child;
             $this->parameters[$key]->parent = $this;
         }
@@ -540,12 +453,11 @@ abstract class Property extends Node {
      *    * node - (reference to the offending node)
      *
      * @param int $options
-     *
      * @return array
      */
     function validate($options = 0) {
 
-        $warnings = [];
+        $warnings = array();
 
         // Checking if our value is UTF-8
         if (!StringUtil::isUTF8($this->getRawMimeDirValue())) {
@@ -568,20 +480,20 @@ abstract class Property extends Node {
                 $message = 'Property is not valid UTF-8! ' . $oldValue;
             }
 
-            $warnings[] = [
-                'level'   => $level,
+            $warnings[] = array(
+                'level' => $level,
                 'message' => $message,
-                'node'    => $this,
-            ];
+                'node' => $this,
+            );
         }
 
         // Checking if the propertyname does not contain any invalid bytes.
         if (!preg_match('/^([A-Z0-9-]+)$/', $this->name)) {
-            $warnings[] = [
-                'level'   => $options & self::REPAIR ? 1 : 3,
+            $warnings[] = array(
+                'level' => 1,
                 'message' => 'The propertyname: ' . $this->name . ' contains invalid characters. Only A-Z, 0-9 and - are allowed',
-                'node'    => $this,
-            ];
+                'node' => $this,
+            );
             if ($options & self::REPAIR) {
                 // Uppercasing and converting underscores to dashes.
                 $this->name = strtoupper(
@@ -596,65 +508,47 @@ abstract class Property extends Node {
 
         if ($encoding = $this->offsetGet('ENCODING')) {
 
-            if ($this->root->getDocumentType() === Document::VCARD40) {
-                $warnings[] = [
-                    'level'   => 3,
+            if ($this->root->getDocumentType()===Document::VCARD40) {
+                $warnings[] = array(
+                    'level' => 1,
                     'message' => 'ENCODING parameter is not valid in vCard 4.',
-                    'node'    => $this
-                ];
+                    'node' => $this
+                );
             } else {
 
                 $encoding = (string)$encoding;
 
-                $allowedEncoding = [];
+                $allowedEncoding = array();
 
-                switch ($this->root->getDocumentType()) {
+                switch($this->root->getDocumentType()) {
                     case Document::ICALENDAR20 :
-                        $allowedEncoding = ['8BIT', 'BASE64'];
+                        $allowedEncoding = array('8BIT', 'BASE64');
                         break;
                     case Document::VCARD21 :
-                        $allowedEncoding = ['QUOTED-PRINTABLE', 'BASE64', '8BIT'];
+                        $allowedEncoding = array('QUOTED-PRINTABLE', 'BASE64', '8BIT');
                         break;
                     case Document::VCARD30 :
-                        $allowedEncoding = ['B'];
+                        $allowedEncoding = array('B');
                         break;
 
                 }
                 if ($allowedEncoding && !in_array(strtoupper($encoding), $allowedEncoding)) {
-                    $warnings[] = [
-                        'level'   => 3,
+                    $warnings[] = array(
+                        'level' => 1,
                         'message' => 'ENCODING=' . strtoupper($encoding) . ' is not valid for this document type.',
-                        'node'    => $this
-                    ];
+                        'node' => $this
+                    );
                 }
             }
 
         }
 
         // Validating inner parameters
-        foreach ($this->parameters as $param) {
+        foreach($this->parameters as $param) {
             $warnings = array_merge($warnings, $param->validate($options));
         }
 
         return $warnings;
-
-    }
-
-    /**
-     * Call this method on a document if you're done using it.
-     *
-     * It's intended to remove all circular references, so PHP can easily clean
-     * it up.
-     *
-     * @return void
-     */
-    function destroy() {
-
-        parent::destroy();
-        foreach ($this->parameters as $param) {
-            $param->destroy();
-        }
-        $this->parameters = [];
 
     }
 

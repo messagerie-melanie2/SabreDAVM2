@@ -2,7 +2,6 @@
 
 namespace Sabre\CalDAV\Xml\Request;
 
-use Sabre\DAV\Xml\Element\Sharee;
 use Sabre\DAV\Xml\XmlTest;
 
 class ShareTest extends XmlTest {
@@ -30,20 +29,19 @@ class ShareTest extends XmlTest {
 XML;
 
         $result = $this->parse($xml);
-        $share = new Share([
-            new Sharee([
-                'href'       => 'mailto:eric@example.com',
-                'access'     => \Sabre\DAV\Sharing\Plugin::ACCESS_READWRITE,
-                'properties' => [
-                    '{DAV:}displayname' => 'Eric York',
-                ],
-                'comment' => 'Shared workspace',
-            ]),
-            new Sharee([
-                'href'   => 'mailto:foo@bar',
-                'access' => \Sabre\DAV\Sharing\Plugin::ACCESS_NOACCESS,
-            ]),
-        ]);
+        $share = new Share(
+            [
+                [
+                    'href'       => 'mailto:eric@example.com',
+                    'commonName' => 'Eric York',
+                    'summary'    => 'Shared workspace',
+                    'readOnly'   => false,
+                ]
+            ],
+            [
+                'mailto:foo@bar',
+            ]
+        );
 
         $this->assertEquals(
             $share,
@@ -52,7 +50,7 @@ XML;
 
     }
 
-    function testDeserializeMinimal() {
+    function testDeserializeMininal() {
 
         $xml = <<<XML
 <?xml version="1.0" encoding="utf-8" ?>
@@ -66,12 +64,17 @@ XML;
 XML;
 
         $result = $this->parse($xml);
-        $share = new Share([
-            new Sharee([
-                'href'   => 'mailto:eric@example.com',
-                'access' => \Sabre\DAV\Sharing\Plugin::ACCESS_READ,
-            ]),
-        ]);
+        $share = new Share(
+            [
+                [
+                    'href'       => 'mailto:eric@example.com',
+                    'commonName' => null,
+                    'summary'    => null,
+                    'readOnly'   => true,
+                ]
+            ],
+            []
+        );
 
         $this->assertEquals(
             $share,

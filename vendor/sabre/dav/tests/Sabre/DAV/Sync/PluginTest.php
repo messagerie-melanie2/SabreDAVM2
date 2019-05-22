@@ -2,8 +2,9 @@
 
 namespace Sabre\DAV\Sync;
 
-use Sabre\DAV;
-use Sabre\HTTP;
+use
+    Sabre\DAV,
+    Sabre\HTTP;
 
 require_once __DIR__ . '/MockSyncCollection.php';
 
@@ -31,8 +32,8 @@ class PluginTest extends \Sabre\DAVServerTest {
 
         $this->collection =
             new MockSyncCollection('coll', [
-                new DAV\SimpleFile('file1.txt', 'foo'),
-                new DAV\SimpleFile('file2.txt', 'bar'),
+                new DAV\SimpleFile('file1.txt','foo'),
+                new DAV\SimpleFile('file2.txt','bar'),
             ]);
         $this->tree = [
             $this->collection,
@@ -139,7 +140,7 @@ BLA;
         $request = HTTP\Sapi::createFromServerArray([
             'REQUEST_METHOD' => 'REPORT',
             'REQUEST_URI'    => '/coll/',
-            'CONTENT_TYPE'   => 'application/xml',
+            'CONTENT_TYPE'    => 'application/xml',
         ]);
 
         $body = <<<BLA
@@ -198,7 +199,7 @@ BLA;
         $request = HTTP\Sapi::createFromServerArray([
             'REQUEST_METHOD' => 'REPORT',
             'REQUEST_URI'    => '/coll/',
-            'CONTENT_TYPE'   => 'application/xml',
+            'CONTENT_TYPE'    => 'application/xml',
         ]);
 
         $body = <<<BLA
@@ -306,7 +307,7 @@ BLA;
         $request = HTTP\Sapi::createFromServerArray([
             'REQUEST_METHOD' => 'REPORT',
             'REQUEST_URI'    => '/coll/',
-            'CONTENT_TYPE'   => 'application/xml',
+            'CONTENT_TYPE'    => 'application/xml',
         ]);
 
         $body = <<<BLA
@@ -335,7 +336,7 @@ BLA;
         $request = HTTP\Sapi::createFromServerArray([
             'REQUEST_METHOD' => 'REPORT',
             'REQUEST_URI'    => '/normalcoll/',
-            'CONTENT_TYPE'   => 'application/xml',
+            'CONTENT_TYPE'    => 'application/xml',
         ]);
 
         $body = <<<BLA
@@ -365,7 +366,7 @@ BLA;
         $request = HTTP\Sapi::createFromServerArray([
             'REQUEST_METHOD' => 'REPORT',
             'REQUEST_URI'    => '/coll/',
-            'CONTENT_TYPE'   => 'application/xml',
+            'CONTENT_TYPE'    => 'application/xml',
         ]);
 
         $body = <<<BLA
@@ -394,7 +395,7 @@ BLA;
         $request = HTTP\Sapi::createFromServerArray([
             'REQUEST_METHOD' => 'REPORT',
             'REQUEST_URI'    => '/coll/',
-            'CONTENT_TYPE'   => 'application/xml',
+            'CONTENT_TYPE'    => 'application/xml',
         ]);
 
         $body = <<<BLA
@@ -423,7 +424,7 @@ BLA;
         $request = HTTP\Sapi::createFromServerArray([
             'REQUEST_METHOD' => 'REPORT',
             'REQUEST_URI'    => '/coll/',
-            'CONTENT_TYPE'   => 'application/xml',
+            'CONTENT_TYPE'    => 'application/xml',
         ]);
 
         $body = <<<BLA

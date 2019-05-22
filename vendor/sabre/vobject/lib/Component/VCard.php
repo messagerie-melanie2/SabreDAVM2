@@ -2,11 +2,11 @@
 
 namespace Sabre\VObject\Component;
 
-use Sabre\VObject;
-use Sabre\Xml;
+use
+    Sabre\VObject;
 
 /**
- * The VCard component.
+ * The VCard component
  *
  * This component represents the BEGIN:VCARD and END:VCARD found in every
  * vcard.
@@ -27,27 +27,18 @@ class VCard extends VObject\Document {
     static $defaultName = 'VCARD';
 
     /**
-     * Caching the version number.
+     * Caching the version number
      *
      * @var int
      */
     private $version = null;
 
     /**
-     * This is a list of components, and which classes they should map to.
-     *
-     * @var array
-     */
-    static $componentMap = [
-        'VCARD' => 'Sabre\\VObject\\Component\\VCard',
-    ];
-
-    /**
      * List of value-types, and which classes they map to.
      *
      * @var array
      */
-    static $valueMap = [
+    static $valueMap = array(
         'BINARY'           => 'Sabre\\VObject\\Property\\Binary',
         'BOOLEAN'          => 'Sabre\\VObject\\Property\\Boolean',
         'CONTENT-ID'       => 'Sabre\\VObject\\Property\\FlatText',   // vCard 2.1 only
@@ -64,29 +55,29 @@ class VCard extends VObject\Document {
         'URI'              => 'Sabre\\VObject\\Property\\Uri',
         'URL'              => 'Sabre\\VObject\\Property\\Uri', // vCard 2.1 only
         'UTC-OFFSET'       => 'Sabre\\VObject\\Property\\UtcOffset',
-    ];
+    );
 
     /**
      * List of properties, and which classes they map to.
      *
      * @var array
      */
-    static $propertyMap = [
+    static $propertyMap = array(
 
         // vCard 2.1 properties and up
-        'N'      => 'Sabre\\VObject\\Property\\Text',
-        'FN'     => 'Sabre\\VObject\\Property\\FlatText',
-        'PHOTO'  => 'Sabre\\VObject\\Property\\Binary',
-        'BDAY'   => 'Sabre\\VObject\\Property\\VCard\\DateAndOrTime',
-        'ADR'    => 'Sabre\\VObject\\Property\\Text',
-        'LABEL'  => 'Sabre\\VObject\\Property\\FlatText', // Removed in vCard 4.0
-        'TEL'    => 'Sabre\\VObject\\Property\\FlatText',
-        'EMAIL'  => 'Sabre\\VObject\\Property\\FlatText',
-        'MAILER' => 'Sabre\\VObject\\Property\\FlatText', // Removed in vCard 4.0
-        'GEO'    => 'Sabre\\VObject\\Property\\FlatText',
-        'TITLE'  => 'Sabre\\VObject\\Property\\FlatText',
-        'ROLE'   => 'Sabre\\VObject\\Property\\FlatText',
-        'LOGO'   => 'Sabre\\VObject\\Property\\Binary',
+        'N'       => 'Sabre\\VObject\\Property\\Text',
+        'FN'      => 'Sabre\\VObject\\Property\\FlatText',
+        'PHOTO'   => 'Sabre\\VObject\\Property\\Binary', // Todo: we should add a class for Binary values.
+        'BDAY'    => 'Sabre\\VObject\\Property\\VCard\\DateAndOrTime',
+        'ADR'     => 'Sabre\\VObject\\Property\\Text',
+        'LABEL'   => 'Sabre\\VObject\\Property\\FlatText', // Removed in vCard 4.0
+        'TEL'     => 'Sabre\\VObject\\Property\\FlatText',
+        'EMAIL'   => 'Sabre\\VObject\\Property\\FlatText',
+        'MAILER'  => 'Sabre\\VObject\\Property\\FlatText', // Removed in vCard 4.0
+        'GEO'     => 'Sabre\\VObject\\Property\\FlatText',
+        'TITLE'   => 'Sabre\\VObject\\Property\\FlatText',
+        'ROLE'    => 'Sabre\\VObject\\Property\\FlatText',
+        'LOGO'    => 'Sabre\\VObject\\Property\\Binary',
         // 'AGENT'   => 'Sabre\\VObject\\Property\\',      // Todo: is an embedded vCard. Probably rare, so
                                  // not supported at the moment
         'ORG'     => 'Sabre\\VObject\\Property\\Text',
@@ -107,29 +98,25 @@ class VCard extends VObject\Document {
         'CLASS'       => 'Sabre\\VObject\\Property\\FlatText', // Removed in vCard 4.0
 
         // rfc2739 properties
-        'FBURL'     => 'Sabre\\VObject\\Property\\Uri',
-        'CAPURI'    => 'Sabre\\VObject\\Property\\Uri',
-        'CALURI'    => 'Sabre\\VObject\\Property\\Uri',
-        'CALADRURI' => 'Sabre\\VObject\\Property\\Uri',
+        'FBURL'        => 'Sabre\\VObject\\Property\\Uri',
+        'CAPURI'       => 'Sabre\\VObject\\Property\\Uri',
+        'CALURI'       => 'Sabre\\VObject\\Property\\Uri',
 
         // rfc4770 properties
-        'IMPP' => 'Sabre\\VObject\\Property\\Uri',
+        'IMPP'         => 'Sabre\\VObject\\Property\\Uri',
 
         // vCard 4.0 properties
-        'SOURCE'       => 'Sabre\\VObject\\Property\\Uri',
         'XML'          => 'Sabre\\VObject\\Property\\FlatText',
         'ANNIVERSARY'  => 'Sabre\\VObject\\Property\\VCard\\DateAndOrTime',
         'CLIENTPIDMAP' => 'Sabre\\VObject\\Property\\Text',
         'LANG'         => 'Sabre\\VObject\\Property\\VCard\\LanguageTag',
         'GENDER'       => 'Sabre\\VObject\\Property\\Text',
         'KIND'         => 'Sabre\\VObject\\Property\\FlatText',
-        'MEMBER'       => 'Sabre\\VObject\\Property\\Uri',
-        'RELATED'      => 'Sabre\\VObject\\Property\\Uri',
 
         // rfc6474 properties
-        'BIRTHPLACE' => 'Sabre\\VObject\\Property\\FlatText',
-        'DEATHPLACE' => 'Sabre\\VObject\\Property\\FlatText',
-        'DEATHDATE'  => 'Sabre\\VObject\\Property\\VCard\\DateAndOrTime',
+        'BIRTHPLACE'    => 'Sabre\\VObject\\Property\\FlatText',
+        'DEATHPLACE'    => 'Sabre\\VObject\\Property\\FlatText',
+        'DEATHDATE'     => 'Sabre\\VObject\\Property\\VCard\\DateAndOrTime',
 
         // rfc6715 properties
         'EXPERTISE'     => 'Sabre\\VObject\\Property\\FlatText',
@@ -137,20 +124,18 @@ class VCard extends VObject\Document {
         'INTEREST'      => 'Sabre\\VObject\\Property\\FlatText',
         'ORG-DIRECTORY' => 'Sabre\\VObject\\Property\\FlatText',
 
-    ];
+    );
 
     /**
      * Returns the current document type.
      *
-     * @return int
+     * @return void
      */
     function getDocumentType() {
 
         if (!$this->version) {
-
             $version = (string)$this->VERSION;
-
-            switch ($version) {
+            switch($version) {
                 case '2.1' :
                     $this->version = self::VCARD21;
                     break;
@@ -161,9 +146,9 @@ class VCard extends VObject\Document {
                     $this->version = self::VCARD40;
                     break;
                 default :
-                    // We don't want to cache the version if it's unknown,
-                    // because we might get a version property in a bit.
-                    return self::UNKNOWN;
+                    $this->version = self::UNKNOWN;
+                    break;
+
             }
         }
 
@@ -182,7 +167,6 @@ class VCard extends VObject\Document {
      * If input and output version are identical, a clone is returned.
      *
      * @param int $target
-     *
      * @return VCard
      */
     function convert($target) {
@@ -218,38 +202,37 @@ class VCard extends VObject\Document {
      *   3 - A severe issue.
      *
      * @param int $options
-     *
      * @return array
      */
     function validate($options = 0) {
 
-        $warnings = [];
+        $warnings = array();
 
-        $versionMap = [
+        $versionMap = array(
             self::VCARD21 => '2.1',
             self::VCARD30 => '3.0',
             self::VCARD40 => '4.0',
-        ];
+        );
 
         $version = $this->select('VERSION');
-        if (count($version) === 1) {
+        if (count($version)===1) {
             $version = (string)$this->VERSION;
-            if ($version !== '2.1' && $version !== '3.0' && $version !== '4.0') {
-                $warnings[] = [
-                    'level'   => 3,
+            if ($version!=='2.1' && $version!=='3.0' && $version!=='4.0') {
+                $warnings[] = array(
+                    'level' => 3,
                     'message' => 'Only vcard version 4.0 (RFC6350), version 3.0 (RFC2426) or version 2.1 (icm-vcard-2.1) are supported.',
-                    'node'    => $this,
-                ];
+                    'node' => $this,
+                );
                 if ($options & self::REPAIR) {
                     $this->VERSION = $versionMap[self::DEFAULT_VERSION];
                 }
             }
             if ($version === '2.1' && ($options & self::PROFILE_CARDDAV)) {
-                $warnings[] = [
-                    'level'   => 3,
+                $warnings[] = array(
+                    'level' => 3,
                     'message' => 'CardDAV servers are not allowed to accept vCard 2.1.',
-                    'node'    => $this,
-                ];
+                    'node' => $this,
+                );
             }
 
         }
@@ -268,15 +251,15 @@ class VCard extends VObject\Document {
                 $this->UID = VObject\UUIDUtil::getUUID();
                 $warningLevel = 1;
             }
-            $warnings[] = [
-                'level'   => $warningLevel,
+            $warnings[] = array(
+                'level' => $warningLevel,
                 'message' => $message,
-                'node'    => $this,
-            ];
+                'node' => $this,
+            );
         }
 
         $fn = $this->select('FN');
-        if (count($fn) !== 1) {
+        if (count($fn)!==1) {
 
             $repaired = false;
             if (($options & self::REPAIR) && count($fn) === 0) {
@@ -295,19 +278,14 @@ class VCard extends VObject\Document {
                 } elseif (isset($this->ORG)) {
                     $this->FN = (string)$this->ORG;
                     $repaired = true;
-
-                // Otherwise, the EMAIL property may work
-                } elseif (isset($this->EMAIL)) {
-                    $this->FN = (string)$this->EMAIL;
-                    $repaired = true;
                 }
 
             }
-            $warnings[] = [
-                'level'   => $repaired ? 1 : 3,
+            $warnings[] = array(
+                'level' => $repaired?1:3,
                 'message' => 'The FN property must appear in the VCARD component exactly 1 time',
-                'node'    => $this,
-            ];
+                'node' => $this,
+            );
         }
 
         return array_merge(
@@ -334,7 +312,7 @@ class VCard extends VObject\Document {
      */
     function getValidationRules() {
 
-        return [
+        return array(
             'ADR'          => '*',
             'ANNIVERSARY'  => '?',
             'BDAY'         => '?',
@@ -373,8 +351,9 @@ class VCard extends VObject\Document {
             // FN is commented out, because it's already handled by the
             // validate function, which may also try to repair it.
             // 'FN'           => '+',
-            'UID' => '?',
-        ];
+
+            'UID'          => '?',
+        );
 
     }
 
@@ -389,14 +368,13 @@ class VCard extends VObject\Document {
      * a field with that name does not exist, null is returned.
      *
      * @param string $fieldName
-     *
      * @return VObject\Property|null
      */
     function preferred($propertyName) {
 
         $preferred = null;
         $lastPref = 101;
-        foreach ($this->select($propertyName) as $field) {
+        foreach($this->select($propertyName) as $field) {
 
             $pref = 101;
             if (isset($field['TYPE']) && $field['TYPE']->has('PREF')) {
@@ -416,36 +394,16 @@ class VCard extends VObject\Document {
     }
 
     /**
-     * Returns a property with a specific TYPE value (ADR, TEL, or EMAIL).
-     *
-     * This function will return null if the property does not exist. If there are
-     * multiple properties with the same TYPE value, only one will be returned.
-     *
-     * @param string $propertyName
-     * @param string $type
-     *
-     * @return VObject\Property|null
-     */
-    function getByType($propertyName, $type) {
-        foreach ($this->select($propertyName) as $field) {
-            if (isset($field['TYPE']) && $field['TYPE']->has($type)) {
-                return $field;
-            }
-        }
-    }
-
-    /**
      * This method should return a list of default property values.
      *
      * @return array
      */
     protected function getDefaults() {
 
-        return [
-            'VERSION' => '4.0',
-            'PRODID'  => '-//Sabre//Sabre VObject ' . VObject\Version::VERSION . '//EN',
-            'UID'     => 'sabre-vobject-' . VObject\UUIDUtil::getUUID(),
-        ];
+        return array(
+            'VERSION' => '3.0',
+            'PRODID' => '-//Sabre//Sabre VObject ' . VObject\Version::VERSION . '//EN',
+        );
 
     }
 
@@ -459,80 +417,16 @@ class VCard extends VObject\Document {
 
         // A vcard does not have sub-components, so we're overriding this
         // method to remove that array element.
-        $properties = [];
+        $properties = array();
 
-        foreach ($this->children() as $child) {
+        foreach($this->children as $child) {
             $properties[] = $child->jsonSerialize();
         }
 
-        return [
+        return array(
             strtolower($this->name),
             $properties,
-        ];
-
-    }
-
-    /**
-     * This method serializes the data into XML. This is used to create xCard or
-     * xCal documents.
-     *
-     * @param Xml\Writer $writer  XML writer.
-     *
-     * @return void
-     */
-    function xmlSerialize(Xml\Writer $writer) {
-
-        $propertiesByGroup = [];
-
-        foreach ($this->children() as $property) {
-
-            $group = $property->group;
-
-            if (!isset($propertiesByGroup[$group])) {
-                $propertiesByGroup[$group] = [];
-            }
-
-            $propertiesByGroup[$group][] = $property;
-
-        }
-
-        $writer->startElement(strtolower($this->name));
-
-        foreach ($propertiesByGroup as $group => $properties) {
-
-            if (!empty($group)) {
-
-                $writer->startElement('group');
-                $writer->writeAttribute('name', strtolower($group));
-
-            }
-
-            foreach ($properties as $property) {
-                switch ($property->name) {
-
-                    case 'VERSION':
-                        continue;
-
-                    case 'XML':
-                        $value = $property->getParts();
-                        $fragment = new Xml\Element\XmlFragment($value[0]);
-                        $writer->write($fragment);
-                        break;
-
-                    default:
-                        $property->xmlSerialize($writer);
-                        break;
-
-                }
-            }
-
-            if (!empty($group)) {
-                $writer->endElement();
-            }
-
-        }
-
-        $writer->endElement();
+        );
 
     }
 
@@ -540,15 +434,14 @@ class VCard extends VObject\Document {
      * Returns the default class for a property name.
      *
      * @param string $propertyName
-     *
      * @return string
      */
     function getClassNameForPropertyName($propertyName) {
 
         $className = parent::getClassNameForPropertyName($propertyName);
-
         // In vCard 4, BINARY no longer exists, and we need URI instead.
-        if ($className == 'Sabre\\VObject\\Property\\Binary' && $this->getDocumentType() === self::VCARD40) {
+
+        if ($className == 'Sabre\\VObject\\Property\\Binary' && $this->getDocumentType()===self::VCARD40) {
             return 'Sabre\\VObject\\Property\\Uri';
         }
         return $className;
@@ -556,3 +449,4 @@ class VCard extends VObject\Document {
     }
 
 }
+

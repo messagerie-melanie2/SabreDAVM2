@@ -2,10 +2,11 @@
 
 namespace Sabre\VObject\Property\ICalendar;
 
-use PHPUnit\Framework\TestCase;
+use Sabre\VObject\Component;
 use Sabre\VObject\Component\VCalendar;
 
-class DateTimeTest extends TestCase {
+
+class DateTimeTest extends \PHPUnit_Framework_TestCase {
 
     protected $vcal;
 
@@ -52,20 +53,6 @@ class DateTimeTest extends TestCase {
         $tz = new \DateTimeZone('GMT');
         $dt = new \DateTime('1985-07-04 01:30:00', $tz);
         $dt->setTimeZone($tz);
-
-        $elem = $this->vcal->createProperty('DTSTART');
-        $elem->setDateTime($dt);
-
-        $this->assertEquals('19850704T013000Z', (string)$elem);
-        $this->assertNull($elem['TZID']);
-
-        $this->assertTrue($elem->hasTime());
-    }
-
-    function testSetDateTimeFromUnixTimestamp() {
-
-        // When initialized from a Unix timestamp, the timezone is set to "+00:00".
-        $dt = new \DateTime('@489288600');
 
         $elem = $this->vcal->createProperty('DTSTART');
         $elem->setDateTime($dt);
@@ -134,7 +121,7 @@ class DateTimeTest extends TestCase {
         $dt2->setTimeZone($tz);
 
         $elem = $this->vcal->createProperty('DTSTART');
-        $elem->setValue([$dt1, $dt2]);
+        $elem->setValue(array($dt1, $dt2));
 
         $this->assertEquals('19850704T013000,19850704T023000', (string)$elem);
         $this->assertEquals('Europe/Amsterdam', (string)$elem['TZID']);
@@ -153,7 +140,7 @@ class DateTimeTest extends TestCase {
         $dt2->setTimeZone($tz);
 
         $elem = $this->vcal->createProperty('DTSTART');
-        $elem->setParts([$dt1, $dt2]);
+        $elem->setParts(array($dt1, $dt2));
 
         $this->assertEquals('19850704T013000,19850704T023000', (string)$elem);
         $this->assertEquals('Europe/Amsterdam', (string)$elem['TZID']);
@@ -168,7 +155,7 @@ class DateTimeTest extends TestCase {
         $dt2 = '19850704T023000Z';
 
         $elem = $this->vcal->createProperty('DTSTART');
-        $elem->setParts([$dt1, $dt2]);
+        $elem->setParts(array($dt1, $dt2));
 
         $this->assertEquals('19850704T013000Z,19850704T023000Z', (string)$elem);
         $this->assertNull($elem['VALUE']);
@@ -181,7 +168,7 @@ class DateTimeTest extends TestCase {
     function testGetDateTimeCached() {
 
         $tz = new \DateTimeZone('Europe/Amsterdam');
-        $dt = new \DateTimeImmutable('1985-07-04 01:30:00', $tz);
+        $dt = new \DateTime('1985-07-04 01:30:00', $tz);
         $dt->setTimeZone($tz);
 
         $elem = $this->vcal->createProperty('DTSTART');
@@ -202,56 +189,56 @@ class DateTimeTest extends TestCase {
 
     function testGetDateTimeDateDATE() {
 
-        $elem = $this->vcal->createProperty('DTSTART', '19850704');
+        $elem = $this->vcal->createProperty('DTSTART','19850704');
         $dt = $elem->getDateTime();
 
-        $this->assertInstanceOf('DateTimeImmutable', $dt);
+        $this->assertInstanceOf('DateTime', $dt);
         $this->assertEquals('1985-07-04 00:00:00', $dt->format('Y-m-d H:i:s'));
 
     }
 
     function testGetDateTimeDateDATEReferenceTimeZone() {
 
-        $elem = $this->vcal->createProperty('DTSTART', '19850704');
+        $elem = $this->vcal->createProperty('DTSTART','19850704');
 
         $tz = new \DateTimeZone('America/Toronto');
         $dt = $elem->getDateTime($tz);
-        $dt = $dt->setTimeZone(new \DateTimeZone('UTC'));
+        $dt->setTimeZone(new \DateTimeZone('UTC'));
 
-        $this->assertInstanceOf('DateTimeImmutable', $dt);
+        $this->assertInstanceOf('DateTime', $dt);
         $this->assertEquals('1985-07-04 04:00:00', $dt->format('Y-m-d H:i:s'));
 
     }
 
     function testGetDateTimeDateFloating() {
 
-        $elem = $this->vcal->createProperty('DTSTART', '19850704T013000');
+        $elem = $this->vcal->createProperty('DTSTART','19850704T013000');
         $dt = $elem->getDateTime();
 
-        $this->assertInstanceOf('DateTimeImmutable', $dt);
+        $this->assertInstanceOf('DateTime', $dt);
         $this->assertEquals('1985-07-04 01:30:00', $dt->format('Y-m-d H:i:s'));
 
     }
 
     function testGetDateTimeDateFloatingReferenceTimeZone() {
 
-        $elem = $this->vcal->createProperty('DTSTART', '19850704T013000');
+        $elem = $this->vcal->createProperty('DTSTART','19850704T013000');
 
         $tz = new \DateTimeZone('America/Toronto');
         $dt = $elem->getDateTime($tz);
-        $dt = $dt->setTimeZone(new \DateTimeZone('UTC'));
+        $dt->setTimeZone(new \DateTimeZone('UTC'));
 
-        $this->assertInstanceOf('DateTimeInterface', $dt);
+        $this->assertInstanceOf('DateTime', $dt);
         $this->assertEquals('1985-07-04 05:30:00', $dt->format('Y-m-d H:i:s'));
 
     }
 
     function testGetDateTimeDateUTC() {
 
-        $elem = $this->vcal->createProperty('DTSTART', '19850704T013000Z');
+        $elem = $this->vcal->createProperty('DTSTART','19850704T013000Z');
         $dt = $elem->getDateTime();
 
-        $this->assertInstanceOf('DateTimeImmutable', $dt);
+        $this->assertInstanceOf('DateTime', $dt);
         $this->assertEquals('1985-07-04 01:30:00', $dt->format('Y-m-d H:i:s'));
         $this->assertEquals('UTC', $dt->getTimeZone()->getName());
 
@@ -259,30 +246,30 @@ class DateTimeTest extends TestCase {
 
     function testGetDateTimeDateLOCALTZ() {
 
-        $elem = $this->vcal->createProperty('DTSTART', '19850704T013000');
+        $elem = $this->vcal->createProperty('DTSTART','19850704T013000');
         $elem['TZID'] = 'Europe/Amsterdam';
 
         $dt = $elem->getDateTime();
 
-        $this->assertInstanceOf('DateTimeImmutable', $dt);
+        $this->assertInstanceOf('DateTime', $dt);
         $this->assertEquals('1985-07-04 01:30:00', $dt->format('Y-m-d H:i:s'));
         $this->assertEquals('Europe/Amsterdam', $dt->getTimeZone()->getName());
 
     }
 
     /**
-     * @expectedException \Sabre\VObject\InvalidDataException
+     * @expectedException LogicException
      */
     function testGetDateTimeDateInvalid() {
 
-        $elem = $this->vcal->createProperty('DTSTART', 'bla');
+        $elem = $this->vcal->createProperty('DTSTART','bla');
         $dt = $elem->getDateTime();
 
     }
 
     function testGetDateTimeWeirdTZ() {
 
-        $elem = $this->vcal->createProperty('DTSTART', '19850704T013000');
+        $elem = $this->vcal->createProperty('DTSTART','19850704T013000');
         $elem['TZID'] = '/freeassociation.sourceforge.net/Tzfile/Europe/Amsterdam';
 
 
@@ -298,7 +285,7 @@ class DateTimeTest extends TestCase {
 
         $dt = $elem->getDateTime();
 
-        $this->assertInstanceOf('DateTimeImmutable', $dt);
+        $this->assertInstanceOf('DateTime', $dt);
         $this->assertEquals('1985-07-04 01:30:00', $dt->format('Y-m-d H:i:s'));
         $this->assertEquals('Europe/Amsterdam', $dt->getTimeZone()->getName());
 
@@ -309,7 +296,7 @@ class DateTimeTest extends TestCase {
         $default = date_default_timezone_get();
         date_default_timezone_set('Canada/Eastern');
 
-        $elem = $this->vcal->createProperty('DTSTART', '19850704T013000');
+        $elem = $this->vcal->createProperty('DTSTART','19850704T013000');
         $elem['TZID'] = 'Moon';
 
 
@@ -326,7 +313,7 @@ class DateTimeTest extends TestCase {
 
         $dt = $elem->getDateTime();
 
-        $this->assertInstanceOf('DateTimeImmutable', $dt);
+        $this->assertInstanceOf('DateTime', $dt);
         $this->assertEquals('1985-07-04 01:30:00', $dt->format('Y-m-d H:i:s'));
         $this->assertEquals('Canada/Eastern', $dt->getTimeZone()->getName());
         date_default_timezone_set($default);
@@ -362,7 +349,7 @@ class DateTimeTest extends TestCase {
         $dtstart = $vevent->add(
             'DTSTART',
             new \DateTime('2014-03-07'),
-            ['VALUE' => 'DATE']
+            array('VALUE' => 'DATE')
         );
 
         $this->assertEquals("DTSTART;VALUE=DATE:20140307\r\n", $dtstart->serialize());

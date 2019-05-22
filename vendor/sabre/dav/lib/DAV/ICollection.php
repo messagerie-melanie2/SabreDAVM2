@@ -54,14 +54,14 @@ interface ICollection extends INode {
      * exist.
      *
      * @param string $name
-     * @return INode
+     * @return DAV\INode
      */
     function getChild($name);
 
     /**
      * Returns an array with all the child nodes
      *
-     * @return INode[]
+     * @return DAV\INode[]
      */
     function getChildren();
 

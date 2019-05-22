@@ -3,25 +3,22 @@
 namespace Sabre\CalDAV;
 
 use Sabre\HTTP\Request;
-use Sabre\VObject;
 
 class JCalTransformTest extends \Sabre\DAVServerTest {
-
-    use VObject\PHPUnitAssertions;
 
     protected $setupCalDAV = true;
     protected $caldavCalendars = [
         [
-            'id'           => 1,
+            'id' => 1,
             'principaluri' => 'principals/user1',
-            'uri'          => 'foo',
+            'uri' => 'foo',
         ]
     ];
     protected $caldavCalendarObjects = [
         1 => [
             'bar.ics' => [
-                'uri'          => 'bar.ics',
-                'calendarid'   => 1,
+                'uri' => 'bar.ics',
+                'calendarid' => 1,
                 'calendardata' => "BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
                 'lastmodified' => null
             ]
@@ -40,7 +37,7 @@ class JCalTransformTest extends \Sabre\DAVServerTest {
         $body = $response->getBodyAsString();
         $this->assertEquals(200, $response->getStatus(), "Incorrect status code: " . $body);
 
-        $response = json_decode($body, true);
+        $response = json_decode($body,true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             $this->fail('Json decoding error: ' . json_last_error_msg());
         }
@@ -89,7 +86,7 @@ XML;
 
         $response = $responses[0]->getResponseProperties()[200]["{urn:ietf:params:xml:ns:caldav}calendar-data"];
 
-        $jresponse = json_decode($response, true);
+        $jresponse = json_decode($response,true);
         if (json_last_error()) {
             $this->fail('Json decoding error: ' . json_last_error_msg() . '. Full response: ' . $response);
         }
@@ -142,7 +139,7 @@ XML;
         $this->assertEquals(1, count($responses));
 
         $response = $responses[0]->getResponseProperties()[200]["{urn:ietf:params:xml:ns:caldav}calendar-data"];
-        $response = json_decode($response, true);
+        $response = json_decode($response,true);
         if (json_last_error()) {
             $this->fail('Json decoding error: ' . json_last_error_msg());
         }
@@ -195,7 +192,7 @@ XML;
         $this->assertEquals(1, count($responses));
 
         $response = $responses[0]->getResponseProperties()[200]["{urn:ietf:params:xml:ns:caldav}calendar-data"];
-        $response = json_decode($response, true);
+        $response = json_decode($response,true);
         if (json_last_error()) {
             $this->fail('Json decoding error: ' . json_last_error_msg());
         }
@@ -225,8 +222,7 @@ XML;
                 [
                     'vevent',
                     [
-                        ['uid',     (object)[], 'text', 'foo'],
-                        ['dtstart', (object)[], 'date', '2016-04-06'],
+                        ['uid', (object)[], 'text', 'foo'],
                     ],
                     [],
                 ],
@@ -240,22 +236,7 @@ XML;
             $modified
         );
 
-
-        $expected = <<<ICS
-BEGIN:VCALENDAR
-VERSION:2.0
-BEGIN:VEVENT
-UID:foo
-DTSTART;VALUE=DATE:20160406
-DTSTAMP:**ANY**
-END:VEVENT
-END:VCALENDAR
-ICS;
-
-        $this->assertVObjectEqualsVObject(
-            $expected,
-            $input
-        );
+        $this->assertEquals("BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nUID:foo\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n", $input);
 
     }
 

@@ -2,10 +2,10 @@
 
 namespace Sabre\VObject\Component;
 
-use PHPUnit\Framework\TestCase;
+use Sabre\VObject;
 use Sabre\VObject\Reader;
 
-class VTimeZoneTest extends TestCase {
+class VTimeZoneTest extends \PHPUnit_Framework_TestCase {
 
     function testValidate() {
 
@@ -22,12 +22,12 @@ HI;
         $obj = Reader::read($input);
 
         $warnings = $obj->validate();
-        $messages = [];
-        foreach ($warnings as $warning) {
+        $messages = array();
+        foreach($warnings as $warning) {
             $messages[] = $warning['message'];
         }
 
-        $this->assertEquals([], $messages);
+        $this->assertEquals(array(), $messages);
 
     }
 

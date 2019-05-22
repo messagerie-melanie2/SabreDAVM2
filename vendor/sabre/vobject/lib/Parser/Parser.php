@@ -29,7 +29,7 @@ abstract class Parser {
     const OPTION_IGNORE_INVALID_LINES = 2;
 
     /**
-     * Bitmask of parser options.
+     * Bitmask of parser options
      *
      * @var int
      */
@@ -42,10 +42,9 @@ abstract class Parser {
      *
      * @param mixed $input
      * @param int $options Any parser options (OPTION constants).
-     *
      * @return void
      */
-    function __construct($input = null, $options = 0) {
+    public function __construct($input = null, $options = 0) {
 
         if (!is_null($input)) {
             $this->setInput($input);
@@ -62,19 +61,17 @@ abstract class Parser {
      * If either input or options are not supplied, the defaults will be used.
      *
      * @param mixed $input
-     * @param int $options
-     *
+     * @param int|null $options
      * @return array
      */
-    abstract function parse($input = null, $options = 0);
+    abstract public function parse($input = null, $options = null);
 
     /**
-     * Sets the input data.
+     * Sets the input data
      *
      * @param mixed $input
-     *
      * @return void
      */
-    abstract function setInput($input);
+    abstract public function setInput($input);
 
 }

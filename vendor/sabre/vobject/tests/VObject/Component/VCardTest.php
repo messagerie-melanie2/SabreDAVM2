@@ -2,10 +2,9 @@
 
 namespace Sabre\VObject\Component;
 
-use PHPUnit\Framework\TestCase;
 use Sabre\VObject;
 
-class VCardTest extends TestCase {
+class VCardTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @dataProvider validateData
@@ -16,8 +15,8 @@ class VCardTest extends TestCase {
 
         $warnings = $vcard->validate();
 
-        $warnMsg = [];
-        foreach ($warnings as $warning) {
+        $warnMsg = array();
+        foreach($warnings as $warning) {
             $warnMsg[] = $warning['message'];
         }
 
@@ -32,111 +31,88 @@ class VCardTest extends TestCase {
 
     }
 
-    function validateData() {
+    public function validateData() {
 
-        $tests = [];
+        $tests = array();
 
         // Correct
-        $tests[] = [
+        $tests[] = array(
             "BEGIN:VCARD\r\nVERSION:4.0\r\nFN:John Doe\r\nUID:foo\r\nEND:VCARD\r\n",
-            [],
+            array(),
             "BEGIN:VCARD\r\nVERSION:4.0\r\nFN:John Doe\r\nUID:foo\r\nEND:VCARD\r\n",
-        ];
+        );
 
         // No VERSION
-        $tests[] = [
+        $tests[] = array(
             "BEGIN:VCARD\r\nFN:John Doe\r\nUID:foo\r\nEND:VCARD\r\n",
-            [
+            array(
                 'VERSION MUST appear exactly once in a VCARD component',
-            ],
-            "BEGIN:VCARD\r\nVERSION:4.0\r\nFN:John Doe\r\nUID:foo\r\nEND:VCARD\r\n",
-        ];
+            ),
+            "BEGIN:VCARD\r\nVERSION:3.0\r\nFN:John Doe\r\nUID:foo\r\nEND:VCARD\r\n",
+        );
 
         // Unknown version
-        $tests[] = [
+        $tests[] = array(
             "BEGIN:VCARD\r\nVERSION:2.2\r\nFN:John Doe\r\nUID:foo\r\nEND:VCARD\r\n",
-            [
+            array(
                 'Only vcard version 4.0 (RFC6350), version 3.0 (RFC2426) or version 2.1 (icm-vcard-2.1) are supported.',
-            ],
+            ),
             "BEGIN:VCARD\r\nVERSION:2.1\r\nFN:John Doe\r\nUID:foo\r\nEND:VCARD\r\n",
-        ];
+        );
 
         // No FN
-        $tests[] = [
+        $tests[] = array(
             "BEGIN:VCARD\r\nVERSION:4.0\r\nUID:foo\r\nEND:VCARD\r\n",
-            [
+            array(
                 'The FN property must appear in the VCARD component exactly 1 time',
-            ],
+            ),
             "BEGIN:VCARD\r\nVERSION:4.0\r\nUID:foo\r\nEND:VCARD\r\n",
-        ];
+        );
         // No FN, N fallback
-        $tests[] = [
+        $tests[] = array(
             "BEGIN:VCARD\r\nVERSION:4.0\r\nUID:foo\r\nN:Doe;John;;;;;\r\nEND:VCARD\r\n",
-            [
+            array(
                 'The FN property must appear in the VCARD component exactly 1 time',
-            ],
+            ),
             "BEGIN:VCARD\r\nVERSION:4.0\r\nUID:foo\r\nN:Doe;John;;;;;\r\nFN:John Doe\r\nEND:VCARD\r\n",
-        ];
+        );
         // No FN, N fallback, no first name
-        $tests[] = [
+        $tests[] = array(
             "BEGIN:VCARD\r\nVERSION:4.0\r\nUID:foo\r\nN:Doe;;;;;;\r\nEND:VCARD\r\n",
-            [
+            array(
                 'The FN property must appear in the VCARD component exactly 1 time',
-            ],
+            ),
             "BEGIN:VCARD\r\nVERSION:4.0\r\nUID:foo\r\nN:Doe;;;;;;\r\nFN:Doe\r\nEND:VCARD\r\n",
-        ];
+        );
+
         // No FN, ORG fallback
-        $tests[] = [
+        $tests[] = array(
             "BEGIN:VCARD\r\nVERSION:4.0\r\nUID:foo\r\nORG:Acme Co.\r\nEND:VCARD\r\n",
-            [
+            array(
                 'The FN property must appear in the VCARD component exactly 1 time',
-            ],
+            ),
             "BEGIN:VCARD\r\nVERSION:4.0\r\nUID:foo\r\nORG:Acme Co.\r\nFN:Acme Co.\r\nEND:VCARD\r\n",
-        ];
-        // No FN, EMAIL fallback
-        $tests[] = [
-            "BEGIN:VCARD\r\nVERSION:4.0\r\nUID:foo\r\nEMAIL:1@example.org\r\nEND:VCARD\r\n",
-            [
-                'The FN property must appear in the VCARD component exactly 1 time',
-            ],
-            "BEGIN:VCARD\r\nVERSION:4.0\r\nUID:foo\r\nEMAIL:1@example.org\r\nFN:1@example.org\r\nEND:VCARD\r\n",
-        ];
+        );
         return $tests;
 
     }
 
     function testGetDocumentType() {
 
-        $vcard = new VCard([], false);
+        $vcard = new VCard(array(), false);
         $vcard->VERSION = '2.1';
         $this->assertEquals(VCard::VCARD21, $vcard->getDocumentType());
 
-        $vcard = new VCard([], false);
+        $vcard = new VCard(array(), false);
         $vcard->VERSION = '3.0';
         $this->assertEquals(VCard::VCARD30, $vcard->getDocumentType());
 
-        $vcard = new VCard([], false);
+        $vcard = new VCard(array(), false);
         $vcard->VERSION = '4.0';
         $this->assertEquals(VCard::VCARD40, $vcard->getDocumentType());
 
-        $vcard = new VCard([], false);
+        $vcard = new VCard(array(), false);
         $this->assertEquals(VCard::UNKNOWN, $vcard->getDocumentType());
-    }
-
-    function testGetByType() {
-        $vcard = <<<VCF
-BEGIN:VCARD
-VERSION:3.0
-EMAIL;TYPE=home:1@example.org
-EMAIL;TYPE=work:2@example.org
-END:VCARD
-VCF;
-
-        $vcard = VObject\Reader::read($vcard);
-        $this->assertEquals('1@example.org', $vcard->getByType('EMAIL', 'home')->getValue());
-        $this->assertEquals('2@example.org', $vcard->getByType('EMAIL', 'work')->getValue());
-        $this->assertNull($vcard->getByType('EMAIL', 'non-existant'));
-        $this->assertNull($vcard->getByType('ADR', 'non-existant'));
     }
 
     function testPreferredNoPref() {
@@ -294,8 +270,8 @@ VCF;
 
     function assertValidateResult($input, $expectedLevel, $expectedMessage = null) {
 
-        $messages = [];
-        foreach ($input as $warning) {
+        $messages = array();
+        foreach($input as $warning) {
             $messages[] = $warning['message'];
         }
 

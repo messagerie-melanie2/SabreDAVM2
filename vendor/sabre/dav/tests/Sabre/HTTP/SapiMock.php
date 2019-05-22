@@ -18,7 +18,6 @@ class SapiMock extends Sapi {
     /**
      * Overriding this so nothing is ever echo'd.
      *
-     * @param ResponseInterface $response
      * @return void
      */
     static function sendResponse(ResponseInterface $response) {

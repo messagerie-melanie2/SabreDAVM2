@@ -2,14 +2,12 @@
 
 namespace Sabre\VObject\Recur\EventIterator;
 
-use DateTime;
-use DateTimeZone;
-use PHPUnit\Framework\TestCase;
-use Sabre\VObject\Reader;
+use
+    DateTime,
+    DateTimeZone,
+    Sabre\VObject\Reader;
 
-class ExpandFloatingTimesTest extends TestCase {
-
-    use \Sabre\VObject\PHPUnitAssertions;
+class ExpandFloatingTimesTest extends \PHPUnit_Framework_TestCase {
 
     function testExpand() {
 
@@ -28,7 +26,10 @@ ICS;
         $vcal = Reader::read($input);
         $this->assertInstanceOf('Sabre\\VObject\\Component\\VCalendar', $vcal);
 
-        $vcal = $vcal->expand(new DateTime('2015-01-01'), new DateTime('2015-01-31'));
+        $vcal->expand(new DateTime('2015-01-01'), new DateTime('2015-01-31'));
+
+        $result = $vcal->serialize();
+
         $output = <<<ICS
 BEGIN:VCALENDAR
 VERSION:2.0
@@ -59,7 +60,7 @@ END:VEVENT
 END:VCALENDAR
 
 ICS;
-        $this->assertVObjectEqualsVObject($output, $vcal);
+        $this->assertEquals($output, str_replace("\r", "", $result));
 
     }
 
@@ -80,11 +81,9 @@ ICS;
         $vcal = Reader::read($input);
         $this->assertInstanceOf('Sabre\\VObject\\Component\\VCalendar', $vcal);
 
-        $vcal = $vcal->expand(
-            new DateTime('2015-01-01'),
-            new DateTime('2015-01-31'),
-            new DateTimeZone('Europe/Berlin')
-        );
+        $vcal->expand(new DateTime('2015-01-01'), new DateTime('2015-01-31'), new \DateTimeZone('Europe/Berlin'));
+
+        $result = $vcal->serialize();
 
         $output = <<<ICS
 BEGIN:VCALENDAR
@@ -116,7 +115,7 @@ END:VEVENT
 END:VCALENDAR
 
 ICS;
-        $this->assertVObjectEqualsVObject($output, $vcal);
+        $this->assertEquals($output, str_replace("\r", "", $result));
 
     }
 

@@ -5,12 +5,12 @@
     "homepage" : "https://sabre.io/xml/",
     "license" : "BSD-3-Clause",
     "require" : {
-        "php" : ">=5.5.5",
+        "php" : ">=5.4.1",
         "ext-xmlwriter" : "*",
         "ext-xmlreader" : "*",
         "ext-dom" : "*",
         "lib-libxml" : ">=2.6.20",
-        "sabre/uri" : ">=1.0,<3.0.0"
+        "sabre/uri" : "~1.0"
     },
     "authors" : [
         {
@@ -38,13 +38,10 @@
             "lib/Serializer/functions.php"
         ]
     },
-    "autoload-dev" : {
-        "psr-4" : {
-            "Sabre\\Xml\\" : "tests/Sabre/Xml/"
-        }
-    },
+    "bin" : [
+    ],
     "require-dev": {
-        "sabre/cs": "~1.0.0",
+        "sabre/cs": "~0.0.2",
         "phpunit/phpunit" : "*"
     },
     "config" : {

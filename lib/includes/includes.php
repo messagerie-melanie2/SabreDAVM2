@@ -34,3 +34,4 @@ require_once 'lib/CalDAV/CalendarRootM2.php';
 require_once 'lib/CalDAV/CalendarHomeM2.php';
 require_once 'lib/CalDAV/Schedule/PluginM2.php';
 require_once 'lib/DAVACL/PrincipalBackend/LibM2.php';
+require_once 'lib/DAVACL/PluginM2.php';

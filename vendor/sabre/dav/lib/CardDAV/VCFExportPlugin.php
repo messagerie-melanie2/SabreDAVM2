@@ -3,9 +3,9 @@
 namespace Sabre\CardDAV;
 
 use Sabre\DAV;
+use Sabre\VObject;
 use Sabre\HTTP\RequestInterface;
 use Sabre\HTTP\ResponseInterface;
-use Sabre\VObject;
 
 /**
  * VCF Exporter
@@ -24,7 +24,7 @@ class VCFExportPlugin extends DAV\ServerPlugin {
     /**
      * Reference to Server class
      *
-     * @var DAV\Server
+     * @var Sabre\DAV\Server
      */
     protected $server;
 
@@ -70,34 +70,14 @@ class VCFExportPlugin extends DAV\ServerPlugin {
             $aclPlugin->checkPrivileges($path, '{DAV:}read');
         }
 
+        $response->setHeader('Content-Type', 'text/directory');
+        $response->setStatus(200);
+
         $nodes = $this->server->getPropertiesForPath($path, [
             '{' . Plugin::NS_CARDDAV . '}address-data',
         ], 1);
 
-        $format = 'text/directory';
-
-        $output = null;
-        $filenameExtension = null;
-
-        switch ($format) {
-            case 'text/directory':
-                $output = $this->generateVCF($nodes);
-                $filenameExtension = '.vcf';
-                break;
-        }
-
-        $filename = preg_replace(
-            '/[^a-zA-Z0-9-_ ]/um',
-            '',
-            $node->getName()
-        );
-        $filename .= '-' . date('Y-m-d') . $filenameExtension;
-
-        $response->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"');
-        $response->setHeader('Content-Type', $format);
-
-        $response->setStatus(200);
-        $response->setBody($output);
+        $response->setBody($this->generateVCF($nodes));
 
         // Returning false to break the event chain
         return false;
@@ -122,11 +102,8 @@ class VCFExportPlugin extends DAV\ServerPlugin {
             $nodeData = $node[200]['{' . Plugin::NS_CARDDAV . '}address-data'];
 
             // Parsing this node so VObject can clean up the output.
-            $vcard = VObject\Reader::read($nodeData);
-            $output .= $vcard->serialize();
-
-            // Destroy circular references to PHP will GC the object.
-            $vcard->destroy();
+            $output .=
+               VObject\Reader::read($nodeData)->serialize();
 
         }
 

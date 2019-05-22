@@ -2,8 +2,8 @@
 
 namespace Sabre\CalDAV;
 
-use DateTime;
 use Sabre\VObject;
+use DateTime;
 
 /**
  * CalendarQuery Validator
@@ -25,7 +25,7 @@ class CalendarQueryValidator {
      *
      * The list of filters must be formatted as parsed by \Sabre\CalDAV\CalendarQueryParser
      *
-     * @param VObject\Component\VCalendar $vObject
+     * @param VObject\Component $vObject
      * @param array $filters
      * @return bool
      */

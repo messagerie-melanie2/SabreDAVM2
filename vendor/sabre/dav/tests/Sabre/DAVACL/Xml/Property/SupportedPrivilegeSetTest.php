@@ -3,8 +3,8 @@
 namespace Sabre\DAVACL\Xml\Property;
 
 use Sabre\DAV;
-use Sabre\DAV\Browser\HtmlOutputHelper;
 use Sabre\HTTP;
+use Sabre\DAV\Browser\HtmlOutputHelper;
 
 class SupportedPrivilegeSetTest extends \PHPUnit_Framework_TestCase {
 
@@ -23,7 +23,9 @@ class SupportedPrivilegeSetTest extends \PHPUnit_Framework_TestCase {
      */
     function testSerializeSimple() {
 
-        $prop = new SupportedPrivilegeSet([]);
+        $prop = new SupportedPrivilegeSet([
+            'privilege' => '{DAV:}all',
+        ]);
 
         $xml = (new DAV\Server())->xml->write('{DAV:}supported-privilege-set', $prop);
 
@@ -44,10 +46,17 @@ class SupportedPrivilegeSetTest extends \PHPUnit_Framework_TestCase {
     function testSerializeAggregate() {
 
         $prop = new SupportedPrivilegeSet([
-            '{DAV:}read'  => [],
-            '{DAV:}write' => [
-                'description' => 'booh',
-            ]
+            'privilege'  => '{DAV:}all',
+            'abstract'   => true,
+            'aggregates' => [
+                [
+                    'privilege' => '{DAV:}read',
+                ],
+                [
+                    'privilege'   => '{DAV:}write',
+                    'description' => 'booh',
+                ],
+            ],
         ]);
 
         $xml = (new DAV\Server())->xml->write('{DAV:}supported-privilege-set', $prop);
@@ -58,6 +67,7 @@ class SupportedPrivilegeSetTest extends \PHPUnit_Framework_TestCase {
   <d:privilege>
    <d:all/>
   </d:privilege>
+  <d:abstract/>
   <d:supported-privilege>
    <d:privilege>
     <d:read/>
@@ -77,9 +87,16 @@ class SupportedPrivilegeSetTest extends \PHPUnit_Framework_TestCase {
     function testToHtml() {
 
         $prop = new SupportedPrivilegeSet([
-            '{DAV:}read'  => [],
-            '{DAV:}write' => [
-                'description' => 'booh',
+            'privilege'  => '{DAV:}all',
+            'abstract'   => true,
+            'aggregates' => [
+                [
+                    'privilege' => '{DAV:}read',
+                ],
+                [
+                    'privilege'   => '{DAV:}write',
+                    'description' => 'booh',
+                ],
             ],
         ]);
         $html = new HtmlOutputHelper(
@@ -88,7 +105,7 @@ class SupportedPrivilegeSetTest extends \PHPUnit_Framework_TestCase {
         );
 
         $expected = <<<HTML
-<ul class="tree"><li><span title="{DAV:}all">d:all</span>
+<ul class="tree"><li><span title="{DAV:}all">d:all</span> <i>(abstract)</i>
 <ul>
 <li><span title="{DAV:}read">d:read</span></li>
 <li><span title="{DAV:}write">d:write</span> booh</li>

@@ -6,7 +6,7 @@ use
     Sabre\VObject\Property;
 
 /**
- * Integer property.
+ * Integer property
  *
  * This object represents INTEGER values. These are always a single integer.
  * They may be preceeded by either + or -.
@@ -24,10 +24,9 @@ class IntegerValue extends Property {
      * not yet done, but parameters are not included.
      *
      * @param string $val
-     *
      * @return void
      */
-    function setRawMimeDirValue($val) {
+    public function setRawMimeDirValue($val) {
 
         $this->setValue((int)$val);
 
@@ -38,7 +37,7 @@ class IntegerValue extends Property {
      *
      * @return string
      */
-    function getRawMimeDirValue() {
+    public function getRawMimeDirValue() {
 
         return $this->value;
 
@@ -52,9 +51,9 @@ class IntegerValue extends Property {
      *
      * @return string
      */
-    function getValueType() {
+    public function getValueType() {
 
-        return 'INTEGER';
+        return "INTEGER";
 
     }
 
@@ -65,24 +64,9 @@ class IntegerValue extends Property {
      *
      * @return array
      */
-    function getJsonValue() {
+    public function getJsonValue() {
 
-        return [(int)$this->getValue()];
-
-    }
-
-    /**
-     * Hydrate data from a XML subtree, as it would appear in a xCard or xCal
-     * object.
-     *
-     * @param array $value
-     *
-     * @return void
-     */
-    function setXmlValue(array $value) {
-
-        $value = array_map('intval', $value);
-        parent::setXmlValue($value);
+        return array((int)$this->getValue());
 
     }
 }

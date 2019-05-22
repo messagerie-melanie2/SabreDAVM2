@@ -2,8 +2,9 @@
 
 namespace Sabre\DAV\Exception;
 
-use DOMDocument;
-use Sabre\DAV;
+use
+    Sabre\DAV,
+    DOMDocument;
 
 class LockedTest extends \PHPUnit_Framework_TestCase {
 
@@ -14,7 +15,7 @@ class LockedTest extends \PHPUnit_Framework_TestCase {
         $root = $dom->createElement('d:root');
 
         $dom->appendChild($root);
-        $root->setAttribute('xmlns:d', 'DAV:');
+        $root->setAttribute('xmlns:d','DAV:');
 
         $lockInfo = new DAV\Locks\LockInfo();
         $lockInfo->uri = '/foo';
@@ -43,7 +44,7 @@ class LockedTest extends \PHPUnit_Framework_TestCase {
         $root = $dom->createElement('d:root');
 
         $dom->appendChild($root);
-        $root->setAttribute('xmlns:d', 'DAV:');
+        $root->setAttribute('xmlns:d','DAV:');
 
         $lockInfo = new DAV\Locks\LockInfo();
         $lockInfo->uri = '/foo&bar';

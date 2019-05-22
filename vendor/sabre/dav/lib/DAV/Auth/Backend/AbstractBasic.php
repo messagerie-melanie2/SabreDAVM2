@@ -98,9 +98,9 @@ abstract class AbstractBasic implements BackendInterface {
             $response
         );
 
-        $userpass = $auth->getCredentials();
+        $userpass = $auth->getCredentials($request);
         if (!$userpass) {
-            return [false, "No 'Authorization: Basic' header found. Either the client didn't send one, or the server is misconfigured"];
+            return [false, "No 'Authorization: Basic' header found. Either the client didn't send one, or the server is mis-configured"];
         }
         if (!$this->validateUserPass($userpass[0], $userpass[1])) {
             return [false, "Username or password was incorrect"];

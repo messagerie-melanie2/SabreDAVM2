@@ -100,6 +100,7 @@ class Response extends Message implements ResponseInterface {
      * @param string|int $status
      * @param array $headers
      * @param resource $body
+     * @return void
      */
     function __construct($status = null, array $headers = null, $body = null) {
 
@@ -144,7 +145,7 @@ class Response extends Message implements ResponseInterface {
      * added.
      *
      * @param string|int $status
-     * @throws \InvalidArgumentException
+     * @throws \InvalidArgumentExeption
      * @return void
      */
     function setStatus($status) {

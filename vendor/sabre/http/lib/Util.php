@@ -31,7 +31,7 @@ class Util {
      * Deprecated! Use negotiateContentType.
      *
      * @deprecated Use \Sabre\HTTP\NegotiateContentType
-     * @param string|null $acceptHeaderValue
+     * @param string|null $acceptHeader
      * @param array $availableOptions
      * @return string|null
      */

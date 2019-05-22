@@ -25,14 +25,14 @@ class Plugin extends DAV\ServerPlugin {
     /**
      * locksBackend
      *
-     * @var Backend\BackendInterface
+     * @var Backend\Backend\Interface
      */
     protected $locksBackend;
 
     /**
      * server
      *
-     * @var DAV\Server
+     * @var Sabre\DAV\Server
      */
     protected $server;
 
@@ -256,7 +256,7 @@ class Plugin extends DAV\ServerPlugin {
         $response->setStatus($newFile ? 201 : 200);
         $response->setBody($this->generateLockResponse($lockInfo));
 
-        // Returning false will interrupt the event chain and mark this method
+        // Returning false will interupt the event chain and mark this method
         // as 'handled'.
         return false;
 

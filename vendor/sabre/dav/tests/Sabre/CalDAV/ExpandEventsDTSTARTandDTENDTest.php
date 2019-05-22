@@ -1,7 +1,6 @@
 <?php
 
 namespace Sabre\CalDAV;
-
 use Sabre\HTTP;
 use Sabre\VObject;
 
@@ -17,18 +16,18 @@ class ExpandEventsDTSTARTandDTENDTest extends \Sabre\DAVServerTest {
 
     protected $setupCalDAV = true;
 
-    protected $caldavCalendars = [
-        [
-            'id'           => 1,
-            'name'         => 'Calendar',
+    protected $caldavCalendars = array(
+        array(
+            'id' => 1,
+            'name' => 'Calendar',
             'principaluri' => 'principals/user1',
-            'uri'          => 'calendar1',
-        ]
-    ];
+            'uri' => 'calendar1',
+        )
+    );
 
-    protected $caldavCalendarObjects = [
-        1 => [
-           'event.ics' => [
+    protected $caldavCalendarObjects = array(
+        1 => array(
+           'event.ics' => array(
                 'calendardata' => 'BEGIN:VCALENDAR
 VERSION:2.0
 BEGIN:VEVENT
@@ -48,17 +47,17 @@ RECURRENCE-ID;TZID=Europe/Berlin:20120208T181500
 END:VEVENT
 END:VCALENDAR
 ',
-            ],
-        ],
-    ];
+            ),
+        ),
+    );
 
     function testExpand() {
 
         $request = HTTP\Sapi::createFromServerArray([
-            'REQUEST_METHOD'    => 'REPORT',
+            'REQUEST_METHOD' => 'REPORT',
             'HTTP_CONTENT_TYPE' => 'application/xml',
-            'REQUEST_URI'       => '/calendars/user1/calendar1',
-            'HTTP_DEPTH'        => '1',
+            'REQUEST_URI' => '/calendars/user1/calendar1',
+            'HTTP_DEPTH' => '1',
         ]);
 
         $request->setBody('<?xml version="1.0" encoding="utf-8" ?>
@@ -86,28 +85,30 @@ END:VCALENDAR
             $start = strpos($response->body, 'BEGIN:VCALENDAR'),
             strpos($response->body, 'END:VCALENDAR') - $start + 13
         );
-        $body = str_replace('&#13;', '', $body);
+        $body = str_replace('&#13;','',$body);
 
         try {
             $vObject = VObject\Reader::read($body);
         } catch (VObject\ParseException $e) {
-            $this->fail('Could not parse object. Error:' . $e->getMessage() . ' full object: ' . $response->getBodyAsString());
+            $this->fail('Could not parse object. Error:' . $e->getMessage(). ' full object: ' . $response->getBodyAsString());
         }
 
         // check if DTSTARTs and DTENDs are correct
         foreach ($vObject->VEVENT as $vevent) {
             /** @var $vevent Sabre\VObject\Component\VEvent */
-            foreach ($vevent->children() as $child) {
+            foreach ($vevent->children as $child) {
                 /** @var $child Sabre\VObject\Property */
+
                 if ($child->name == 'DTSTART') {
                     // DTSTART has to be one of three valid values
-                    $this->assertContains($child->getValue(), ['20120207T171500Z', '20120208T171500Z', '20120209T171500Z'], 'DTSTART is not a valid value: ' . $child->getValue());
+                    $this->assertContains($child->getValue(), ['20120207T171500Z', '20120208T171500Z', '20120209T171500Z'], 'DTSTART is not a valid value: '.$child->getValue());
                 } elseif ($child->name == 'DTEND') {
                     // DTEND has to be one of three valid values
-                    $this->assertContains($child->getValue(), ['20120207T181500Z', '20120208T181500Z', '20120209T181500Z'], 'DTEND is not a valid value: ' . $child->getValue());
+                    $this->assertContains($child->getValue(), ['20120207T181500Z', '20120208T181500Z', '20120209T181500Z'], 'DTEND is not a valid value: '.$child->getValue());
                 }
             }
         }
     }
 
 }
+

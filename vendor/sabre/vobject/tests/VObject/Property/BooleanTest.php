@@ -2,10 +2,9 @@
 
 namespace Sabre\VObject\Property;
 
-use PHPUnit\Framework\TestCase;
 use Sabre\VObject;
 
-class BooleanTest extends TestCase {
+class BooleanTest extends \PHPUnit_Framework_TestCase {
 
     function testMimeDir() {
 

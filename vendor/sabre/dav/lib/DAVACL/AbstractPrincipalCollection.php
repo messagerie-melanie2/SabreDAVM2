@@ -110,7 +110,7 @@ abstract class AbstractPrincipalCollection extends DAV\Collection implements IPr
      *
      * @param string $name
      * @throws DAV\Exception\NotFound
-     * @return DAV\INode
+     * @return IPrincipal
      */
     function getChild($name) {
 

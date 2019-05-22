@@ -2,11 +2,10 @@
 
 namespace Sabre\VObject\Component;
 
-use DateTimeInterface;
 use Sabre\VObject;
 
 /**
- * The VFreeBusy component.
+ * The VFreeBusy component
  *
  * This component adds functionality to a component, specific for VFREEBUSY
  * components.
@@ -21,18 +20,17 @@ class VFreeBusy extends VObject\Component {
      * Checks based on the contained FREEBUSY information, if a timeslot is
      * available.
      *
-     * @param DateTimeInterface $start
-     * @param DateTimeInterface $end
-     *
+     * @param DateTime $start
+     * @param Datetime $end
      * @return bool
      */
-    function isFree(DateTimeInterface $start, DatetimeInterface $end) {
+    public function isFree(\DateTime $start, \Datetime $end) {
 
-        foreach ($this->select('FREEBUSY') as $freebusy) {
+        foreach($this->select('FREEBUSY') as $freebusy) {
 
             // We are only interested in FBTYPE=BUSY (the default),
             // FBTYPE=BUSY-TENTATIVE or FBTYPE=BUSY-UNAVAILABLE.
-            if (isset($freebusy['FBTYPE']) && strtoupper(substr((string)$freebusy['FBTYPE'], 0, 4)) !== 'BUSY') {
+            if (isset($freebusy['FBTYPE']) && strtoupper(substr((string)$freebusy['FBTYPE'],0,4))!=='BUSY') {
                 continue;
             }
 
@@ -40,7 +38,7 @@ class VFreeBusy extends VObject\Component {
             // commas.
             $periods = explode(',', (string)$freebusy);
 
-            foreach ($periods as $period) {
+            foreach($periods as $period) {
                 // Every period is formatted as [start]/[end]. The start is an
                 // absolute UTC time, the end may be an absolute UTC time, or
                 // duration (relative) value.
@@ -49,10 +47,12 @@ class VFreeBusy extends VObject\Component {
                 $busyStart = VObject\DateTimeParser::parse($busyStart);
                 $busyEnd = VObject\DateTimeParser::parse($busyEnd);
                 if ($busyEnd instanceof \DateInterval) {
-                    $busyEnd = $busyStart->add($busyEnd);
+                    $tmp = clone $busyStart;
+                    $tmp->add($busyEnd);
+                    $busyEnd = $tmp;
                 }
 
-                if ($start < $busyEnd && $end > $busyStart) {
+                if($start < $busyEnd && $end > $busyStart) {
                     return false;
                 }
 
@@ -79,24 +79,25 @@ class VFreeBusy extends VObject\Component {
      *
      * @var array
      */
-    function getValidationRules() {
+    public function getValidationRules() {
 
-        return [
-            'UID'     => 1,
+        return array(
+            'UID' => 1,
             'DTSTAMP' => 1,
 
-            'CONTACT'   => '?',
-            'DTSTART'   => '?',
-            'DTEND'     => '?',
+            'CONTACT' => '?',
+            'DTSTART' => '?',
+            'DTEND' => '?',
             'ORGANIZER' => '?',
-            'URL'       => '?',
+            'URL' => '?',
 
-            'ATTENDEE'       => '*',
-            'COMMENT'        => '*',
-            'FREEBUSY'       => '*',
+            'ATTENDEE' => '*',
+            'COMMENT' => '*',
+            'FREEBUSY' => '*',
             'REQUEST-STATUS' => '*',
-        ];
+        );
 
     }
 
 }
+
