@@ -143,7 +143,10 @@ class LibM2 extends AbstractBackend {
   public function getPrincipalsByPrefix($prefixPath) {
     if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG))
       \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[PrincipalBackend] LibM2.getPrincipalsByPrefix($prefixPath)");
-
+      
+    // List principals
+    $principals = [];
+      
     if (isset($this->calendarBackend)) {
     	// Get shared calendar
     	$calendars = $this->calendarBackend->loadUserCalendars();
@@ -154,8 +157,7 @@ class LibM2 extends AbstractBackend {
     			$calendars_owners[] = $calendar->owner;
     		}
     	}
-    	// List principals
-    	$principals = [];
+    	
     	foreach ($calendars_owners as $owner) {
     		$infos = \LibMelanie\Ldap\Ldap::GetUserInfos($owner);
     	
@@ -176,7 +178,10 @@ class LibM2 extends AbstractBackend {
     		}
     		$principals[] = $principal;
     	}
-    }    
+    }
+    else if (isset($this->contactBackend)) {
+        $principals[] = ['id' => $prefixPath . '/' . $this->contactBackend->getCurrentUser(), 'uri' => $prefixPath . '/' . $this->contactBackend->getCurrentUser()];
+    }
 
     return $principals;
   }
@@ -306,7 +311,7 @@ class LibM2 extends AbstractBackend {
    */
   public function getGroupMembership($principal) {
     if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[PrincipalBackend] LibM2.getGroupMembership($principal)");
-    $username = $this->calendarBackend->getCurrentUser();
+    $username = isset($this->calendarBackend) ? $this->calendarBackend->getCurrentUser() : $this->contactBackend->getCurrentUser();
     $result = [];
     // Gestion du .-.
     if (strpos($principal, '.-.') !== false) {
@@ -314,7 +319,7 @@ class LibM2 extends AbstractBackend {
       $principal = $principal[0];
     }
     
-    if ($principal == "principals/".$username) {
+    if (isset($this->calendarBackend) && $principal == "principals/".$username) {
       // Get shared calendar
       $calendars = $this->calendarBackend->loadUserCalendars();
       $calendars_owners = [];
@@ -327,6 +332,7 @@ class LibM2 extends AbstractBackend {
 
     if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG))
       \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[PrincipalBackend] LibM2.getGroupMembership($principal) result: " . var_export($result, 1));
+    
     return $result;
   }
   /**

@@ -26,7 +26,7 @@ if (!defined('CONFIGURATION_APP_LIBM2')) {
 // Inclusion de la configuration de l'application
 require_once 'config/includes.php';
 // Includes
-require_once 'lib/includes/includes.php';
+require_once 'lib/includes/includes_caldav.php';
 
 /**
  * Classe de serveur CalDAV via SabreDAV

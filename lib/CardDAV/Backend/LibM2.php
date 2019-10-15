@@ -65,6 +65,11 @@ class LibM2 extends AbstractBackend implements Melanie2Support {
 	 * 
 	 * @var string
 	 */
+	protected $current_full_user;
+  	/**
+   	* Utilisateur courant dans un objet User de l'ORM M2
+   	* @var \LibMelanie\Api\Melanie2\User
+   	*/
 	protected $current_balp;
 	/**
 	 * UID de l'objet de partage
@@ -129,6 +134,16 @@ class LibM2 extends AbstractBackend implements Melanie2Support {
 			$this->user_melanie->uid = $this->current_user;
 		}
 	}
+	/**
+	* Retourne le user courant
+   	* 
+   	* @return string
+   	*/
+  	public function getCurrentUser() {
+  	  $this->setCurrentUser();
+  	  return $this->current_user;
+  	}
+	
 	/**
 	 * Récupère l'utilisateur lié au principalURI
 	 */
@@ -331,7 +346,7 @@ class LibM2 extends AbstractBackend implements Melanie2Support {
 			\Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CardDAVBackend] LibM2.getCards($addressBookId)");
 			// User courant
 		$this->setCurrentUser();
-		// Cherche si le calendrier est présent en mémoire
+		// Cherche si le carnet d adresse est présent en mémoire
 		if (isset($this->addressbooks) && isset($this->addressbooks[$addressBookId])) {
 			$loaded = true;
 		} else {
@@ -380,14 +395,14 @@ class LibM2 extends AbstractBackend implements Melanie2Support {
 	 */
 	function getCard($addressBookId, $cardUri) {
 		if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG))
-			\Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CalDAVBackend] LibM2.getCalendarObject($calendarId,$objectUri)");
-			// User courant
+			\Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CardDAVBackend] LibM2.getCard($addressBookId,$cardUri)");
+		// User courant
 		$this->setCurrentUser();
 		// Cherche si le calendrier est présent en mémoire
 		if (isset($this->addressbooks) && isset($this->addressbooks[$addressBookId])) {
 			$loaded = true;
 		} else {
-			$this->addressbooks[$addressBookId] = new \LibMelanie\Api\Melanie2\Addressbook($this->user_melanie);
+			$this->addressbooks[$addressBookId] = new \LibMelanie\Api\Melanie2\Contact($this->user_melanie);
 			$this->addressbooks[$addressBookId]->id = $addressBookId;
 			if ($this->addressbooks[$addressBookId]->load()) {
 				$loaded = true;
@@ -407,17 +422,16 @@ class LibM2 extends AbstractBackend implements Melanie2Support {
 			if (! isset($this->cache_contacts[$contact_uid . $addressBookId])) {
 				$contact = new \LibMelanie\Api\Melanie2\Contact($this->user_melanie, $this->addressbooks[$addressBookId]);
 				$contact->uid = $contact_uid;
-				if ($contact->load()) {
-					$this->cache_contacts[$event_uid . $addressBookId] = $contact;
-				}
+				$this->cache_contacts[$contact_uid . $addressBookId] = $contact;
 			}
-			// Si l'évènement existe on retourne le resultat
-			if (isset($this->cache_contacts[$contact_uid . $addressBookId]) && $this->cache_contacts[$contact_uid . $addressBookId]->exists()) {
+			// Si le contact existe on retourne le resultat
+			if (isset($this->cache_contacts[$contact_uid . $addressBookId]) 
+				&& $this->cache_contacts[$contact_uid . $addressBookId]->exists()) {
 				$result = [
-						'id' => $this->cache_contacts[$contact_uid . $addressBookId]->uid,
-						'uri' => urlencode($this->cache_contacts[$contact_uid . $addressBookId]->uid) . '.vcf',
-						'lastmodified' => $this->cache_contacts[$contact_uid . $addressBookId]->modified,
-						'etag' => '"' . md5($this->cache_contacts[$contact_uid . $addressBookId]->modified) . '"',
+				  'id' => $this->cache_contacts[$contact_uid . $addressBookId]->uid,
+				  'uri' => urlencode($this->cache_contacts[$contact_uid . $addressBookId]->uid) . '.vcf',
+				  'lastmodified' => $this->cache_contacts[$contact_uid . $addressBookId]->modified,
+				  'etag' => '"' . md5($this->cache_contacts[$contact_uid . $addressBookId]->modified) . '"',
 				];
 				if ($this->server->httpRequest->getMethod() != 'PROPFIND') {
 					$result['carddata'] = $this->cache_contacts[$contact_uid . $addressBookId]->vcard;
@@ -426,20 +440,6 @@ class LibM2 extends AbstractBackend implements Melanie2Support {
 			}
 		}
 		// if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CalDAVBackend] LibM2.getCalendarObject($calendarId,$objectUri) : " . var_export($result, true));
-		return $result;
-		
-		$stmt = $this->pdo->prepare('SELECT id, carddata, uri, lastmodified, etag, size FROM ' . $this->cardsTableName . ' WHERE addressbookid = ? AND uri = ? LIMIT 1');
-		$stmt->execute([
-				$addressBookId,
-				$cardUri
-		]);
-		
-		$result = $stmt->fetch(\PDO::FETCH_ASSOC);
-		
-		if (! $result)
-			return false;
-		
-		$result['etag'] = '"' . $result['etag'] . '"';
 		return $result;
 	}
 	
@@ -454,21 +454,23 @@ class LibM2 extends AbstractBackend implements Melanie2Support {
 	 * @return array
 	 */
 	function getMultipleCards($addressBookId, array $uris) {
-		$query = 'SELECT id, uri, lastmodified, etag, size, carddata FROM ' . $this->cardsTableName . ' WHERE addressbookid = ? AND uri IN (';
-		// Inserting a whole bunch of question marks
-		$query .= implode(',', array_fill(0, count($uris), '?'));
-		$query .= ')';
+		// Gurps
+		//$query = 'SELECT id, uri, lastmodified, etag, size, carddata FROM ' . $this->cardsTableName . ' WHERE addressbookid = ? AND uri IN (';
+		//// Inserting a whole bunch of question marks
+		//$query .= implode(',', array_fill(0, count($uris), '?'));
+		//$query .= ')';
 		
-		$stmt = $this->pdo->prepare($query);
-		$stmt->execute(array_merge([
-				$addressBookId
-		], $uris));
-		$result = [];
-		while ( $row = $stmt->fetch(\PDO::FETCH_ASSOC) ) {
-			$row['etag'] = '"' . $row['etag'] . '"';
-			$result[] = $row;
-		}
-		return $result;
+		//$stmt = $this->pdo->prepare($query);
+		//$stmt->execute(array_merge([
+		//		$addressBookId
+		//], $uris));
+		//$result = [];
+		//while ( $row = $stmt->fetch(\PDO::FETCH_ASSOC) ) {
+		//	$row['etag'] = '"' . $row['etag'] . '"';
+		//	$result[] = $row;
+		//}
+		//return $result;
+		return $this->getCards($addressBookId);
 	}
 	
 	/**
@@ -492,22 +494,60 @@ class LibM2 extends AbstractBackend implements Melanie2Support {
 	 * @return string|null
 	 */
 	function createCard($addressBookId, $cardUri, $cardData) {
-		$stmt = $this->pdo->prepare('INSERT INTO ' . $this->cardsTableName . ' (carddata, uri, lastmodified, addressbookid, size, etag) VALUES (?, ?, ?, ?, ?, ?)');
-		
-		$etag = md5($cardData);
-		
-		$stmt->execute([
-				$cardData,
-				$cardUri,
-				time(),
-				$addressBookId,
-				strlen($cardData),
-				$etag
-		]);
-		
-		$this->addChange($addressBookId, $cardUri, 1);
-		
-		return '"' . $etag . '"';
+		if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CardDAVBackend] LibM2.createCard($addressBookId,$cardUri)");
+    		// User courant
+		$this->setCurrentUser();
+    		// Cherche si le contact est présent en mémoire
+    		if (isset($this->addressbooks)
+        			&& isset($this->addressbooks[$addressBookId])) {
+      			$loaded = true;
+    		}
+    		else {
+      			$this->addressbooks[$addressBookId] = new \LibMelanie\Api\Melanie2\Contact($this->user_melanie);
+      			$this->addressbooks[$addressBookId]->id = $addressBookId;
+      			if ($this->addressbooks[$addressBookId]->load()) {
+      				  $loaded = true;
+      			}
+      			else {
+       			unset($this->addressbooks[$addressBookId]);
+        		$loaded = false;
+      			}
+		}	
+		$result = null;
+		if ($loaded) {
+        		if (!$this->addressbooks[$addressBookId]->asRight(\LibMelanie\Config\ConfigMelanie::WRITE)) {
+				throw new \Sabre\DAV\Exception\Forbidden();
+
+        		}
+			$contact_uid = str_replace('.vcf', '', $this->uiddecode($cardUri));
+        		// Cherche si le contact n'est pas déjà dans le cache
+        		if (isset($this->cache_events[$contact_uid.$addressBookId])
+            				&& is_object($this->cache_events[$contact_uid.$addressBookId])) {
+          			$contact = $this->cache_events[$contact_uid.$AddressBookId];
+        		}
+        		else {
+          			$contact = new \LibMelanie\Api\Melanie2\Contact($this->user_melanie, $this->addressbooks[$addressBookId]);
+          			$contact->uid = $contact_uid;
+        		}
+			$contact->id = md5(uniqid(mt_rand(), true));			
+			// Transformer les vcf en contacts: VCardToContact
+        		//$contact->vcf = $cardData;
+			$contact->setMapVcard($cardData);
+			//
+        		// MANTIS 0005134: Problème de bouclage sur des événements créés
+        		$contact->uid = $contact_uid;
+        		// MANTIS 0004663: Problème de création d'une exception d'une récurrence non présente
+        		if (!isset($contact->end) && count($contact->exceptions) > 0) {
+          			$contact->deleted = true;
+        		}
+			$contact->modified = time();
+        		$res = $contact->save();
+        		if (!is_null($res)) {
+          			$this->cache_contacts[$contact_uid.$addressBookId] = $contact;
+          			$result = '"'.md5($contact->modified).'"';
+        		}
+    		}
+    	return $result;
 	}
 	
 	/**
@@ -531,21 +571,53 @@ class LibM2 extends AbstractBackend implements Melanie2Support {
 	 * @return string|null
 	 */
 	function updateCard($addressBookId, $cardUri, $cardData) {
-		$stmt = $this->pdo->prepare('UPDATE ' . $this->cardsTableName . ' SET carddata = ?, lastmodified = ?, size = ?, etag = ? WHERE uri = ? AND addressbookid =?');
-		
-		$etag = md5($cardData);
-		$stmt->execute([
-				$cardData,
-				time(),
-				strlen($cardData),
-				$etag,
-				$cardUri,
-				$addressBookId
-		]);
-		
-		$this->addChange($addressBookId, $cardUri, 2);
-		
-		return '"' . $etag . '"';
+		if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CardDAVBackend] LibM2.updateCard($addressBookId,$cardUri)");
+		$this->setCurrentUser();
+		// Adresse en memoire?
+		if (isset($this->addressbooks) && isset($this->addressbooks[$addressBookId])) {
+			$loaded = true;
+		} else {
+			$this->addressbooks[$addressBookId] = new \LibMelanie\Api\Melanie2\Contact($this->user_melanie);
+			$this->addressbooks[$addressBookId]->id = $addressBookId;
+			if ($this->addressbooks[$addressBookId]->load()) {
+				$loaded = true;
+			} else {
+				unset($this->addressbooks[$addressBookId]);
+				$loaded = false;
+			}
+		}
+		$result = null;
+		if ($loaded) {
+			if (! $this->addressbooks[$addressBookId]->asRight(\LibMelanie\Config\ConfigMelanie::WRITE)) {
+				// MANTIS 0004469: Générer des messages d'erreur quand l'utilisateur n'a pas les droits
+				throw new \Sabre\DAV\Exception\Forbidden();
+			}
+			$contact_uid = str_replace('.vcf', '', urldecode($cardUri));
+
+			// memoire?
+			if (isset($this->cache_contacts[$contact_uid.$addressBookId])
+				&& is_object($this->cache_contacts[$contact_uid.$addressBookId])) {
+				$contact = $this->cache_contacts[$contact_uid.$addressBookId];
+			}
+			else {
+				$contact = new \LibMelanie\Api\Melanie2\Contact($this->user_melanie, $this->addressbooks[$addressBookId]);
+				$contact->uid = $contact_uid;
+			}
+			if ($contact->load()) {
+				$contact->setMapVcard($cardData);          			
+				// MANTIS 0005134: Problème de bouclage sur des événements créés
+          			$contact->uid = $contact_uid;
+          			$contact->modified = time();
+				$res = $contact->save();
+          			if (!is_null($res)) {
+            				$this->cache_contacts[$contact_uid.$addressBookId] = $contact;
+            				$result = '"'.md5($contact->modified).'"';
+				} 
+        		}        
+
+		}
+			return $result;
+
 	}
 	
 	/**
@@ -556,14 +628,65 @@ class LibM2 extends AbstractBackend implements Melanie2Support {
 	 * @return bool
 	 */
 	function deleteCard($addressBookId, $cardUri) {
-		$stmt = $this->pdo->prepare('DELETE FROM ' . $this->cardsTableName . ' WHERE addressbookid = ? AND uri = ?');
-		$stmt->execute([
-				$addressBookId,
-				$cardUri
-		]);
-		
-		$this->addChange($addressBookId, $cardUri, 3);
-		
-		return $stmt->rowCount() === 1;
-	}
+    		if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[CardDAVBackend] LibM2.deleteCard($addressBookId,$cardUri)");
+    		if (!isset($cardUri)) {
+        		return;
+    		}
+    		// User courant
+    		$this->setCurrentUser();
+    		// Cherche si le contact est présent en mémoire
+    		if (isset($this->addressbooks)
+        		&& isset($this->addressbooks[$addressBookId])) {
+      		$loaded = true;
+    		}
+    		else {
+      			$this->addressbooks[$addressBookId] = new \LibMelanie\Api\Melanie2\Contact($this->user_melanie);
+      			$this->addressbooks[$addressBookId]->id = $addressBookId;
+      			if ($this->addressbooks[$addressBookId]->load()) {
+        			$loaded = true;
+      			}
+      			else {
+        			unset($this->addressbooks[$addressBookId]);
+      			}
+    		}
+    		if ($loaded) {
+        		if (!$this->addressbooks[$addressBookId]->asRight(\LibMelanie\Config\ConfigMelanie::WRITE)) {
+                		// MANTIS 0004469: Générer des messages d'erreur quand l'utilisateur n'a pas les droits
+                		throw new \Sabre\DAV\Exception\Forbidden();
+        		}
+      			$contact = new \LibMelanie\Api\Melanie2\Contact($this->user_melanie, $this->addressbooks[$addressBookId]);
+      			$contact->uid = str_replace('.vcf', '', $this->uiddecode($cardUri));
+      			$res = false;
+      			if ($contact->load()) {
+        			$exceptions = $contact->exceptions;
+        			// Suppression du contact
+        			$res = $contact->delete();
+        			if (count($exceptions) > 0) {
+          				foreach($exceptions as $exception) {
+            				// Suppression des exceptions du contact
+            					$exception->delete();
+          				}
+        			}
+      			}
+      			if (!$res) {
+        			throw new \Exception();
+      			}
+    }
+  }
+
+
+	/**
+   	* Décodage d'un uid pour les uri (pour les / notamment)
+   	* @param string $uid
+   	* @return string
+   	*/
+  	private function uiddecode($uid) {
+  	  if (strpos($uid, '%25') !== false) {
+  	    $uid = preg_replace('/%[25]+40/', '%40', $uid);
+  	  }
+  	  $search = ['%2F','%40'];
+  	  $replace = ['/','@'];
+  	  return str_replace($search, $replace, $uid);
+  	}
 }
+

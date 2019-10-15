@@ -24,8 +24,15 @@ A faire
 CalDAV - Liste des changements
 ==============================
 
-CalDAV - 0.6.6 (Pas encore publiée) [ Afficher les bogues ]
----
+CalDAV - 0.6.7 (Pas encore publiée) [ Afficher les bogues ]
+===================================
+- 0005397: [SabreDAV] Problème dans les recurrence id sur des timezones différents d'Europe/Paris (thomas.payen) - résolu.
+- 0005311: [SabreDAV] Fix: Problème de suppression d'événement recurrent avec occurrences (thomas.payen) - résolu.
+
+[2 bogues]
+
+CalDAV - 0.6.6 (Publiée 13/02/2019) [ Afficher les bogues ]
+===================================
 - 0005239: [SabreDAV] Erreur lors de l'affichage en mode browser (thomas.payen) - résolu.
 - 0005227: [SabreDAV] Problème pour désactiver une alarme sur un événement récurrent (thomas.payen) - résolu.
 
