@@ -17,10 +17,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 // Configuration du nom de l'application pour l'ORM
 if (!defined('CONFIGURATION_APP_LIBM2')) {
   define('CONFIGURATION_APP_LIBM2', 'sabredav');
 }
+
 // Inclusion de l'ORM
 @include_once 'includes/libm2.php';
 // Inclusion de la configuration de l'application
@@ -37,26 +39,31 @@ require_once 'lib/includes/includes_caldav.php';
  *
  */
 class CalDAV {
+
   /**
    * server SabreDAV
    * @var Sabre\DAV\Server
    */
   private static $server;
+
   /**
    * Backend d'authentification
-   * @var Sabre\DAV\Auth\Backend\LibM2
+   * @var Sabre\DAV\Auth\Backend\LibM2AuthInterface
    */
   private static $authBackend;
+
   /**
    * Backend calendar
    * @var Sabre\CalDAV\Backend\LibM2
    */
   private static $calendarBackend;
+
   /**
    * Backend principal
    * @var Sabre\DAVACL\PrincipalBackend\LibM2
    */
   private static $principalBackend;
+
   /**
    * Démarrage des différents modules du serveur CalDAV
    * @throws ErrorException
@@ -64,12 +71,6 @@ class CalDAV {
   public static function Start() {
     // Set default timezone, based on ORM configuration
     date_default_timezone_set(\LibMelanie\Config\ConfigMelanie::CALENDAR_DEFAULT_TIMEZONE);
-
-    //Mapping PHP errors to exceptions
-//     function exception_error_handler($errno, $errstr, $errfile, $errline ) {
-//       throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
-//     }
-//     set_error_handler("exception_error_handler");
 
     // Initialisation des backends
     self::InitBackends();
@@ -135,17 +136,23 @@ class CalDAV {
     // Démarrage du serveur
     self::$server->exec();
   }
+
   /**
    * Initialisation des backends
    */
   private static function InitBackends() {
+    // Récupération du nom de backend depuis la configuration
+    $authPlugin = defined('\Config\Config::authPlugin') ? \Config\Config::authPlugin : 'Sabre\DAV\Auth\Backend\LibM2';
+    self::$authBackend = new $authPlugin();
+
     // Définition des backends Mélanie2
-    self::$authBackend = new Sabre\DAV\Auth\Backend\LibM2();
     self::$calendarBackend = new Sabre\CalDAV\Backend\LibM2(self::$authBackend);
     self::$principalBackend = new Sabre\DAVACL\PrincipalBackend\LibM2(self::$authBackend);
+    
     // Ajout du calendar backend dans le principal backend
     self::$principalBackend->setCalendarBackend(self::$calendarBackend);
   }
+
   /**
    * Initialisation des logs
    */
@@ -159,7 +166,19 @@ class CalDAV {
     };
     \LibMelanie\Log\M2Log::InitDebugLog($debuglog);
     \LibMelanie\Log\M2Log::InitErrorLog($errorlog);
+
+    // Gestion des exceptions
+    /**
+     * Ecrit l'exception dans les logs
+     * 
+     * @param Exception $excpetion
+     */
+    function exception_handler($exception) {
+      \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "[Exception] " . $exception);
+    }
+    set_exception_handler('exception_handler');
   }
+
   /**
    * Initialisation des plugins
    */
@@ -197,6 +216,7 @@ class CalDAV {
       );
     }
   }
+
   /**
    * Gestion des Events server
    * Pour logger les exceptions notamment
@@ -213,13 +233,14 @@ class CalDAV {
       }      
     });
   }
+  
   /**
    * Initialisation du shutdown pour logger les erreurs
    */
   public static function InitShutdown() {
     $last_error = error_get_last();
     if (isset($last_error)) {
-      $path = $_SERVER['PATH_INFO'];
+      $path = isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : '-';
       $req = $_SERVER['REQUEST_METHOD'];
       $error = "";
       if (isset($last_error['type']) && ($last_error['type'] === E_ERROR)) {
@@ -250,6 +271,8 @@ class CalDAV {
    */
   private static function kill_on_exit() {
     $pid = getmypid();
+    $path = isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : '-';
+    $req = $_SERVER['REQUEST_METHOD'];
     \Lib\Log\Log::l(\Lib\Log\Log::FATAL, "$req $path [Shutdown] kill_on_exit() SIGTERM");
     posix_kill($pid, SIGTERM);
   } 

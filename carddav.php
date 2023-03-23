@@ -17,10 +17,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 // Configuration du nom de l'application pour l'ORM
 if (!defined('CONFIGURATION_APP_LIBM2')) {
 	define('CONFIGURATION_APP_LIBM2', 'sabredav');
 }
+
 // Inclusion de l'ORM
 @include_once 'includes/libm2.php';
 // Inclusion de la configuration de l'application
@@ -37,26 +39,31 @@ require_once 'lib/includes/includes_carddav.php';
  *
  */
 class CardDAV {
+
 	/**
 	 * server SabreDAV
 	 * @var Sabre\DAV\Server
 	 */
 	private static $server;
+
 	/**
 	 * Backend d'authentification
-	 * @var Sabre\DAV\Auth\Backend\LibM2
+	 * @var Sabre\DAV\Auth\Backend\LibM2AuthInterface
 	 */
 	private static $authBackend;
+
 	/**
 	 * Backend calendar
 	 * @var Sabre\CardDAV\Backend\LibM2
 	 */
 	private static $contactBackend;
+
 	/**
 	 * Backend principal
 	 * @var Sabre\DAVACL\PrincipalBackend\LibM2
 	 */
 	private static $principalBackend;
+
 	/**
 	 * Démarrage des différents modules du serveur CardDAV
 	 * @throws ErrorException
@@ -93,17 +100,23 @@ class CardDAV {
 		// Démarrage du serveur
 		self::$server->exec();
 	}
+
 	/**
 	 * Initialisation des backends
 	 */
 	private static function InitBackends() {
+		// Récupération du nom de backend depuis la configuration
+		$authPlugin = defined('\Config\Config::authPlugin') ? \Config\Config::authPlugin : 'Sabre\DAV\Auth\Backend\LibM2';
+		self::$authBackend = new $authPlugin();
+
 		// Définition des backends Mélanie2
-		self::$authBackend = new Sabre\DAV\Auth\Backend\LibM2();
 		self::$contactBackend = new Sabre\CardDAV\Backend\LibM2(self::$authBackend);
 		self::$principalBackend = new Sabre\DAVACL\PrincipalBackend\LibM2(self::$authBackend);
+		
 		// Ajout du calendar backend dans le principal backend
 		self::$principalBackend->setContactBackend(self::$contactBackend);
 	}
+
 	/**
 	 * Initialisation des logs
 	 */
@@ -118,6 +131,7 @@ class CardDAV {
 		\LibMelanie\Log\M2Log::InitDebugLog($debuglog);
 		\LibMelanie\Log\M2Log::InitErrorLog($errorlog);
 	}
+
 	/**
 	 * Initialisation des plugins
 	 */

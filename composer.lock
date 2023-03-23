@@ -1,11 +1,69 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fffc4c0ca150b5ca2f007098f614c552",
+    "content-hash": "3e451fe6f4b4a74894468ecc22d80eae",
     "packages": [
+        {
+            "name": "messagerie-melanie2/orm-m2",
+            "version": "0.6.5.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/messagerie-melanie2/ORM-M2.git",
+                "reference": "4eb7d2a24a10b881d575c6e4544cb2cfceb0a1e8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/messagerie-melanie2/ORM-M2/zipball/4eb7d2a24a10b881d575c6e4544cb2cfceb0a1e8",
+                "reference": "4eb7d2a24a10b881d575c6e4544cb2cfceb0a1e8",
+                "shasum": ""
+            },
+            "require": {
+                "ext-ldap": "*",
+                "ext-pgsql": "*",
+                "php": ">=5.3.1"
+            },
+            "require-dev": {
+                "composer/composer": "*"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "includes/includes_conf.php"
+                ],
+                "psr-4": {
+                    "LibMelanie\\": "src/"
+                }
+            },
+            "license": [
+                "GPLv3"
+            ],
+            "authors": [
+                {
+                    "name": "Thomas Payen",
+                    "email": "thomas.payen@i-carre.net",
+                    "homepage": "https://github.com/tpayen",
+                    "role": "Developer"
+                }
+            ],
+            "description": "ORM pour l'accès aux données Mél",
+            "homepage": "https://github.com/messagerie-melanie2/orm-m2",
+            "keywords": [
+                "Addressbook",
+                "Calendar",
+                "LDAP",
+                "ORM",
+                "SQL",
+                "Tasks"
+            ],
+            "support": {
+                "source": "https://github.com/messagerie-melanie2/ORM-M2/tree/0.6.5.5",
+                "issues": "https://github.com/messagerie-melanie2/ORM-M2/issues"
+            },
+            "time": "2023-03-23T14:26:45+00:00"
+        },
         {
             "name": "sabre/dav",
             "version": "3.0.9",
@@ -59,8 +117,8 @@
             "autoload": {
                 "psr-4": {
                     "Sabre\\DAV\\": "lib/DAV/",
-                    "Sabre\\DAVACL\\": "lib/DAVACL/",
                     "Sabre\\CalDAV\\": "lib/CalDAV/",
+                    "Sabre\\DAVACL\\": "lib/DAVACL/",
                     "Sabre\\CardDAV\\": "lib/CardDAV/"
                 }
             },
@@ -85,6 +143,11 @@
                 "framework",
                 "iCalendar"
             ],
+            "support": {
+                "forum": "https://groups.google.com/group/sabredav-discuss",
+                "issues": "https://github.com/sabre-io/dav/issues",
+                "source": "https://github.com/fruux/sabre-dav"
+            },
             "time": "2016-04-07T00:32:57+00:00"
         },
         {
@@ -136,6 +199,11 @@
                 "promise",
                 "signal"
             ],
+            "support": {
+                "forum": "https://groups.google.com/group/sabredav-discuss",
+                "issues": "https://github.com/sabre-io/event/issues",
+                "source": "https://github.com/fruux/sabre-event"
+            },
             "time": "2015-05-19T10:24:22+00:00"
         },
         {
@@ -191,6 +259,11 @@
             "keywords": [
                 "http"
             ],
+            "support": {
+                "forum": "https://groups.google.com/group/sabredav-discuss",
+                "issues": "https://github.com/sabre-io/http/issues",
+                "source": "https://github.com/fruux/sabre-http"
+            },
             "time": "2016-01-06T23:00:08+00:00"
         },
         {
@@ -242,6 +315,11 @@
                 "uri",
                 "url"
             ],
+            "support": {
+                "forum": "https://groups.google.com/group/sabredav-discuss",
+                "issues": "https://github.com/sabre-io/uri/issues",
+                "source": "https://github.com/fruux/sabre-uri"
+            },
             "time": "2016-03-08T02:29:27+00:00"
         },
         {
@@ -308,6 +386,11 @@
                 "jCard",
                 "vCard"
             ],
+            "support": {
+                "forum": "https://groups.google.com/group/sabredav-discuss",
+                "issues": "https://github.com/sabre-io/vobject/issues",
+                "source": "https://github.com/fruux/sabre-vobject"
+            },
             "time": "2016-04-07T00:12:31+00:00"
         },
         {
@@ -338,13 +421,13 @@
             },
             "type": "library",
             "autoload": {
-                "psr-4": {
-                    "Sabre\\Xml\\": "lib/"
-                },
                 "files": [
                     "lib/Deserializer/functions.php",
                     "lib/Serializer/functions.php"
-                ]
+                ],
+                "psr-4": {
+                    "Sabre\\Xml\\": "lib/"
+                }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -371,6 +454,11 @@
                 "dom",
                 "xml"
             ],
+            "support": {
+                "forum": "https://groups.google.com/group/sabredav-discuss",
+                "issues": "https://github.com/sabre-io/xml/issues",
+                "source": "https://github.com/fruux/sabre-xml"
+            },
             "time": "2016-03-12T22:23:16+00:00"
         }
     ],
@@ -381,5 +469,6 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
-    "platform-dev": []
+    "platform-dev": [],
+    "plugin-api-version": "2.3.0"
 }

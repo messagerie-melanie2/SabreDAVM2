@@ -84,8 +84,7 @@ $calendar_id = $args[2];
 if (!preg_match('/^[0-9a-z\-\.]+$/', $calendar_id, $matches)) {
   Error404 ('Erreur de paramètre : ' . $path . ' / baseuri : ' . \Config\Config::baseUri);
 }
-
-$calendar = new LibMelanie\Api\Melanie2\Calendar();
+$calendar = \driver::new('Calendar');
 $calendar->id = $calendar_id;
 $ctag = $calendar->getCTag();
 
@@ -98,7 +97,7 @@ $statusMessage = ' OK';
 
 if ($user_uid == $calendar_id && $user_uid == $_SERVER['PHP_AUTH_USER'])
 {
-  $taskslist = new LibMelanie\Api\Melanie2\Taskslist();
+  $taskslist = \driver::new('Taskslist');
   $taskslist->id = $calendar_id;
   $taskslist_ctag = $taskslist->getCTag();
 

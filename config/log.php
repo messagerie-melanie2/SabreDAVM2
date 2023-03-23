@@ -52,14 +52,14 @@ class Log {
 	 * le format de la date est configuré en dessous
 	 * Le fichier doit être dans un répertoire avec des droits d'écriture
 	 */
-	public static $file_log = "sabredav_{date}.log";
+	public static $file_log = "sabredav.log";
 	/**
 	 * Définition du fichier d'erreurs
 	 * Possibilité d'ajouter {date} pour ajouter la date au nom du fichier
 	 * le format de la date est configuré en dessous
 	 * Le fichier doit être dans un répertoire avec des droits d'écriture
 	 */
-	public static $file_errors_log = "sabredav_errors_{date}.log";
+	public static $file_errors_log = "sabredav_errors.log";
 	/**
 	 * Définition du format de date a ajouter éventuellement au nom du fichier
 	 */
@@ -67,5 +67,5 @@ class Log {
   /**
    * Liste des utilisateurs pour lesquels les logs seront en debug dans un fichier particulier
    */
-	public static $users_debug = [];
+	public static $users_debug = ['thomas.test1', 'thomas.payen'];
 }

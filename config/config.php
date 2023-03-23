@@ -30,21 +30,27 @@ class Config {
    * You can override the baseUri here.
    * @var string
    */
-  const baseUri = '/caldav.php';
+  const baseUri = '/davm2/caldav.php';
   /**
    * If you want to run the SabreDAV server in a custom location (using mod_rewrite for instance)
    * You can override the baseUri here.
    * For CalDAV server
    * @var string
    */
-  const caldavBaseUri = '/caldav.php';  
+  const caldavBaseUri = '/davm2/caldav.php';
   /**
    * If you want to run the SabreDAV server in a custom location (using mod_rewrite for instance)
    * You can override the baseUri here.
    * For CardDAV server
    * @var string
    */
-  const carddavBaseUri = '/carddav.php';
+  const carddavBaseUri = '/davm2/carddav.php';
+  /**
+   * Configuration du nom de driver
+   * 
+   * Valeurs possibles : 'mte', 'mce', 'gn', 'dgfip', 'mi', 'ens'
+   */
+  const driver = 'mce';
   /**
    * This is a flag that allow or not showing file, line and code
    * of the exception in the returned XML
@@ -58,7 +64,6 @@ class Config {
    * @var boolean
    */
   const useBrowser = true;
-  
   /**
    * Use WebDav Sync to CalDAV synchronisation
    * @var boolean
@@ -68,12 +73,41 @@ class Config {
    * Date limite maximum pour l'ancienneté des évènements retournés
    * @var string
    */
-  const DATE_MAX = "-18 months"; 
+  const DATE_MAX = "-18 months";
   /**
    * Ajouter au Sync Token pour retourner plus d'enregistrement
    * @var integer
    */
   const addToSyncToken = 0;
+  /**
+   * Permettre un nettoyage du cache régulier en chargeant plus de SyncToken
+   * que nécessaite
+   * 
+   * Syntaxe de configuration :
+   *  [ frequence => tokens ]
+   * 
+   * Exemple, pour recharger 100 tokens toutes les 20 synchros 
+   *  et 500 tokens toutes les 100 synchros :
+   *  [ 
+   *    20  => 100,
+   *    100 => 500,
+   *  ]
+   * @var array ou null
+   */
+  const addSyncTokenToCleanCache = null;
+  /**
+   * Plugin d'authentification
+   *   'Sabre\DAV\Auth\Backend\LibM2' : Login/password
+   *   'Sabre\DAV\Auth\Backend\LibM2Krb' : Kerberos
+   */
+  const authPlugin = 'Sabre\DAV\Auth\Backend\LibM2';
+
+  /**
+   * Filtre LDAP pour la recherche d'un utilisateur kerberos
+   * (utilisé avec le backend LibM2Krb)
+   */
+  const krbldapfilter = '';
+
   /**
    * Liste des URL bloquées en fonction des utilisateurs
    * Ex :  [

@@ -755,12 +755,15 @@ class Broker {
                 // generated for an instance of a recurring event, through the
                 // fact that the instance has disappeared by showing up in
                 // EXDATE
-                $dt = DateTimeParser::parse($instance['id'], $eventInfo['timezone']);
-                // Treat is as a DATE field
-                if (strlen($instance['id']) <= 8) {
-                    $recur = $event->add('DTSTART', $dt, array('VALUE' => 'DATE'));
-                } else {
-                    $recur = $event->add('DTSTART', $dt);
+                // PAMELA - MANTIS 0005311: Fix: Problème de suppression d'événement recurrent avec occurrences
+                if ($instance['id'] !== 'master') {
+                  $dt = DateTimeParser::parse($instance['id'], $eventInfo['timezone']);
+                  // Treat is as a DATE field
+                  if (strlen($instance['id']) <= 8) {
+                      $recur = $event->add('DTSTART', $dt, array('VALUE' => 'DATE'));
+                  } else {
+                      $recur = $event->add('DTSTART', $dt);
+                  }
                 }
                 if ($summary) {
                     $event->add('SUMMARY', $summary);

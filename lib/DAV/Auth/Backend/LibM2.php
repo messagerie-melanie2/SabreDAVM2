@@ -20,14 +20,14 @@
  */
 namespace Sabre\DAV\Auth\Backend;
 
+use Sabre\HTTP;
+use Sabre\HTTP\RequestInterface;
+use Sabre\HTTP\ResponseInterface;
+
 /**
- * This is an authentication backend that uses a database to manage passwords.
- *
- * @copyright Copyright (C) 2007-2014 fruux GmbH (https://fruux.com/).
- * @author Evert Pot (http://evertpot.com/)
- * @license http://sabre.io/license/ Modified BSD License
+ * This is an authentication backend based on ORM MCE
  */
-class LibM2 extends AbstractBasic {
+class LibM2 extends AbstractBasic implements LibM2AuthInterface {
 	/**
 	 * 
 	 * @var boolean
@@ -63,19 +63,21 @@ class LibM2 extends AbstractBasic {
   protected function validateUserPass($username, $password) {
     if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[AuthBackend] LibM2.validateUserPass($username) noauth = " . $this->noauth);
     // Si c'est une boite partagée, on s'authentifie sur l'utilisateur pas sur la bal
-    if (strpos($username, '.-.') !== false) {
+    if (\driver::gi()->isBalp($username)) {
       // MANTIS 3791: Gestion de l'authentification via des boites partagées
-      $tmp = explode('.-.', $username, 2);
-      $username = $tmp[0];
-      if (isset($tmp[1])) {
-        // TODO: Valider que la bali a bien les droits emission sur la balp
-        if (!$this->checkBalfPrivileges($username, $tmp[1])) {
+      list($username, $balpname) = \driver::gi()->getBalpnameFromUsername($username);
+      if (isset($balpname)) {
+        // Valider que la bali a bien les droits emission sur la balp
+        if (!$this->checkBalfPrivileges($username, $balpname)) {
           return false;
         }
       }
     }
+    // Gestion du user
+    $user = \driver::new('User');
+    $user->uid = $username;
     // Gestion de l'authentification via l'ORM M2
-    if ($this->noauth || \LibMelanie\Ldap\Ldap::Authentification($username, $password)) {
+    if ($this->noauth || $user->load() && $user->authentification($password)) {
       return true;
     }
     else {
@@ -84,30 +86,71 @@ class LibM2 extends AbstractBasic {
       return false;
     }
   }
+
   /**
    * Permet de valider qu'un utilisateur à bien les droits d'écriture sur une balf
    * Nécessaire pour les droits sur les agendas
+   * 
    * @param string $username
    * @param string $balf
+   * 
    * @return boolean
    */
-  private function checkBalfPrivileges($username, $balf) {
+  protected function checkBalfPrivileges($username, $balf) {
     if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[AuthBackend] LibM2.checkBalfPrivileges($username, $balf)");
-    // Liste des droits pour l'écriture
-    $droits = ['C','G'];
-    // Récupère le champ mineqmelpartages pour les partages de boites dans le LDAP
-    $infos = \LibMelanie\Ldap\Ldap::GetUserInfos($balf, null, ["mineqmelpartages"]);
-    if ($infos !== false) {
-      foreach ($infos['mineqmelpartages'] as $melPartage) {
-        foreach ($droits as $droit) {
-          // Si le droit matche, c'est bon
-          if ($melPartage == "$username:$droit") {
-            return true;
-          }
-        }
-      }
+    $user = \driver::new('User');
+    $user->uid = $balf;
+    if ($user->load('shares')) {
+      // Est-ce que l'utilisateur a des droits d'émission sur la balf ?
+      return $user->asRight($username, \driver::const('User', 'RIGHT_SEND'));
     }
-    // Pas de droit trouvé, l'utilisateur n'a pas les droits sur la balf
+    // La balf n'existe pas
     return false;
+  }
+
+  /**
+   * When this method is called, the backend must check if authentication was
+   * successful.
+   *
+   * The returned value must be one of the following
+   *
+   * [true, "principals/username"]
+   * [false, "reason for failure"]
+   *
+   * If authentication was successful, it's expected that the authentication
+   * backend returns a so-called principal url.
+   *
+   * Examples of a principal url:
+   *
+   * principals/admin
+   * principals/user1
+   * principals/users/joe
+   * principals/uid/123457
+   *
+   * If you don't use WebDAV ACL (RFC3744) we recommend that you simply
+   * return a string such as:
+   *
+   * principals/users/[username]
+   *
+   * @param RequestInterface $request
+   * @param ResponseInterface $response
+   * @return array
+   */
+  public function check(RequestInterface $request, ResponseInterface $response) {
+
+    $auth = new HTTP\Auth\Basic(
+        $this->realm,
+        $request,
+        $response
+    );
+
+    $userpass = $auth->getCredentials($request);
+    if (!$userpass) {
+        return [false, "No 'Authorization: Basic' header found. Either the client didn't send one, or the server is mis-configured"];
+    }
+    if (!$this->validateUserPass($userpass[0], $userpass[1])) {
+        return [false, "Username or password was incorrect"];
+    }
+    return [true, $this->principalPrefix . \driver::gi()->convertUser($userpass[0])];
   }
 }

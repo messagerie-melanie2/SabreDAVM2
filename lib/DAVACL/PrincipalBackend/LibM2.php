@@ -21,8 +21,6 @@
  */
 namespace Sabre\DAVACL\PrincipalBackend;
 
-use Sabre\DAV, Sabre\DAVACL, Sabre\HTTP\URLUtil;
-
 /**
  * LibM2 principal backend
  * This backend assumes all principals are in a single collection. The default collection
@@ -33,24 +31,28 @@ use Sabre\DAV, Sabre\DAVACL, Sabre\HTTP\URLUtil;
  * @license http://sabre.io/license/ Modified BSD License
  */
 class LibM2 extends AbstractBackend {
+
   /**
    * Authenfication backend
    *
    * @var \Sabre\DAV\Auth\Backend\LibM2
    */
   protected $authBackend;
+
   /**
    * Calendar backend
    *
    * @var \Sabre\CalDAV\Backend\LibM2
    */
   protected $calendarBackend;
+
   /**
    * Contact backend
    *
    * @var \Sabre\CardDAV\Backend\LibM2
    */
   protected $contactBackend;
+
   /**
    * Instance du serveur SabreDAV
    * Permet d'accéder à la requête et à la réponse
@@ -58,34 +60,23 @@ class LibM2 extends AbstractBackend {
    * @var \Sabre\DAV\Server
    */
   protected $server;
-  /**
-   * A list of additional fields to support
-   *
-   * @var array
-   */
-  protected $fieldMap = [
-	  /**
-	   * This property can be used to display the users' real name.
-	   */
-	  '{DAV:}displayname' => ['ldapField' => 'cn'],/**
-	   * This is the users' primary email-address.
-	   */
-	  '{http://sabredav.org/ns}email-address' => ['ldapField' => 'mineqmelmailemission']  		
-  ];
+
   /**
    * Ne pas faire de recherche du principal dans le LDAP
    * @var boolean
    */
   protected $noPrincipalSearch;
+
   /**
    * Sets up the backend.
    *
-   * @param \Sabre\DAV\Auth\Backend\LibM2 $authBackend
+   * @param \Sabre\DAV\Auth\Backend\LibM2AuthInterface $authBackend
    */
-  public function __construct(\Sabre\DAV\Auth\Backend\LibM2 $authBackend) {
+  public function __construct(\Sabre\DAV\Auth\Backend\LibM2AuthInterface $authBackend) {
     $this->authBackend = $authBackend;
     $this->noPrincipalSearch = false;
   }
+
   /**
    * Récupération de l'instance du serveur SabreDAV
    *
@@ -94,6 +85,7 @@ class LibM2 extends AbstractBackend {
   public function setServer(\Sabre\DAV\Server $server) {
     $this->server = $server;
   }
+
   /**
    * Sets up the calendar backend
    * 
@@ -102,6 +94,7 @@ class LibM2 extends AbstractBackend {
   public function setCalendarBackend(\Sabre\CalDAV\Backend\LibM2 $calendarBackend) {
   	$this->calendarBackend = $calendarBackend;
   }
+
   /**
    * Sets up the contact backend
    * 
@@ -110,6 +103,7 @@ class LibM2 extends AbstractBackend {
   public function setContactBackend(\Sabre\CardDAV\Backend\LibM2 $contactBackend) {
   	$this->contactBackend = $contactBackend;
   }
+
   /**
    * Set up the noPrincipalSearch variable
    * 
@@ -118,6 +112,7 @@ class LibM2 extends AbstractBackend {
   public function setNoPrincipalSearch($noPrincipalSearch = false) {
   	$this->noPrincipalSearch = $noPrincipalSearch;
   }
+
   /**
    * Récupère l'utilisateur lié au principalURI
    */
@@ -126,6 +121,7 @@ class LibM2 extends AbstractBackend {
     $username = $var[1];
     return $username;
   }
+
   /**
    * Returns a list of principals based on a prefix.
    * This prefix will often contain something like 'principals'. You are only
@@ -147,44 +143,39 @@ class LibM2 extends AbstractBackend {
     // List principals
     $principals = [];
       
-    if (isset($this->calendarBackend)) {
-    	// Get shared calendar
-    	$calendars = $this->calendarBackend->loadUserCalendars();
-    	$calendars_owners = [];
-    	
-    	foreach ($calendars as $calendar) {
-    		if (! in_array($calendar->owner, $calendars_owners)) {
-    			$calendars_owners[] = $calendar->owner;
+    if (isset($this->calendarBackend) || isset($this->contactBackend)) {
+      if (isset($this->calendarBackend)) {
+        // Get shared calendars
+        $containers = $this->calendarBackend->loadUserCalendars();
+      }
+      else {
+        // Get shared addressbooks
+        $containers = $this->contactBackend->loadUserAddressBooks();
+      }
+      $owners = [];
+
+      foreach ($containers as $container) {
+    		if (!in_array($container->owner, $owners)) {
+    			$owners[] = $container->owner;
+
+          $user = \driver::new('User');
+          $user->uid = $container->owner;
+
+          if ($user->load()) {
+            $principals[] = [
+              'id'                => $prefixPath . '/' . $user->uid, 
+              'uri'               => $prefixPath . '/' . $user->uid,
+              '{DAV:}displayname' => $user->fullname,
+              '{http://sabredav.org/ns}email-address' => $user->email_send,
+            ];
+          }
     		}
     	}
-    	
-    	foreach ($calendars_owners as $owner) {
-    		$infos = \LibMelanie\Ldap\Ldap::GetUserInfos($owner);
-    	
-    		$principal = ['id' => $prefixPath . '/' . $owner, 'uri' => $prefixPath . '/' . $owner];
-    	
-    		if (isset($infos) && count($infos) > 0) {
-    			foreach ($this->fieldMap as $key => $val) {
-    				$value = $infos[$val['ldapField']];
-    				if (is_array($value)) {
-    					if (isset($value[0])) {
-    						$principal[$key] = $value[0];
-    					}
-    				}
-    				else {
-    					$principal[$key] = $value;
-    				}
-    			}
-    		}
-    		$principals[] = $principal;
-    	}
-    }
-    else if (isset($this->contactBackend)) {
-        $principals[] = ['id' => $prefixPath . '/' . $this->contactBackend->getCurrentUser(), 'uri' => $prefixPath . '/' . $this->contactBackend->getCurrentUser()];
     }
 
     return $principals;
   }
+
   /**
    * Returns a specific principal, specified by it's path.
    * The returned structure should be the exact same as from
@@ -198,36 +189,33 @@ class LibM2 extends AbstractBackend {
       \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[PrincipalBackend] LibM2.getPrincipalByPath($path)");
 
     $user_uid = $this->getUserFromPrincipalUri($path);
-    $principal = ['id' => "principals/$user_uid",'uri' => "principals/$user_uid"];
+    $principal = [
+      'id' => "principals/$user_uid",
+      'uri' => "principals/$user_uid"
+    ];
     
     if ($this->noPrincipalSearch) {
     	$principal['{DAV:}displayname'] = $user_uid;
     }
     else {
-      $filter = null;
-      if (strpos($user_uid, '.-.')) {
-        $filter = "(&(objectClass=mineqMelObjetPartage)(uid=$user_uid))";
-      }      
-      $infos = \LibMelanie\Ldap\Ldap::GetUserInfos($user_uid, $filter);
-    	
-    	if (isset($infos) && count($infos) > 0) {
-    		foreach ($this->fieldMap as $key => $val) {
-    			$value = $infos[$val['ldapField']];
-    			if (is_array($value)) {
-    				if (isset($value[0])) {
-    					$principal[$key] = $value[0];
-    				}
-    			}
-    			else {
-    				$principal[$key] = $value;
-    			}
-    		}
-    	}
+      $user = \driver::new('User');
+      $user->uid = $user_uid;
+
+      if ($user->load()) {
+        $principal['{DAV:}displayname'] = $user->fullname;
+        $principal['{http://sabredav.org/ns}email-address'] = $user->email_send;
+      }
+      else {
+        $principal = [];
+      }
     }
+
     if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG))
       \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[PrincipalBackend] LibM2.getPrincipalByPath($path) principal: " . var_export($principal, true));
+
     return $principal;
   }
+
   /**
    * Updates one ore more webdav properties on a principal.
    * The list of mutations is stored in a Sabre\DAV\PropPatch object.
@@ -245,6 +233,7 @@ class LibM2 extends AbstractBackend {
       \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[PrincipalBackend] LibM2.updatePrincipal($path)");
     return false;
   }
+
   /**
    * This method is used to search for principals matching a set of
    * properties.
@@ -273,25 +262,20 @@ class LibM2 extends AbstractBackend {
       \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[PrincipalBackend] LibM2.searchPrincipals($prefixPath, " . var_export($searchProperties, true) . ", $test)");
 
     if ($this->server->httpRequest->getMethod() == 'POST') {
-      if (isset($searchProperties)) {
-        if (isset($searchProperties['{http://sabredav.org/ns}email-address'])) {
-          $email = $searchProperties['{http://sabredav.org/ns}email-address'];
-          $filter = null;
-          if (strpos($email, '.-.')) {
-            $filter = "(&(objectClass=mineqMelObjetPartage)(mineqmelmailemission=$email))";
-          }      
-          $infos = \LibMelanie\Ldap\Ldap::GetUserInfosFromEmail($email, $filter);
-        }
-      }
+      if (isset($searchProperties) 
+          && isset($searchProperties['{http://sabredav.org/ns}email-address'])) {
 
-      if (isset($infos)) {
-        $user_uid = $infos['uid'][0];
-        $principal = [$prefixPath . '/' . $user_uid];
-        return $principal;
+        $user = \driver::new('User');
+        $user->email = $searchProperties['{http://sabredav.org/ns}email-address'];
+
+        if ($user->load()) {
+          return [$prefixPath . '/' . $user->uid];
+        }
       }
     }
     return [];
   }
+
   /**
    * Returns the list of members for a group-principal
    *
@@ -303,6 +287,7 @@ class LibM2 extends AbstractBackend {
       \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[PrincipalBackend] LibM2.getGroupMemberSet($principal)");
     return [];
   }
+
   /**
    * Returns the list of groups a principal is a member of
    *
@@ -313,19 +298,28 @@ class LibM2 extends AbstractBackend {
     if (\Lib\Log\Log::isLvl(\Lib\Log\Log::DEBUG)) \Lib\Log\Log::l(\Lib\Log\Log::DEBUG, "[PrincipalBackend] LibM2.getGroupMembership($principal)");
     $username = isset($this->calendarBackend) ? $this->calendarBackend->getCurrentUser() : $this->contactBackend->getCurrentUser();
     $result = [];
-    // Gestion du .-.
-    if (strpos($principal, '.-.') !== false) {
-      $principal = explode('.-.', $principal);
-      $principal = $principal[0];
+    // Gestion des objets de partage
+    if (\driver::gi()->isBalp($principal)) {
+      list($principal, $balpname) = \driver::gi()->getBalpnameFromUsername($principal);
     }
     
-    if (isset($this->calendarBackend) && $principal == "principals/".$username) {
-      // Get shared calendar
+    if (isset($this->calendarBackend) && $principal == "principals/" . $username) {
+      // Get shared calendars
       $calendars = $this->calendarBackend->loadUserCalendars();
-      $calendars_owners = [];
+
       foreach ($calendars as $calendar) {
-        if (! in_array("principals/".$calendar->owner, $result)) {
-          $result[] = "principals/".$calendar->owner;
+        if (!in_array("principals/" . $calendar->owner, $result)) {
+          $result[] = "principals/" . $calendar->owner;
+        }
+      }
+    }
+    else if (isset($this->contactBackend) && $principal == "principals/" . $username) {
+      // Get shared addressbooks
+      $addressbooks = $this->contactBackend->loadUserAddressBooks();
+
+      foreach ($addressbooks as $addressbook) {
+        if (!in_array("principals/" . $addressbook->owner, $result)) {
+          $result[] = "principals/" . $addressbook->owner;
         }
       }
     }
@@ -335,6 +329,7 @@ class LibM2 extends AbstractBackend {
     
     return $result;
   }
+
   /**
    * Updates the list of group members for a group principal.
    * The principals should be passed as a list of uri's.

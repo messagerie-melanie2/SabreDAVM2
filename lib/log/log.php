@@ -67,6 +67,7 @@ class Log {
 	 * @var Logging $log
 	 */
 	private static $log = null;
+
 	/**
 	 * Permet de calculer le niveau de configuration du niveau de log
 	 * Le calcul est fait ici car impossible de passer des opérateurs dans les définitions de variable de classe
@@ -74,10 +75,12 @@ class Log {
 	 * @var int (binaire)
 	 */
 	private static $conflevel = 0;
+
 	/**
 	 * Fichier de log pour les erreurs
 	 */
 	private static $errorlog_file = "";
+	
 	/**
 	 * Fichier de log
 	 */
@@ -103,10 +106,9 @@ class Log {
 		// Récupération de l'utilisateur connecté
 		$username = isset($_SERVER['PHP_AUTH_USER']) ? $_SERVER['PHP_AUTH_USER'] : '';
 		// Si c'est une boite partagée, on s'authentifie sur l'utilisateur pas sur la bal
-		if (strpos($username, '.-.') !== false) {
-		  // MANTIS 3791: Gestion de l'authentification via des boites partagées
-		  $tmp = explode('.-.', $username, 2);
-		  $username = $tmp[0];
+		if (\driver::gi()->isBalp($username)) {
+			// MANTIS 3791: Gestion de l'authentification via des boites partagées
+			list($username, $balpname) = \driver::gi()->getBalpnameFromUsername($username);
 		}
 		// Récupèration de l'adresse IP
 		$addrip = self::get_address_ip();
@@ -169,41 +171,42 @@ class Log {
 			self::$log->lclose();
 		}
 	}
+
 	/**
 	 * Permet de tester si on est dans le bon log level avant de logger
 	 * @param Log::<LEVEL> $level
 	 * @return boolean
 	 */
 	public static function isLvl($level) {
-	  // Récupération de l'utilisateur connecté
-	  $username = isset($_SERVER['PHP_AUTH_USER']) ? $_SERVER['PHP_AUTH_USER'] : '';
-	  // Si c'est une boite partagée, on s'authentifie sur l'utilisateur pas sur la bal
-	  if (strpos($username, '.-.') !== false) {
-	    // MANTIS 3791: Gestion de l'authentification via des boites partagées
-	    $tmp = explode('.-.', $username, 2);
-	    $username = $tmp[0];
-	  }
-	  // Log DEBUG spécifique pour un utilisateur
-	  if (isset(\Config\Log::$users_debug)
-	      && !empty($username)
-	      && in_array($username, \Config\Log::$users_debug)) {
-      return true;
-	  }
-	  // Récupération du niveau de log configuré
-	  if (self::$conflevel === 0) {
-	    $globalLevel = explode('|', \Config\Log::$Level);
-	    // Utilise la reflection pour un accès dynamique à la valeur de la constante de classe
-	    $r = new \ReflectionClass('\Lib\Log\Log');
-	    foreach ($globalLevel as $l) self::$conflevel |= $r->getConstant($l);
-	  }
+		// Récupération de l'utilisateur connecté
+		$username = isset($_SERVER['PHP_AUTH_USER']) ? $_SERVER['PHP_AUTH_USER'] : '';
+		// Si c'est une boite partagée, on s'authentifie sur l'utilisateur pas sur la bal
+		if (\driver::gi()->isBalp($username)) {
+			// MANTIS 3791: Gestion de l'authentification via des boites partagées
+			list($username, $balpname) = \driver::gi()->getBalpnameFromUsername($username);
+		}
+		// Log DEBUG spécifique pour un utilisateur
+		if (isset(\Config\Log::$users_debug)
+				&& !empty($username)
+				&& in_array($username, \Config\Log::$users_debug)) {
+			return true;
+		}
+		// Récupération du niveau de log configuré
+		if (self::$conflevel === 0) {
+			$globalLevel = explode('|', \Config\Log::$Level);
+			// Utilise la reflection pour un accès dynamique à la valeur de la constante de classe
+			$r = new \ReflectionClass('\Lib\Log\Log');
+			foreach ($globalLevel as $l) self::$conflevel |= $r->getConstant($l);
+		}
 
-	  // Les logs sont désactivé
-	  if ((self::$conflevel & self::OFF) === self::OFF) return false;
-	  // Ce niveau de log n'est pas pris en charge
-	  if ((self::$conflevel & $level) !== $level && (self::$conflevel & self::ALL) !== self::ALL) return false;
-	  // On est dans le bon log level
-	  return true;
+		// Les logs sont désactivé
+		if ((self::$conflevel & self::OFF) === self::OFF) return false;
+		// Ce niveau de log n'est pas pris en charge
+		if ((self::$conflevel & $level) !== $level && (self::$conflevel & self::ALL) !== self::ALL) return false;
+		// On est dans le bon log level
+		return true;
 	}
+
 	/**
 	 * Retourne l'adresse ip
 	 * @return string

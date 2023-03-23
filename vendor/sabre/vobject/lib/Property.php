@@ -228,33 +228,31 @@ abstract class Property extends Node {
      *
      * @return string
      */
-    function serialize() {
-
+    public function serialize()
+    {
         $str = $this->name;
-        if ($this->group) $str = $this->group . '.' . $this->name;
-
-        foreach($this->parameters as $param) {
-
-            $str.=';' . $param->serialize();
-
+        if ($this->group) {
+            $str = $this->group.'.'.$this->name;
         }
 
-        $str.=':' . $this->getRawMimeDirValue();
-
-        $out = '';
-        while(strlen($str)>0) {
-            if (strlen($str)>75) {
-                $out.= mb_strcut($str,0,75,'utf-8') . "\r\n";
-                $str = ' ' . mb_strcut($str,75,strlen($str),'utf-8');
-            } else {
-                $out.=$str . "\r\n";
-                $str='';
-                break;
-            }
+        foreach ($this->parameters() as $param) {
+            $str .= ';'.$param->serialize();
         }
 
-        return $out;
+        $str .= ':'.$this->getRawMimeDirValue();
 
+        $str = \preg_replace(
+            '/(
+                (?:^.)?         # 1 additional byte in first line because of missing single space (see next line)
+                .{1,74}         # max 75 bytes per line (1 byte is used for a single space added after every CRLF)
+                (?![\x80-\xbf]) # prevent splitting multibyte characters
+            )/x',
+            "$1\r\n ",
+            $str
+        );
+
+        // remove single space after last CRLF
+        return \substr($str, 0, -1);
     }
 
     /**
