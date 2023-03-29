@@ -3,7 +3,7 @@
         'name' => 'messagerie-melanie2/sabredavm2',
         'pretty_version' => 'dev-develop',
         'version' => 'dev-develop',
-        'reference' => '35b8e537072ed81e3458005e6bc4f9970e4250fc',
+        'reference' => '1ff6a6cdcb9e7dc4090530285b68adc476c473c5',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         'messagerie-melanie2/orm-m2' => array(
-            'pretty_version' => '0.6.5.5',
-            'version' => '0.6.5.5',
-            'reference' => '4eb7d2a24a10b881d575c6e4544cb2cfceb0a1e8',
+            'pretty_version' => '0.6.5.8',
+            'version' => '0.6.5.8',
+            'reference' => 'ebb2fa42fd0b9ecf841ae6deff671b5af30d336e',
             'type' => 'library',
             'install_path' => __DIR__ . '/../messagerie-melanie2/orm-m2',
             'aliases' => array(),
@@ -22,7 +22,7 @@
         'messagerie-melanie2/sabredavm2' => array(
             'pretty_version' => 'dev-develop',
             'version' => 'dev-develop',
-            'reference' => '35b8e537072ed81e3458005e6bc4f9970e4250fc',
+            'reference' => '1ff6a6cdcb9e7dc4090530285b68adc476c473c5',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

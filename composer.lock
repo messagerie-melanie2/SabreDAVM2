@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "messagerie-melanie2/orm-m2",
-            "version": "0.6.5.5",
+            "version": "0.6.5.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/messagerie-melanie2/ORM-M2.git",
-                "reference": "4eb7d2a24a10b881d575c6e4544cb2cfceb0a1e8"
+                "reference": "ebb2fa42fd0b9ecf841ae6deff671b5af30d336e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/messagerie-melanie2/ORM-M2/zipball/4eb7d2a24a10b881d575c6e4544cb2cfceb0a1e8",
-                "reference": "4eb7d2a24a10b881d575c6e4544cb2cfceb0a1e8",
+                "url": "https://api.github.com/repos/messagerie-melanie2/ORM-M2/zipball/ebb2fa42fd0b9ecf841ae6deff671b5af30d336e",
+                "reference": "ebb2fa42fd0b9ecf841ae6deff671b5af30d336e",
                 "shasum": ""
             },
             "require": {
@@ -59,10 +59,10 @@
                 "Tasks"
             ],
             "support": {
-                "source": "https://github.com/messagerie-melanie2/ORM-M2/tree/0.6.5.5",
+                "source": "https://github.com/messagerie-melanie2/ORM-M2/tree/0.6.5.8",
                 "issues": "https://github.com/messagerie-melanie2/ORM-M2/issues"
             },
-            "time": "2023-03-23T14:26:45+00:00"
+            "time": "2023-03-29T13:06:28+00:00"
         },
         {
             "name": "sabre/dav",
