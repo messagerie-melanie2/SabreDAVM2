@@ -30,14 +30,8 @@ class VAlarm extends VObject\Component {
 
             $parentComponent = $this->parent;
             if ($related === 'START') {
-
-                if ($parentComponent->name === 'VTODO') {
-                    $propName = 'DUE';
-                } else {
-                    $propName = 'DTSTART';
-                }
-
-                $effectiveTrigger = clone $parentComponent->$propName->getDateTime();
+                // MANTIS 0007635: Problème d'alarme sur les tâches               
+                $effectiveTrigger = $parentComponent->DTSTART->getDateTime();
                 $effectiveTrigger->add($triggerDuration);
             } else {
                 if ($parentComponent->name === 'VTODO') {

@@ -24,6 +24,10 @@ A faire
 CalDAV - Liste des changements
 ==============================
 
+CalDAV - 0.7.3
+==============
+- 0007635: Problème d'alarme sur les tâches
+
 CalDAV - 0.7
 ============
 - 0007588: [SabreDAV] Erreur lors de la suppression d'un contact

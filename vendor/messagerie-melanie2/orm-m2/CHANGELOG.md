@@ -1,3 +1,21 @@
+ORM M2 - 0.6.5.12
+------
+- 0007639: [ICSToTask] Erreur de calcul pour l'alarme
+- 0007640: [ICSToTask] Nettoyer les ICS des tâches
+
+ORM M2 - 0.6.5.11
+------
+- 0007636: Undefined variable: exDuration
+
+ORM M2 - 0.6.5.10
+------
+- 0007626: [ICS] Gérer un SENT-BY vide
+- 0007629: [ICSToTask] Erreur de traitement du VALARM
+
+ORM M2 - 0.6.5.9
+------
+- Correctif MagicObject sur la gestion des array dans les timestamp et les int
+
 ORM M2 - 0.6.5.8
 ------
 - Possibilité d'avoir des listes de tâches sans owner pour le Bnum
