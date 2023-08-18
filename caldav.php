@@ -164,8 +164,12 @@ class CalDAV {
     $errorlog = function ($message) {
       \Lib\Log\Log::l(\Lib\Log\Log::ERROR, "[LibM2] $message");
     };
+    $infolog = function ($message) {
+      \Lib\Log\Log::l(\Lib\Log\Log::INFO, "[LibM2] $message");
+    };
     \LibMelanie\Log\M2Log::InitDebugLog($debuglog);
     \LibMelanie\Log\M2Log::InitErrorLog($errorlog);
+    \LibMelanie\Log\M2Log::InitInfoLog($infolog);
 
     // Gestion des exceptions
     /**

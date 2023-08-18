@@ -1,3 +1,50 @@
+ORM M2 - 0.6.5.20
+------
+- 0007846: [ICS] Nettoyer le @visio: dans la location
+- 0007849: Ajouter un niveau de log TRACE
+- 0007850: Ne pas charger les informations des participants quand l'organisateur est externe
+
+ORM M2 - 0.6.5.19
+------
+- 0007843: Copie des pièces jointes dans le en attente
+
+ORM M2 - 0.6.5.18
+------
+- 0007798: Mauvaise copie des données via le en attente
+- 0007799: Régression liée à la suppression des ocurrences après la date de fin de récurrence
+- 0007802: [MagicObject] L'enregistrement des anciennes valeur ne doit se faire que si haschanged est à false
+- 0007800: Modifier toute la récurrence devrait aussi modifier les participants des occurrences modifiées
+- 0007806: Ajouter la version du schéma dans les exceptions
+- 0007807: Suppression d'un participant d'une réunion récurrente
+- 0007809: Mettre l'organisateur en créateur via le en attente
+- 0007811: Désannuler un événement via le en attente
+
+ORM M2 - 0.6.5.17
+------
+- 0007750: Optimisation des réunions à des liste
+- 0007747: Syntaxe OutOfOffice MCE: passer les horaires hebdo en UTC
+
+ORM M2 - 0.6.5.16
+------
+- 0007740: Utiliser les functions plsql stable pour lister les objets d'un utilisateur
+- 0007741: Proposer une configuration pour utiliser les functions SQL plutôt que les requêtes
+
+ORM M2 - 0.6.5.15
+------
+- 0007731: Récupérer la dernière news d'un utilisateur
+
+ORM M2 - 0.6.5.14
+------
+- 0007728: Remplace les length > 10 dans le sql
+- 0007727: [Event] Ne plus order by sur attendees
+- Test: ne plus update + 1 tout le monde pour éviter les lock sur la base de données
+
+ORM M2 - 0.6.5.13
+------
+- 0007699: Sortir l'objectshare du cache
+- 0007692: Avoir la possibilité de ne pas avoir d'objet de partage
+- Fichier de tests pour le ldap
+
 ORM M2 - 0.6.5.12
 ------
 - 0007639: [ICSToTask] Erreur de calcul pour l'alarme

@@ -20,6 +20,7 @@
  */
 namespace Sabre\DAV\Auth\Backend;
 
+use LibMelanie\Config\Ldap;
 use Sabre\HTTP;
 use Sabre\HTTP\RequestInterface;
 use Sabre\HTTP\ResponseInterface;
@@ -74,7 +75,7 @@ class LibM2 extends AbstractBasic implements LibM2AuthInterface {
       }
     }
     // Gestion du user
-    $user = \driver::new('User');
+    $user = \driver::new('User', Ldap::$AUTH_LDAP);
     $user->uid = $username;
     // Gestion de l'authentification via l'ORM M2
     if ($this->noauth || $user->load() && $user->authentification($password)) {

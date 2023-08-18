@@ -24,6 +24,10 @@ A faire
 CalDAV - Liste des changements
 ==============================
 
+CalDAV - 0.7.4
+==============
+- MR 3 fix server ldap for auth 
+
 CalDAV - 0.7.3
 ==============
 - 0007635: Problème d'alarme sur les tâches

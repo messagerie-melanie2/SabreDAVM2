@@ -87,6 +87,11 @@ use LibMelanie\Config\DefaultConfig;
  */
 class Event extends MceObject {
   /**
+   * Version du schéma pour les events
+   */
+  const VERSION = 2;
+
+  /**
    * Format de datetime pour la base de données
    *
    * @var string
@@ -263,7 +268,6 @@ class Event extends MceObject {
     // Défini la classe courante
     $this->get_class = get_class($this);
     
-    // M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class."->__construct()");
     // Définition de l'évènement melanie2
     $this->objectmelanie = new EventMelanie();
     
@@ -284,7 +288,6 @@ class Event extends MceObject {
    *
    */
   public function setUserMelanie($user) {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->setUserMelanie()");
     $this->user = $user;
   }
   /**
@@ -293,7 +296,6 @@ class Event extends MceObject {
    * @return User
    */
   public function getUserMelanie() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getUserMelanie()");
     return $this->user;
   }
   
@@ -305,7 +307,6 @@ class Event extends MceObject {
    *
    */
   public function setCalendarMelanie($calendar) {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->setCalendarMelanie()");
     $this->calendarmce = $calendar;
     $this->objectmelanie->calendar = $this->calendarmce->id;
   }
@@ -315,7 +316,6 @@ class Event extends MceObject {
    * @return Calendar
    */
   public function getCalendarMelanie() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getCalendarMelanie()");
     return $this->calendarmce;
   }
   
@@ -416,7 +416,7 @@ class Event extends MceObject {
    * @param array $attributes          
    */
   public function setAttributes($attributes) {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->setAttributes()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->setAttributes()");
     // Positionne la liste des attributs
     $this->attributes = $attributes;
     $this->attributes_loaded = true;
@@ -475,7 +475,7 @@ class Event extends MceObject {
     * Nouvelle version de l'enregistrement des participants
     */
   protected function saveAttendees() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->saveAttendees()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->saveAttendees()");
     // Détecter les attendees pour tous les évènements et exceptions
     $hasAttendees = $this->getMapHasAttendees();
     // Récupération de l'organisateur
@@ -693,18 +693,20 @@ class Event extends MceObject {
         $organizer_event->modified = time();
         // Ne pas appeler le saveAttendees pour éviter les doubles sauvegardes (mode en attente)
         $organizer_event->save($saveAttendees);
-        if (strpos($this->get_class, '\Exception') !== false) {
-          // Si on est dans une exception on met à jour le modified du maitre également
-          $Event = $this->__getNamespace() . '\\Event';
-          $organizer_master_event = new $Event($this->user, $organizer_calendar);
-          $organizer_master_event->uid = $this->uid;
-          // Mise à jour de l'etag pour tout le monde
-          $organizer_master_event->getObjectMelanie()->updateMeetingEtag();
-        }
-        else {
-          // Mise à jour de l'etag pour tout le monde
-          $this->objectmelanie->updateMeetingEtag();
-        }
+
+        // XXX: Tester de ne plus update tout le monde pour éviter les lock sur pg
+        // if (strpos($this->get_class, '\Exception') !== false) {
+        //   // Si on est dans une exception on met à jour le modified du maitre également
+        //   $Event = $this->__getNamespace() . '\\Event';
+        //   $organizer_master_event = new $Event($this->user, $organizer_calendar);
+        //   $organizer_master_event->uid = $this->uid;
+        //   // Mise à jour de l'etag pour tout le monde
+        //   $organizer_master_event->getObjectMelanie()->updateMeetingEtag();
+        // }
+        // else {
+        //   // Mise à jour de l'etag pour tout le monde
+        //   $this->objectmelanie->updateMeetingEtag();
+        // }
       }
     }
     else {
@@ -867,7 +869,7 @@ class Event extends MceObject {
     if (isset($owner) && !empty($owner)) {
       $listevents->owner = $owner;
     }
-    return $listevents->getList(null, null, null, 'attendees', false);
+    return $listevents->getList();
   }
 
   /**
@@ -897,7 +899,7 @@ class Event extends MceObject {
    *     si l'événement n'existe pas, on le crée dans l'agenda du participant avec les éléments de base (date/heure, titre, location, description, récurrence) 
    */
   protected function saveNeedAction() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->saveNeedAction()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->saveNeedAction()");
     // Liste des champs qui sont déterminant pour remettre à 0 le en attente
     $needActionFieldsList = [
         'start',
@@ -933,6 +935,7 @@ class Event extends MceObject {
         'recurrence_json',
         'organizer_json',
         'organizer_calendar_id',
+        'attachments',
     ];
     // Vérifier si l'enregistrement en attente est nécessaire
     if ($this->exists()) {
@@ -1012,19 +1015,19 @@ class Event extends MceObject {
       }
 
       // MANTIS 0005053: [En attente] Lors de la suppression d'un participant, passer son événement en annulé
-      if ($this->exists()) {
+      if (strpos($this->get_class, '\Exception') === false && $this->exists()) {
         $attendees_uid[] = $this->calendar;
         $Event = $this->__getNamespace() . '\\Event';
         $event = new $Event();
-        $event->uid = $this->uid;
+        $event->realuid = $this->uid;
         $event->calendar = $attendees_uid;
         // Liste des opérateurs
         $operators = [
-            'uid'       => MappingMce::eq,
+            'realuid'   => MappingMce::eq,
             'calendar'  => MappingMce::diff,
         ];
         // Filtre
-        $filter = "#uid# AND #calendar#";
+        $filter = "#realuid# AND #calendar#";
         $User = $this->__getNamespace() . '\\User';
         // Lister les événements pour les passer en annulé
         foreach ($event->getList(null, $filter, $operators) as $_e) {
@@ -1033,26 +1036,32 @@ class Event extends MceObject {
           $listAttendee->uid = $_e->calendar;
 
           if ($listAttendee->need_action) {
-            // Copier l'événement même pour une annulation
-            $this->copyEventNeedAction($this, $_e, null, $copyFieldsList, $needActionFieldsList, null, null, strpos($this->get_class, '\Exception') !== false, true);
-            // Doit on annuler l'événement pour le participant ?
-            if ($clean_deleted_attendees) {
-              $_e->status = self::STATUS_CANCELLED;
-
-              // 0006698: Incrémenter la séquence des participants dans le cas d'une suppression par l'organisateur
-              if (!empty($_e->sequence)) {
-                $_e->sequence = $_e->sequence + 1;
-              }
-              else {
-                $_e->sequence = 1;
-              }
+            if ($_e->status == self::STATUS_TENTATIVE) {
+              // Si on est en provisoire on le supprime directement
+              $_e->delete();
             }
-            $_e->modified = time();
-            $_e->save(false);
-          }       
+            else {
+              // Copier l'événement même pour une annulation
+              $this->copyEventNeedAction($this, $_e, null, $copyFieldsList, $needActionFieldsList, null, null, false, true);
+              // Doit on annuler l'événement pour le participant ?
+              if ($clean_deleted_attendees) {
+                $_e->status = self::STATUS_CANCELLED;
+
+                // 0006698: Incrémenter la séquence des participants dans le cas d'une suppression par l'organisateur
+                if (!empty($_e->sequence)) {
+                  $_e->sequence = $_e->sequence + 1;
+                }
+                else {
+                  $_e->sequence = 1;
+                }
+              }
+              $_e->modified = time();
+              $_e->save(false);
+            }
+          }
         }
       }
-    }      
+    }
   }
 
   /**
@@ -1196,7 +1205,7 @@ class Event extends MceObject {
    * @return boolean L'événement doit il être enregistré
    */
   protected function copyEventNeedAction($event, &$attendee_event, $attendee_uid, $copyFieldsList, $needActionFieldsList, $attendees, $attendee_key, $isException, $eventExists) {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->copyEventNeedAction()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->copyEventNeedAction()");
     if ($eventExists) {
       $save = false;
       $saveAndNeedAction = false;
@@ -1263,6 +1272,20 @@ class Event extends MceObject {
             }
             $event->attendees = $attendees;
           }          
+        }
+        // MANTIS 0007811: Désannuler un événement via le en attente
+        else if ($attendee_event->status == self::STATUS_CANCELLED
+            && $event->status != self::STATUS_CANCELLED
+            && isset($attendee_key)) {
+          switch ($attendees[$attendee_key]->response) {
+            case Attendee::RESPONSE_ACCEPTED:
+              $attendee_event->status = self::STATUS_CONFIRMED;
+              break;
+            case Attendee::RESPONSE_NEED_ACTION:
+            case Attendee::RESPONSE_TENTATIVE:
+              $attendee_event->status = self::STATUS_TENTATIVE;
+              break;
+          }
         }
         return true;
       }
@@ -1342,11 +1365,13 @@ class Event extends MceObject {
           $event->attendees = $attendees;
         }
       }
-      $attendee_event->class = self::CLASS_PUBLIC;
-      $attendee_event->transparency = self::TRANS_OPAQUE;
-      $attendee_event->created = time();      
-      $attendee_event->owner = $attendee_uid;
-      $attendee_event->alarm = 0;
+      $attendee_event->class          = self::CLASS_PUBLIC;
+      $attendee_event->transparency   = self::TRANS_OPAQUE;
+      $attendee_event->created        = time();      
+      $attendee_event->owner          = $event->owner;
+      $attendee_event->creator_email  = $event->creator_email;
+      $attendee_event->creator_name   = $event->creator_name;
+      $attendee_event->alarm          = 0;
 
       // MANTIS 0006232: [En attente] Gérer les catégories des espaces de travail du BNum
       if (strpos($event->category, 'ws#') === 0) {
@@ -1355,7 +1380,11 @@ class Event extends MceObject {
       
       // copier la liste des champs
       foreach ($copyFieldsList as $field) {
-        $attendee_event->$field = $event->$field;
+        if ($event->getObjectMelanie()->getFieldValueFromData($field) != $attendee_event->getObjectMelanie()->getFieldValueFromData($field)) {
+          $newvalue = $event->getObjectMelanie()->getFieldValueFromData($field);
+          $attendee_event->getObjectMelanie()->setFieldValueToData($field, $newvalue);
+          $attendee_event->getObjectMelanie()->setFieldHasChanged($field);
+        }
       }
       return true;
     }
@@ -1367,7 +1396,7 @@ class Event extends MceObject {
    * On passe tous les participants Mélanie2 en événement annulé
    */
   protected function deleteNeedAction() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->deleteNeedAction()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->deleteNeedAction()");
     // Parcours la liste des participant
     $attendees = $this->getMapAttendees();
     if (isset($attendees)) {
@@ -1494,7 +1523,7 @@ class Event extends MceObject {
    * Sauvegarde les attributs dans la base de données
    */
   protected function saveAttributes() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->saveAttributes()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->saveAttributes()");
     // Parcours les attributs pour les enregistrer
     if (isset($this->attributes)) {
       foreach ($this->attributes as $name => $attribute) {
@@ -1506,7 +1535,7 @@ class Event extends MceObject {
    * Charge les attributs en mémoire
    */
   protected function loadAttributes() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->loadAttributes()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->loadAttributes()");
     // Création de l'objet s'il n'existe pas
     if (!isset($this->attributes))
       $this->attributes = [];
@@ -1543,7 +1572,7 @@ class Event extends MceObject {
    * Supprime les attributs
    */
   protected function deleteAttributes() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->loadAttributes()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->loadAttributes()");
     if (!$this->attributes_loaded) {
       $this->loadAttributes();
     }
@@ -1562,7 +1591,7 @@ class Event extends MceObject {
    * @return boolean
    */
   private function loadExceptions() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->loadExceptions()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->loadExceptions()");
     $event = new static($this->user, $this->calendarmce);
     $event->realuid = $this->uid;
     $events = $event->getList();
@@ -1635,19 +1664,31 @@ class Event extends MceObject {
     M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->save()");
     if (!isset($this->objectmelanie))
       throw new Exceptions\ObjectMelanieUndefinedException();
+
+    // Version du schéma par défaut
+    $this->version = self::VERSION;
+
     // MANTIS 0005125: Bloquer les répétitions "récursives"
     if (!$this->checkRecurrence()) {
       M2Log::Log(M2Log::LEVEL_ERROR, $this->get_class . "->save() La recurrence ne respecte pas les regles d'usage (duree de l'evenement plus longue que la repetition)");
       return null;
     }
-    // Sauvegarde des participants
-    if ($saveAttendees) {
-      $this->saveAttendees();
-    }
+
     // MANTIS 0007426: Avancer la date de fin de récurrence devrait supprimer les occurrences postérieures
     if ($this->objectmelanie->fieldHasChanged('enddate')) {
       $this->deleteOldOccurrences();
     }
+
+    if (isset($this->exceptions)) {
+      // MANTIS 0007427: Modifier toutes les occurrences devrait également modifier les occurrences modifiées si possible
+      $this->updateOccurrences();
+    }
+
+    // Sauvegarde des participants
+    if ($saveAttendees) {
+      $this->saveAttendees();
+    }
+    
     // Supprimer les exceptions
     if (isset($this->deleted_exceptions) && is_array($this->deleted_exceptions) && count($this->deleted_exceptions) > 0) {
       M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->save() delete " . count($this->deleted_exceptions));
@@ -1660,14 +1701,12 @@ class Event extends MceObject {
     $exMod = false;
     // Sauvegarde des exceptions
     if (isset($this->exceptions)) {
-      // MANTIS 0007427: Modifier toutes les occurrences devrait également modifier les occurrences modifiées si possible
-      $this->updateOccurrences();
-
       foreach ($this->exceptions as $exception) {
         $res = $exception->save();
         $exMod = $exMod || !is_null($res);
       }
     }
+
     if ($this->deleted) {
       // Sauvegarde des attributs
       $this->saveAttributes();
@@ -1680,8 +1719,7 @@ class Event extends MceObject {
     if (!isset($this->owner)) {
       $this->owner = $this->user->uid;
     }
-    // Version du schéma par défaut
-    $this->version = 2;
+
     // Sauvegarde l'objet
     $insert = $this->objectmelanie->save();
     if (!is_null($insert)) {
@@ -1748,9 +1786,20 @@ class Event extends MceObject {
     foreach ($this->exceptions as $exception) {
       foreach ($fields as $field) {
         if ($this->objectmelanie->fieldHasChanged($field) 
+            // Comparaison entre oldData et les valeurs de l'exception
             && $this->objectmelanie->getOldData($field) == $exception->getObjectMelanie()->getFieldValueFromData($field)) {
-          $exception->$field = $this->$field;
+          if ($this->getObjectMelanie()->getFieldValueFromData($field) != $exception->getObjectMelanie()->getFieldValueFromData($field)) {
+            // Si les valeurs sont égales on fait la même modification dans l'exception que dans la récurrence
+            $newvalue = $this->getObjectMelanie()->getFieldValueFromData($field);
+            $exception->getObjectMelanie()->setFieldValueToData($field, $newvalue);
+            $exception->getObjectMelanie()->setFieldHasChanged($field);
+          }
         }
+      }
+
+      // MANTIS 0007800: Modifier toute la récurrence devrait aussi modifier les participants des occurrences modifiées
+      if ($this->objectmelanie->fieldHasChanged('attendees')) {
+        $this->updateOccurrenceAttendees($exception);
       }
 
       // Gestion de la date
@@ -1776,6 +1825,80 @@ class Event extends MceObject {
             $exception->dtend = $dtend;
           }
         }
+      }
+    }
+  }
+
+  /**
+   * Mise a jour des participants de l'occurrence à partir de la récurrence
+   * 
+   * @param Exception $exception
+   */
+  protected function updateOccurrenceAttendees(&$exception) {
+    // Comparaison entre oldData et les valeurs de l'exception
+    $oldAttendees = unserialize($this->objectmelanie->getOldData('attendees'));
+    $exceptionAttendees = unserialize($exception->getObjectMelanie()->getFieldValueFromData('attendees'));
+
+    if (is_array($oldAttendees)) {
+      $oldAttendees     = array_change_key_case($oldAttendees);
+      $oldAttendeesKeys = array_keys($oldAttendees);
+      sort($oldAttendeesKeys);
+    }
+    else {
+      $oldAttendees     = [];
+      $oldAttendeesKeys = [];
+    }
+
+    if (is_array($exceptionAttendees)) {
+      $exceptionAttendees     = array_change_key_case($exceptionAttendees);
+      $exceptionAttendeesKeys = array_keys($exceptionAttendees);
+      sort($exceptionAttendeesKeys);
+    }
+    else {
+      $exceptionAttendees     = [];
+      $exceptionAttendeesKeys = [];
+    }
+
+    if ($oldAttendeesKeys == $exceptionAttendeesKeys) {
+      // Si les valeurs sont égales on fait la même modification dans l'exception que dans la récurrence
+      $newAttendees = unserialize($this->getObjectMelanie()->getFieldValueFromData('attendees'));
+      $toChanged    = false;
+
+      if (is_array($newAttendees)) {
+        $newAttendees     = array_change_key_case($newAttendees);
+        $newAttendeesKeys = array_keys($newAttendees);
+        sort($newAttendeesKeys);
+      }
+      else {
+        $newAttendees     = [];
+        $newAttendeesKeys = [];
+      }
+
+      // Rechercher les participants à ajouter
+      $attendeesToAdd = array_diff($newAttendeesKeys, $exceptionAttendeesKeys);
+
+      if (count($attendeesToAdd)) {
+        foreach($attendeesToAdd as $email) {
+          $exceptionAttendees[$email] = $newAttendees[$email];
+          $toChanged = true;
+        }
+      }
+
+      // Rechercher les participants à supprimer
+      $attendeesToDel = array_diff($exceptionAttendeesKeys, $newAttendeesKeys);
+
+      if (count($attendeesToDel)) {
+        foreach($attendeesToDel as $email) {
+          unset($exceptionAttendees[$email]);
+          $toChanged = true;
+        }
+      }
+
+      // Une valeur a changé on met à jour les participants de l'exception
+      if ($toChanged) {
+        $exception->getObjectMelanie()->setFieldValueToData('attendees', serialize($exceptionAttendees));
+        $exception->getObjectMelanie()->setFieldHasChanged('attendees');
+        $exception->clearAttendees();
       }
     }
   }
@@ -1920,7 +2043,7 @@ class Event extends MceObject {
           $events_uid[] = $_event->uid;
         }
       } catch (\Exception $ex) {
-        M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getList() Exception: " . $ex);
+        M2Log::Log(M2Log::LEVEL_ERROR, $this->get_class . "->getList() Exception: " . $ex);
       }
     }
     // Détruit les variables pour libérer le plus rapidement de la mémoire
@@ -2015,7 +2138,7 @@ class Event extends MceObject {
    * Mapping timezone field
    */
   protected function getMapTimezone() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapTimezone()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapTimezone()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     if ($this->useJsonData()) {
       $timezone = $this->objectmelanie->timezone;
@@ -2039,7 +2162,7 @@ class Event extends MceObject {
    * Mapping all_day field
    */
   protected function getMapAll_day() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapAll_day()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapAll_day()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     if ($this->useJsonData()) {
       $all_day = $this->objectmelanie->all_day;
@@ -2060,7 +2183,7 @@ class Event extends MceObject {
    * @param string $start
    */
   protected function setMapStart($start) {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->setMapStart()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->setMapStart()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     $this->objectmelanie->start = $start;
     $this->_dtstart = null;
@@ -2073,7 +2196,7 @@ class Event extends MceObject {
    * @param \DateTime $dtstart
    */
   protected function setMapDtstart($dtstart) {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->setMapDtstart()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->setMapDtstart()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     $this->_dtstart = $dtstart;
     $this->objectmelanie->start = $dtstart->format(self::DB_DATE_FORMAT);
@@ -2083,7 +2206,7 @@ class Event extends MceObject {
    * Mapping dtstart field
    */
   protected function getMapDtstart() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapDtstart()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapDtstart()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     if (!isset($this->_dtstart)) {
       try {
@@ -2101,7 +2224,7 @@ class Event extends MceObject {
    * Mapping dtstart_utc field
    */
   protected function getMapDtstart_utc() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapDtstart_utc()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapDtstart_utc()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     if (!isset($this->_dtstart_utc)) {
       try {
@@ -2120,7 +2243,7 @@ class Event extends MceObject {
    * Mapping olddtstart field
    */
   protected function getMapOlddtstart() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapOlddtstart()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapOlddtstart()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     if (!isset($this->_olddtstart)) {
       try {
@@ -2144,7 +2267,7 @@ class Event extends MceObject {
    * @param string $end
    */
   protected function setMapEnd($end) {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->setMapEnd()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->setMapEnd()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     $this->objectmelanie->end = $end;
     $this->_dtend = null;
@@ -2157,7 +2280,7 @@ class Event extends MceObject {
    * @param \DateTime $dtend
    */
   protected function setMapDtend($dtend) {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->setMapDtend()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->setMapDtend()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     $this->_dtend = $dtend;
     $this->objectmelanie->end = $dtend->format(self::DB_DATE_FORMAT);
@@ -2167,7 +2290,7 @@ class Event extends MceObject {
    * Mapping dtend field
    */
   protected function getMapDtend() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapDtend()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapDtend()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     if (!isset($this->_dtend)) {
       try {
@@ -2185,7 +2308,7 @@ class Event extends MceObject {
    * Mapping dtend_utc field
    */
   protected function getMapDtend_utc() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapDtend_utc()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapDtend_utc()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     if (!isset($this->_dtend_utc)) {
       try {
@@ -2204,7 +2327,7 @@ class Event extends MceObject {
    * Mapping olddtend field
    */
   protected function getMapOlddtend() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapOlddtend()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapOlddtend()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     if (!isset($this->_olddtend)) {
       try {
@@ -2237,7 +2360,7 @@ class Event extends MceObject {
    * Mapping class field
    */
   protected function getMapClass() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapClass()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapClass()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     if (isset(MappingMce::$MapClassMceToObject[$this->objectmelanie->class]))
       return MappingMce::$MapClassMceToObject[$this->objectmelanie->class];
@@ -2260,7 +2383,7 @@ class Event extends MceObject {
    * Mapping status field
    */
   protected function getMapStatus() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapStatus()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapStatus()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     if (isset(MappingMce::$MapStatusMceToObject[$this->objectmelanie->status]))
       return MappingMce::$MapStatusMceToObject[$this->objectmelanie->status];
@@ -2282,7 +2405,7 @@ class Event extends MceObject {
    * Mapping transparency field
    */
   protected function getMapTransparency() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapTransparency()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapTransparency()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     if ($this->useJsonData()) {
       $transparency = $this->objectmelanie->transparency;
@@ -2311,7 +2434,7 @@ class Event extends MceObject {
    * Mapping priority field
    */
   protected function getMapPriority() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapPriority()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapPriority()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     return $this->objectmelanie->priority;
   }
@@ -2322,7 +2445,7 @@ class Event extends MceObject {
    * @param Recurrence $recurrence          
    */
   protected function setMapRecurrence($recurrence) {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->setMapRecurrence()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->setMapRecurrence()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     $this->recurrence = $recurrence;
     $this->recurrence->setObjectMelanie($this->objectmelanie);
@@ -2331,7 +2454,7 @@ class Event extends MceObject {
    * Mapping recurrence field
    */
   protected function getMapRecurrence() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapRecurrence()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapRecurrence()");
     if (!isset($this->recurrence)) {
       $Recurrence = $this->__getNamespace() . '\\Recurrence';
       $this->recurrence = new $Recurrence($this);
@@ -2345,7 +2468,7 @@ class Event extends MceObject {
    * @param Organizer $organizer          
    */
   protected function setMapOrganizer($organizer) {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->setMapOrganizer()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->setMapOrganizer()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     $this->organizer = $organizer;
     $this->organizer->setObjectMelanie($this->objectmelanie);
@@ -2354,7 +2477,7 @@ class Event extends MceObject {
    * Mapping organizer field
    */
   protected function getMapOrganizer() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapOrganizer()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapOrganizer()");
     if (!isset($this->organizer)) {
       $Organizer = $this->__getNamespace() . '\\Organizer';
       $this->organizer = new $Organizer($this);
@@ -2363,12 +2486,20 @@ class Event extends MceObject {
   }
   
   /**
+   * Cas ou les participants ont été changée dans les data
+   * Réinitialise la variable temporaire _attendees 
+   * pour faire un recalcul au prochain appel
+   */
+  public function clearAttendees() {
+    $this->_attendees = null;
+  }
+  /**
    * Mapping attendees field
    * 
    * @param Attendee[] $attendees          
    */
   protected function setMapAttendees($attendees) {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->setMapAttendees()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->setMapAttendees()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     $_attendees = [];
     if (!empty($attendees)) {
@@ -2386,7 +2517,7 @@ class Event extends MceObject {
    * Mapping attendees field
    */
   protected function getMapAttendees() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapAttendees()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapAttendees()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
 
     if (!isset($this->_attendees)) {
@@ -2415,11 +2546,17 @@ class Event extends MceObject {
 
         // Rechercher dans les participants pour ne pas avoir à chercher dans les listes
         $attendeeFound = false;
-        if (isset($this->user->email)) {
-          foreach ($_attendees as $key => $_attendee) {
-            if (strtolower($key) == strtolower($this->user->email)) {
-              $attendeeFound = true;
-              break;
+        $owner_email = strtolower(isset($this->calendar_owner_email) ? $this->calendar_owner_email : (isset($this->user->email) ? $this->user->email : null));
+        if (isset($owner_email)) {
+          if (strtolower($this->getMapOrganizer()->email) == $owner_email) {
+            $attendeeFound = true;
+          }
+          else {
+            foreach ($_attendees as $key => $_attendee) {
+              if (strtolower($key) == $owner_email) {
+                $attendeeFound = true;
+                break;
+              }
             }
           }
         }
@@ -2431,8 +2568,9 @@ class Event extends MceObject {
           $attendee->define($_attendee);
 
           // MANTIS 0006191: Mode en attente lorsque le participant est une liste
-          if ($this->getMapOrganizer()->owner_uid != $this->user->uid
-              && !$attendeeFound
+          if (!$attendeeFound
+              && !$this->getMapOrganizer()->extern
+              && $this->getMapOrganizer()->owner_uid != $this->user->uid
               && $attendee->is_list) {
             $this->attendeeIsList($attendee, $newAttendees, $Attendee, $attendeeFound);
           }
@@ -2457,23 +2595,46 @@ class Event extends MceObject {
   protected function attendeeIsList($attendee, &$attendees, $Attendee, &$attendeeFound) {
     $members = $attendee->members;
     if (is_array($members)) {
-      foreach ($members as $member) {
-        if ($attendeeFound) {
-          break;
-        }
-        // L'utilisateur existe bien dans l'annuaire
-        $listAttendee = new $Attendee();
-        $listAttendee->email = $member;
+      // Recherche d'abord simplement dans les membres par email pour ne pas charger l'annuaire
+      if (isset($this->user->email)) {
+        foreach ($members as $member) {
+          if ($member == $this->user->email) {
+            // L'utilisateur est trouvé dans la liste, on l'ajout de manière virtuelle
+            $listAttendee = new $Attendee();
+            $listAttendee->email = $member;
+            $listAttendee->response = Attendee::RESPONSE_NEED_ACTION;
+            $listAttendee->role = $attendee->role;
+            $attendeeFound = true;
+  
+            $attendees[] = $listAttendee;
 
-        if ($listAttendee->is_list) {
-          $this->attendeeIsList($listAttendee, $attendees, $Attendee, $attendeeFound);
+            break;
+          }
         }
-        else if ($listAttendee->uid == $this->user->uid) {
-          $listAttendee->response = Attendee::RESPONSE_NEED_ACTION;
-          $listAttendee->role = $attendee->role;
-          $attendeeFound = true;
+      }
+      
+      // Rechercher plus en détails si besoin
+      if (!$attendeeFound) {
+        foreach ($members as $member) {
+          if ($attendeeFound) {
+            break;
+          }
+          // L'utilisateur existe bien dans l'annuaire
+          $listAttendee = new $Attendee();
+          $listAttendee->email = $member;
+  
+          if ($listAttendee->is_list) {
+            $this->attendeeIsList($listAttendee, $attendees, $Attendee, $attendeeFound);
+          }
+          else if ($listAttendee->uid == $this->user->uid) {
+            $listAttendee->response = Attendee::RESPONSE_NEED_ACTION;
+            $listAttendee->role = $attendee->role;
+            $attendeeFound = true;
+  
+            $attendees[] = $listAttendee;
 
-          $attendees[] = $listAttendee;
+            break;
+          }
         }
       }
     }
@@ -2511,7 +2672,7 @@ class Event extends MceObject {
    * @return boolean
    */
   protected function getMapHasAttendees() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapHasAttendees() : " . ((isset($this->objectmelanie->attendees) && $this->objectmelanie->attendees != "" && $this->objectmelanie->attendees != "a:0:{}") ? "true" : "false"));
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapHasAttendees() : " . ((isset($this->objectmelanie->attendees) && $this->objectmelanie->attendees != "" && $this->objectmelanie->attendees != "a:0:{}") ? "true" : "false"));
     return (isset($this->objectmelanie->attendees) && $this->objectmelanie->attendees != "" && $this->objectmelanie->attendees != "a:0:{}") 
         || (isset($this->objectmelanie->organizer_attendees) && $this->objectmelanie->organizer_attendees != "" && $this->objectmelanie->organizer_attendees != "a:0:{}");
   }
@@ -2519,7 +2680,7 @@ class Event extends MceObject {
    * Mapping real uid field
    */
   protected function getMapRealUid() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapRealUid()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapRealUid()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     return $this->objectmelanie->uid;
   }
@@ -2537,7 +2698,7 @@ class Event extends MceObject {
    * Mapping deleted field
    */
   protected function getMapDeleted() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapDeleted()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapDeleted()");
     $deleted = $this->deleted;
     if (!isset($this->start) || $this->start == '1970-01-01 00:00:00') {
       $deleted = $deleted || isset($this->objectmelanie->exceptions) && strlen($this->objectmelanie->exceptions) > 16;
@@ -2558,14 +2719,14 @@ class Event extends MceObject {
    * Mapping creator_email field
    */
   protected function getMapCreator_email() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapCreator_email()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapCreator_email()");
     return $this->getAttribute('creator_email');
   }
   /**
    * Mapping creator_email field
    */
   protected function issetMapCreator_email() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->issetMapCreator_email()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->issetMapCreator_email()");
     $ret = $this->getAttribute('creator_email');
     return isset($ret);
   }
@@ -2583,14 +2744,14 @@ class Event extends MceObject {
    * Mapping creator_name field
    */
   protected function getMapCreator_name() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapCreator_name()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapCreator_name()");
     return $this->getAttribute('creator_name');
   }
   /**
    * Mapping creator_name field
    */
   protected function issetMapCreator_name() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->issetMapCreator_name()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->issetMapCreator_name()");
     $ret = $this->getAttribute('creator_name');
     return isset($ret);
   }
@@ -2603,7 +2764,7 @@ class Event extends MceObject {
    *
    */
   protected function setMapExceptions($exceptions) {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->setMapExceptions()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->setMapExceptions()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     
     $_exceptions = [];
@@ -2658,7 +2819,7 @@ class Event extends MceObject {
    *
    */
   protected function getMapExceptions() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapExceptions()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapExceptions()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     if (!isset($this->objectmelanie->exceptions) || $this->objectmelanie->exceptions == "")
       return [];
@@ -2694,7 +2855,7 @@ class Event extends MceObject {
    * @throws Exceptions\ObjectMelanieUndefinedException
    */
   public function addException($exception) {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->addException()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->addException()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     
     if (!isset($this->exceptions) && !is_array($this->exceptions)) {
@@ -2728,7 +2889,7 @@ class Event extends MceObject {
    *
    */
   protected function setMapAttachments($attachments) {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->setMapAttachments()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->setMapAttachments()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     $this->attachments = $attachments;
 
@@ -2762,7 +2923,7 @@ class Event extends MceObject {
    *
    */
   protected function getMapAttachments() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapAttachments()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapAttachments()");
     if (!isset($this->objectmelanie)) throw new Exceptions\ObjectMelanieUndefinedException();
     if (!isset($this->attachments)) {
       $this->attachments = [];
@@ -2820,7 +2981,7 @@ class Event extends MceObject {
         if (isset($attach_uri)) {
           foreach (explode('%%URI-SEPARATOR%%', $attach_uri) as $uri) {
             if (isset($uri) && $uri !== "") {
-              M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapAttachments(): $uri");
+              M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapAttachments(): $uri");
               $attachment = new $Attachment();
               $attachment->url = $uri;
               $attachment->type = Attachment::TYPE_URL;
@@ -2839,7 +3000,7 @@ class Event extends MceObject {
    *
    */
   protected function setMapIcs($ics) {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->setMapsIcs()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->setMapsIcs()");
     \LibMelanie\Lib\ICSToEvent::Convert($ics, $this, $this->calendarmce, $this->user, $this->ics_attachments);
   }
   /**
@@ -2850,7 +3011,7 @@ class Event extends MceObject {
    *
    */
   protected function getMapIcs() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapIcs()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapIcs()");
     return \LibMelanie\Lib\EventToICS::Convert($this, $this->calendarmce, $this->user, null, $this->ics_attachments, $this->ics_freebusy);
   }
   /**
@@ -2861,7 +3022,7 @@ class Event extends MceObject {
    *
    */
   protected function getMapVcalendar() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapVcalendar()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapVcalendar()");
     return \LibMelanie\Lib\EventToICS::getVCalendar($this, $this->calendarmce, $this->user, $this->ics_attachments, $this->ics_freebusy, $this->vcalendar);
   }
   /**
@@ -2872,7 +3033,7 @@ class Event extends MceObject {
    *
    */
   protected function setMapVcalendar($vcalendar) {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->setMapVcalendar()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->setMapVcalendar()");
     $this->vcalendar = $vcalendar;
   }
   /**
@@ -2882,7 +3043,7 @@ class Event extends MceObject {
    *
    */
   protected function setMapMove($move) {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->setMapMove()");
+    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->setMapMove($move)");
     $this->move = $move;
   }
   /**
@@ -2893,7 +3054,7 @@ class Event extends MceObject {
    *
    */
   protected function getMapMove() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getMapMove()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapMove()");
     return $this->move;
   }
 }

@@ -49,7 +49,7 @@ class AddressbookMelanie extends MagicObject implements IObjectMelanie {
 	    // Défini la classe courante
 	    $this->get_class = get_class($this);
 
-		M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class."->__construct()");
+		M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class."->__construct()");
 
 		// Récupération du type d'objet en fonction de la class
 		$this->objectType = explode('\\',$this->get_class);
@@ -115,10 +115,20 @@ class AddressbookMelanie extends MagicObject implements IObjectMelanie {
 
 		// Gérer le load si user n'est pas défini
 		if (isset($this->user_uid)) {
-			$query = Sql\SqlMelanieRequests::listObjectsByUidAndUser;
+			if (\LibMelanie\Config\Config::get(\LibMelanie\Config\Config::USE_SQL_FUNCTIONS_INSTEAD_OF_QUERIES)) {
+				$query = Sql\SqlMelanieRequests::functionListObjectsByUidAndUser;
+			}
+			else {
+				$query = Sql\SqlMelanieRequests::listObjectsByUidAndUser;
+			}
 		}
 		else {
-			$query = Sql\SqlMelanieRequests::listObjectsByUid;
+			if (\LibMelanie\Config\Config::get(\LibMelanie\Config\Config::USE_SQL_FUNCTIONS_INSTEAD_OF_QUERIES)) {
+				$query = Sql\SqlMelanieRequests::functionListObjectsByUid;
+			}
+			else {
+				$query = Sql\SqlMelanieRequests::listObjectsByUid;
+			}
 		}
 
 		// Replace name
@@ -442,7 +452,7 @@ class AddressbookMelanie extends MagicObject implements IObjectMelanie {
 	 * @return boolean
 	 */
 	public function asRight($action) {
-		M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class."->asRight($action)");
+		M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class."->asRight($action, $this->id)");
 		return (DefaultConfig::$PERMS[$action] & $this->perm_addressbook) === DefaultConfig::$PERMS[$action];
 	}
 }

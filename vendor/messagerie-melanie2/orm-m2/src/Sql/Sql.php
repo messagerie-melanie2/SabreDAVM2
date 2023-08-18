@@ -217,7 +217,7 @@ class Sql {
     // Défini la classe courante
     $this->get_class = get_class($this);
 
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->__construct()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->__construct()");
     
     // Connexion par defaut ?
     $this->is_default = $is_default;
@@ -307,7 +307,7 @@ class Sql {
    * @access public
    */
   public function __destruct() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->__destruct()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->__destruct()");
     $this->disconnect();
   }
 
@@ -359,7 +359,7 @@ class Sql {
    * @access public
    */
   public function disconnect() {
-    M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->disconnect()");
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->disconnect()");
     // Fermer tous les statements
     $this->PreparedStatementCache = [];
     // Deconnexion de la bdd
@@ -416,7 +416,7 @@ class Sql {
     // Si la connexion n'est pas instanciée
     if (!isset($this->connection)) {
       // Throw exception, erreur
-      M2Log::Log(M2Log::LEVEL_ERROR, $this->get_class . "->executeQueryToObject(): Problème de connexion à la base de données");
+      M2Log::Log(M2Log::LEVEL_ERROR, $this->get_class . "->executeQuery(): Problème de connexion à la base de données");
       throw new Exceptions\Melanie2DatabaseException("Erreur de base de données Mélanie2 : Erreur de connexion", 21);
     }
     // Configuration de la réutilisation des prepares statements
