@@ -247,6 +247,7 @@ class Event extends MceObject {
   const STATUS_CANCELLED = DefaultConfig::CANCELLED;
   const STATUS_NONE = DefaultConfig::NONE;
   const STATUS_TELEWORK = DefaultConfig::TELEWORK;
+  const STATUS_VACATION = DefaultConfig::VACATION;
   // TRANS Fields
   const TRANS_TRANSPARENT = ICS::TRANSP_TRANSPARENT;
   const TRANS_OPAQUE = ICS::TRANSP_OPAQUE;
@@ -489,7 +490,7 @@ class Event extends MceObject {
       $events = $this->listEventsByUid($this->uid);
       // Est-ce que l'événement existe quelque part ?
       if (count($events) === 0) {
-        if ($this->userIsOrganizer($organizer->uid, $this->user->uid)) {
+        if (isset($this->user) && $this->userIsOrganizer($organizer->uid, $this->user->uid)) {
           // L'évènement n'existe pas, l'organisateur est celui qui créé l'évènement
           // Donc on est dans le cas d'une création interne
           $organizer->calendar = $this->calendar;
@@ -804,7 +805,7 @@ class Event extends MceObject {
     $organizer_event->addException($organizer_event_exception);
     $organizer_event->modified = time();
     // Enregistre l'évenement de l'organisateur
-    $organizer_event->save(false);
+    $organizer_event->save();
 
     return $organizer_event_exception;
   }
@@ -869,7 +870,26 @@ class Event extends MceObject {
     if (isset($owner) && !empty($owner)) {
       $listevents->owner = $owner;
     }
-    return $listevents->getList();
+    // MANTIS 0008366: Alléger la méthode listEventsByUid
+    // getList($fields = [], $filter = "", $operators = [], $orderby = "", $asc = true, $limit = null, $offset = null, $case_unsensitive_fields = [], $join = null, $type_join = 'INNER', $using = null, $prefix = null, $groupby = [], $groupby_count = null, $subqueries = [], $merge = true)
+    return $listevents->getList(
+      [], // fields
+      "", // filter
+      [], // operators
+      "created", // orderby
+      true, // asc
+      3, // limit
+      null, // offset
+      [], // case_unsensitive_fields
+      null, // join
+      'INNER', // type_join
+      null, // using
+      null, // prefix
+      [], // groupby
+      null, // groupby_count
+      [], // subqueries
+      false // merge
+    );
   }
 
   /**
@@ -927,6 +947,9 @@ class Event extends MceObject {
         'interval',
         'type',
         'days',
+        'class',
+        'priority',
+        'transparency',
         'exceptions',
         'modified',
         'modified_json',
@@ -989,7 +1012,7 @@ class Event extends MceObject {
           }
           else {
             // MANTIS 0006801: [En attente] Gestion des boites partagées
-            if (!$attendee->is_individuelle) {
+            if (!$attendee->is_individuelle && !$attendee->is_ressource) {
               $clean_deleted_attendees = false;
             }
             $attendee_uid = $attendee->uid;
@@ -1000,7 +1023,7 @@ class Event extends MceObject {
               if ($attendee_uid != $this->calendarmce->owner
                   && $attendee->need_action) {
                 // Gestion du participant
-                $this->attendeeEventNeedAction($attendee_uid, $User, $Calendar, $Event, $copyFieldsList, $needActionFieldsList, $attendees, $attendee_key, $is_saved);
+                $this->attendeeEventNeedAction($attendee, $User, $Calendar, $Event, $copyFieldsList, $needActionFieldsList, $attendees, $attendee_key, $is_saved);
 
                 // Gérer le is_saved pour le participant
                 $attendees[$attendee_key]->is_saved = $is_saved ? true : null;
@@ -1036,11 +1059,12 @@ class Event extends MceObject {
           $listAttendee->uid = $_e->calendar;
 
           if ($listAttendee->need_action) {
-            if ($_e->status == self::STATUS_TENTATIVE) {
-              // Si on est en provisoire on le supprime directement
+            // 0008834: Pour une ressource, supprimer l'événement via le en attente, peu importe le statut
+            if ($listAttendee->is_ressource) {
               $_e->delete();
             }
             else {
+              // 0008072: [En attente] Ne plus supprimer les événements des participants
               // Copier l'événement même pour une annulation
               $this->copyEventNeedAction($this, $_e, null, $copyFieldsList, $needActionFieldsList, null, null, false, true);
               // Doit on annuler l'événement pour le participant ?
@@ -1106,7 +1130,7 @@ class Event extends MceObject {
           if ($listAttendee->need_action) {
             // Parcours les members et traite ceux qui ont le need_action activé
             // Gestion du participant
-            $this->attendeeEventNeedAction($listAttendee->uid, $User, $Calendar, $Event, $copyFieldsList, $needActionFieldsList, $attendees, null, $is_saved);
+            $this->attendeeEventNeedAction($listAttendee, $User, $Calendar, $Event, $copyFieldsList, $needActionFieldsList, $attendees, null, $is_saved);
             $is_list_saved &= $is_saved;
           }
         }
@@ -1136,7 +1160,7 @@ class Event extends MceObject {
   /**
    * Enregistre l'événement dans l'agenda du participant
    * 
-   * @param string $attendee_uid Uid du participant
+   * @param Attendee $attendee Participant
    * @param string $User Classe User
    * @param string $Calendar Classe Calendar
    * @param string $Event Classe Event
@@ -1146,46 +1170,55 @@ class Event extends MceObject {
    * @param int $attendee_key
    * @param boolean $is_saved
    */
-  protected function attendeeEventNeedAction($attendee_uid, $User, $Calendar, $Event, $copyFieldsList, $needActionFieldsList, &$attendees, $attendee_key, &$is_saved) {
+  protected function attendeeEventNeedAction($attendee, $User, $Calendar, $Event, $copyFieldsList, $needActionFieldsList, &$attendees, $attendee_key, &$is_saved) {
     $is_saved = false;
     // Creation du user melanie
     $attendee_user = new $User();
-    $attendee_user->uid = $attendee_uid;
+    $attendee_user->uid = $attendee->uid;
     // Création du calendar melanie
     $attendee_calendar = new $Calendar($attendee_user);
-    $attendee_calendar->id = $attendee_uid;
-    if ($attendee_calendar->load()) {            
-      // Creation de l'evenement melanie
-      if (strpos($this->get_class, '\Exception') === false) {
-        $attendee_event = new $Event($attendee_user, $attendee_calendar);
+    $attendee_calendar->id = $attendee->uid;
+
+    if (!$attendee_calendar->load()) {
+      if ($attendee->is_ressource) {
+        $attendee_user->createDefaultCalendar();
+        $attendee_calendar->load();
       }
       else {
-        $attendee_event = new $Event(null, $attendee_user, $attendee_calendar);
+        return false;
       }
-      // Enregistrement de la recurrence
-      if (strpos($this->get_class, '\Exception') === false) {
-        $recurrence = $this->getMapRecurrence();
-        if (isset($recurrence)) {
-          $attendee_recurrence = $attendee_event->getMapRecurrence();
-          $attendee_recurrence->type = $recurrence->type;
-          $attendee_recurrence->count = $recurrence->count;
-          $attendee_recurrence->days = $recurrence->days;
-          $attendee_recurrence->enddate = $recurrence->enddate;
-          $attendee_recurrence->interval = $recurrence->interval;
-          $attendee_event->setMapRecurrence($attendee_recurrence);
-        }
+    }
+
+    // Creation de l'evenement melanie
+    if (strpos($this->get_class, '\Exception') === false) {
+      $attendee_event = new $Event($attendee_user, $attendee_calendar);
+    }
+    else {
+      $attendee_event = new $Event(null, $attendee_user, $attendee_calendar);
+    }
+    // Enregistrement de la recurrence
+    if (strpos($this->get_class, '\Exception') === false) {
+      $recurrence = $this->getMapRecurrence();
+      if (isset($recurrence)) {
+        $attendee_recurrence = $attendee_event->getMapRecurrence();
+        $attendee_recurrence->type = $recurrence->type;
+        $attendee_recurrence->count = $recurrence->count;
+        $attendee_recurrence->days = $recurrence->days;
+        $attendee_recurrence->enddate = $recurrence->enddate;
+        $attendee_recurrence->interval = $recurrence->interval;
+        $attendee_event->setMapRecurrence($attendee_recurrence);
       }
-      else {
-        $attendee_event->recurrence_id = $this->recurrence_id;
-      }
-      $attendee_event->uid = $this->uid;
-      $save = $this->copyEventNeedAction($this, $attendee_event, $attendee_uid, $copyFieldsList, $needActionFieldsList, $attendees, $attendee_key, strpos($this->get_class, '\Exception') !== false, $attendee_event->load());
-      if ($save) {
-        $attendee_event->modified = time();
-        // Enregistre l'événement dans l'agenda du participant
-        $attendee_event->save(false);
-        $is_saved = true;
-      }
+    }
+    else {
+      $attendee_event->recurrence_id = $this->recurrence_id;
+    }
+    $attendee_event->uid = $this->uid;
+    $save = $this->copyEventNeedAction($this, $attendee_event, $attendee->uid, $copyFieldsList, $needActionFieldsList, $attendees, $attendee_key, strpos($this->get_class, '\Exception') !== false, $attendee_event->load());
+    if ($save) {
+      $attendee_event->modified = time();
+      // Enregistre l'événement dans l'agenda du participant
+      $attendee_event->save(false);
+      $is_saved = true;
     }
   }
   
@@ -1262,7 +1295,8 @@ class Event extends MceObject {
               // Gestion des boites ressources
               $attendees[$attendee_key]->response = Attendee::RESPONSE_ACCEPTED;
               $attendee_event->status = self::STATUS_CONFIRMED;
-              if (!isset($attendees[$attendee_key]->type) || $attendees[$attendee_key]->type == Attendee::TYPE_INDIVIDUAL) {
+              $attendee_type = $attendees[$attendee_key]->type;
+              if (!isset($attendee_type) || $attendee_type == Attendee::TYPE_INDIVIDUAL) {
                 $attendees[$attendee_key]->type = Attendee::TYPE_RESOURCE;
               }
             }
@@ -1334,7 +1368,8 @@ class Event extends MceObject {
               // Gestion des boites ressources
               $attendees[$attendee_key]->response = Attendee::RESPONSE_ACCEPTED;
               $attendee_event->status = self::STATUS_CONFIRMED;
-              if (!isset($attendees[$attendee_key]->type) || $attendees[$attendee_key]->type == Attendee::TYPE_INDIVIDUAL) {
+              $attendee_type = $attendees[$attendee_key]->type;
+              if (!isset($attendee_type) || $attendee_type == Attendee::TYPE_INDIVIDUAL) {
                 $attendees[$attendee_key]->type = Attendee::TYPE_RESOURCE;
               }
             }
@@ -1354,7 +1389,8 @@ class Event extends MceObject {
             // Gestion des boites ressources
             $attendees[$attendee_key]->response = Attendee::RESPONSE_ACCEPTED;
             $attendee_event->status = self::STATUS_CONFIRMED;
-            if (!isset($attendees[$attendee_key]->type) || $attendees[$attendee_key]->type == Attendee::TYPE_INDIVIDUAL) {
+            $attendee_type = $attendees[$attendee_key]->type;
+            if (!isset($attendee_type) || $attendee_type == Attendee::TYPE_INDIVIDUAL) {
               $attendees[$attendee_key]->type = Attendee::TYPE_RESOURCE;
             }
           }
@@ -1432,32 +1468,27 @@ class Event extends MceObject {
               $attendee_event->recurrence_id = $this->recurrence_id;
             }
             $attendee_event->uid = $this->uid;
-            if ($attendee_event->load()) {
-              // L'evement normal est supprimé
-              if ($attendee_event->status == self::STATUS_TENTATIVE
-                  && $attendee->response == $Attendee::RESPONSE_NEED_ACTION) {
-                // Supprimer l'événement qui est en en attente
-                $attendee_event->delete();
-                $save = false;
+
+            // 0008834: Pour une ressource, supprimer l'événement via le en attente, peu importe le statut
+            if ($attendee->is_ressource) {
+              $attendee_event->delete();
+            }
+            else if ($attendee_event->load()) {
+              // 0008072: [En attente] Ne plus supprimer les événements des participants
+              // Modification en annulé
+              $attendee_event->status = self::STATUS_CANCELLED;
+
+              // 0006698: Incrémenter la séquence des participants dans le cas d'une suppression par l'organisateur
+              if (!empty($attendee_event->sequence)) {
+                $attendee_event->sequence = $attendee_event->sequence + 1;
               }
               else {
-                // Modification en annulé
-                $attendee_event->status = self::STATUS_CANCELLED;
-                $save = true;
-
-                // 0006698: Incrémenter la séquence des participants dans le cas d'une suppression par l'organisateur
-                if (!empty($attendee_event->sequence)) {
-                  $attendee_event->sequence = $attendee_event->sequence + 1;
-                }
-                else {
-                  $attendee_event->sequence = 1;
-                }
+                $attendee_event->sequence = 1;
               }
-              if ($save) {
-                $attendee_event->modified = time();
-                // Enregistre l'événement dans l'agenda du participant
-                $attendee_event->save(false);
-              }              
+              
+              $attendee_event->modified = time();
+              // Enregistre l'événement dans l'agenda du participant
+              $attendee_event->save(false);
             }
           }
         }
@@ -1531,6 +1562,7 @@ class Event extends MceObject {
       }
     }
   }
+
   /**
    * Charge les attributs en mémoire
    */
@@ -1568,6 +1600,7 @@ class Event extends MceObject {
     }
     $this->attributes_loaded = true;
   }
+
   /**
    * Supprime les attributs
    */
@@ -1590,7 +1623,7 @@ class Event extends MceObject {
    * 
    * @return boolean
    */
-  private function loadExceptions() {
+  protected function loadExceptions() {
     M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->loadExceptions()");
     $event = new static($this->user, $this->calendarmce);
     $event->realuid = $this->uid;
@@ -1613,7 +1646,7 @@ class Event extends MceObject {
    * 
    * @return boolean
    */
-  private function notException() {
+  protected function notException() {
     return $this->get_class == $this->__getNamespace() . '\\Event';
   }
   
@@ -1623,30 +1656,61 @@ class Event extends MceObject {
    * 
    * @return boolean True si tout est OK, false sinon 
    */
-  private function checkRecurrence() {
+  protected function checkRecurrence() {
     // Tableau permettant de recuperer toutes les valeurs de la recurrence
     if (isset($this->objectmelanie->recurrence_json)) {
       $recurrence = json_decode($this->objectmelanie->recurrence_json, true);
       if (isset($recurrence[ICS::FREQ])) {
         $event_duration = strtotime($this->objectmelanie->end) - strtotime($this->objectmelanie->start);
+        // 0008073: Intégrer l'interval dans la validation de la recurrence
+        $interval = isset($recurrence[ICS::INTERVAL]) ? $recurrence[ICS::INTERVAL] : 1;
         switch ($recurrence[ICS::FREQ]) {
           case ICS::FREQ_DAILY:
-            $event_max_duration = 60*60*24;
+            $event_max_duration = 60*60*24*$interval;
             break;
           case ICS::FREQ_WEEKLY:
-            $event_max_duration = 60*60*24*7;
+            $event_max_duration = 60*60*24*7*$interval;
             break;
           case ICS::FREQ_MONTHLY:
-            $event_max_duration = 60*60*24*7*31;
+            $event_max_duration = 60*60*24*7*31*$interval;
             break;
           case ICS::FREQ_YEARLY:
-            $event_max_duration = 60*60*24*366;
+            $event_max_duration = 60*60*24*366*$interval;
             break;
         }
         return $event_max_duration >= $event_duration;
       }
     }
     return true;
+  }
+
+  /**
+   * Vérifie si l'événement est un doublon
+   * 
+   * @return boolean true si l'événement est un doublon, false sinon
+   */
+  protected function checkDuplicate() {
+    // Rechercher un doublons avec un uid différent
+    $event = new self();
+    $event->calendar = $this->calendar;
+    $event->realuid = $this->realuid;
+    $event->title = $this->title;
+    $event->start = $this->start;
+    $event->end = $this->end;
+    $event->location = $this->location;
+
+    $operators = [
+      'calendar'  => \LibMelanie\Config\MappingMce::eq,
+      'realuid'   => \LibMelanie\Config\MappingMce::diff,
+      'title'     => \LibMelanie\Config\MappingMce::eq,
+      'start'     => \LibMelanie\Config\MappingMce::eq,
+      'end'       => \LibMelanie\Config\MappingMce::eq,
+      'location'  => \LibMelanie\Config\MappingMce::eq,
+    ];
+
+    $events = $event->getList([], "", $operators);
+
+    return count($events) > 0;
   }
   
   /**
@@ -1660,7 +1724,7 @@ class Event extends MceObject {
    * @ignore
    *
    */
-  public function save($saveAttendees = true) {
+  public function save($saveAttendees = true, $isExternal = false) {
     M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->save()");
     if (!isset($this->objectmelanie))
       throw new Exceptions\ObjectMelanieUndefinedException();
@@ -1674,12 +1738,24 @@ class Event extends MceObject {
       return null;
     }
 
+    // 0008824: Bloquer la création de doublons d'événement
+    if ($this->checkDuplicate()) {
+      M2Log::Log(M2Log::LEVEL_ERROR, $this->get_class . "->save() L'evenement est un doublon");
+      return null;
+    }
+
+    // Ne pas enregistrer un événement avec une source si on est pas sur un enregistrement externe
+    if (!$isExternal && !empty($this->objectmelanie->source)) {
+      M2Log::Log(M2Log::LEVEL_ERROR, $this->get_class . "->save() L'evenement a une source");
+      return null;
+    }
+
     // MANTIS 0007426: Avancer la date de fin de récurrence devrait supprimer les occurrences postérieures
-    if ($this->objectmelanie->fieldHasChanged('enddate')) {
+    if ($this->objectmelanie->fieldHasChanged('enddate') && !$isExternal) {
       $this->deleteOldOccurrences();
     }
 
-    if (isset($this->exceptions)) {
+    if (isset($this->exceptions) && !$isExternal) {
       // MANTIS 0007427: Modifier toutes les occurrences devrait également modifier les occurrences modifiées si possible
       $this->updateOccurrences();
     }
@@ -1702,7 +1778,7 @@ class Event extends MceObject {
     // Sauvegarde des exceptions
     if (isset($this->exceptions)) {
       foreach ($this->exceptions as $exception) {
-        $res = $exception->save();
+        $res = $exception->save($saveAttendees, $isExternal);
         $exMod = $exMod || !is_null($res);
       }
     }
@@ -1713,11 +1789,27 @@ class Event extends MceObject {
       return false;
     }
       
-    if ($exMod) {
+    if ($exMod && !$isExternal) {
       $this->setMapModified(time());
     }
-    if (!isset($this->owner)) {
+
+    if (!isset($this->owner) && isset($this->user)) {
       $this->owner = $this->user->uid;
+    }
+
+    // MANTIS 0008062: Gérer l'incrémentation de la séquence au moment du save
+    if ($saveAttendees && !$this->objectmelanie->fieldHasChanged('sequence')) {
+      foreach (['start', 'end', 'recurrence', 'location', 'status'] as $field) {
+        if ($this->objectmelanie->fieldHasChanged($field)) {
+          if (!empty($this->objectmelanie->sequence)) {
+            $this->objectmelanie->sequence = $this->objectmelanie->sequence + 1;
+          }
+          else {
+            $this->objectmelanie->sequence = 1;
+          }
+          break;
+        }
+      }
     }
 
     // Sauvegarde l'objet
@@ -1767,7 +1859,7 @@ class Event extends MceObject {
    * si elles n'avaient pas changées
    */
   protected function updateOccurrences() {
-    $fields = ['title', 'location', 'description', 'status', 'class', 'category'];
+    $fields = ['title', 'location', 'description', 'status', 'class', 'category', 'source'];
 
     // Gestion de la date
     if ($this->objectmelanie->fieldHasChanged('start') || $this->objectmelanie->fieldHasChanged('end')) {
@@ -1902,6 +1994,33 @@ class Event extends MceObject {
       }
     }
   }
+
+  /**
+   * Déplacement d'un évènement d'un calendrier à un autre
+   * 
+   * @param string $calendar_id Identifiant du calendrier source
+   */
+  public function move($calendar_id) {
+    $event = new $this->get_class();
+    $event->uid = $this->uid;
+    $event->calendar = $calendar_id;
+    if ($event->load()) {
+      $is_organizer = $event->calendar == $event->getMapOrganizer()->calendar;
+
+      // Gérer la copie des données
+      $this->objectmelanie->__copy_from($event->getObjectMelanie(), true, ['calendar', 'id']);
+      $this->modified = time();
+
+      // Si on est dans un événement d'organisateur, il faut modifier pour tout le monde
+      if ($is_organizer) {
+        $this->getMapOrganizer()->calendar = $this->calendar;
+        $event->getMapOrganizer()->calendar = $this->calendar;
+      }
+
+      $event->delete();
+      $this->save();
+    }
+  }
   
   /**
    * Mapping de la suppression de l'objet
@@ -1974,32 +2093,33 @@ class Event extends MceObject {
   }
   
   /**
-   * Permet de récupérer la liste d'objet en utilisant les données passées
-   * (la clause where s'adapte aux données)
-   * Il faut donc peut être sauvegarder l'objet avant d'appeler cette méthode
-   * pour réinitialiser les données modifiées (propriété haschanged)
-   * 
-   * @param String[] $fields
-   *          Liste les champs à récupérer depuis les données
-   * @param String $filter
-   *          Filtre pour la lecture des données en fonction des valeurs déjà passé, exemple de filtre : "((#description# OR #title#) AND #start#)"
-   * @param String[] $operators
-   *          Liste les propriétés par operateur (MappingMce::like, MappingMce::supp, MappingMce::inf, MappingMce::diff)
-   * @param String $orderby
-   *          Tri par le champ
-   * @param bool $asc
-   *          Tri ascendant ou non
-   * @param int $limit
-   *          Limite le nombre de résultat (utile pour la pagination)
-   * @param int $offset
-   *          Offset de début pour les résultats (utile pour la pagination)
-   * @param String[] $case_unsensitive_fields
-   *          Liste des champs pour lesquels on ne sera pas sensible à la casse
-   * @return Event[] Array
-   */
-  public function getList($fields = [], $filter = "", $operators = [], $orderby = "", $asc = true, $limit = null, $offset = null, $case_unsensitive_fields = []) {
+	 * Permet de récupérer la liste d'objet en utilisant les données passées
+	 * (la clause where s'adapte aux données)
+	 * Il faut donc peut être sauvegarder l'objet avant d'appeler cette méthode
+	 * pour réinitialiser les données modifiées (propriété haschanged)
+	 * 
+	 * @param String[] $fields
+	 *          Liste les champs à récupérer depuis les données
+	 * @param String $filter
+	 *          Filtre pour la lecture des données en fonction des valeurs déjà passé, exemple de filtre : "((#description# OR #title#) AND #start#)"
+	 * @param String[] $operators
+	 *          Liste les propriétés par operateur (MappingMce::like, MappingMce::supp, MappingMce::inf, MappingMce::diff)
+	 * @param String $orderby
+	 *          Tri par le champ
+	 * @param bool $asc
+	 *          Tri ascendant ou non
+	 * @param int $limit
+	 *          Limite le nombre de résultat (utile pour la pagination)
+	 * @param int $offset
+	 *          Offset de début pour les résultats (utile pour la pagination)
+	 * @param String[] $case_unsensitive_fields
+	 *          Liste des champs pour lesquels on ne sera pas sensible à la casse
+	 * 
+	 * @return MceObject[] Array
+	 */
+	public function getList($fields = [], $filter = "", $operators = [], $orderby = "", $asc = true, $limit = null, $offset = null, $case_unsensitive_fields = [], $join = null, $type_join = 'INNER', $using = null, $prefix = null, $groupby = [], $groupby_count = null, $subqueries = [], $merge = true) {
     M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getList()");
-    $_events = $this->objectmelanie->getList($fields, $filter, $operators, $orderby, $asc, $limit, $offset, $case_unsensitive_fields);
+    $_events = $this->objectmelanie->getList($fields, $filter, $operators, $orderby, $asc, $limit, $offset, $case_unsensitive_fields, $merge);
     if (!isset($_events))
       return null;
     $events = [];
@@ -2570,6 +2690,7 @@ class Event extends MceObject {
           // MANTIS 0006191: Mode en attente lorsque le participant est une liste
           if (!$attendeeFound
               && !$this->getMapOrganizer()->extern
+              && isset($this->user)
               && $this->getMapOrganizer()->owner_uid != $this->user->uid
               && $attendee->is_list) {
             $this->attendeeIsList($attendee, $newAttendees, $Attendee, $attendeeFound);
@@ -2626,7 +2747,7 @@ class Event extends MceObject {
           if ($listAttendee->is_list) {
             $this->attendeeIsList($listAttendee, $attendees, $Attendee, $attendeeFound);
           }
-          else if ($listAttendee->uid == $this->user->uid) {
+          else if (isset($this->user) && $listAttendee->uid == $this->user->uid) {
             $listAttendee->response = Attendee::RESPONSE_NEED_ACTION;
             $listAttendee->role = $attendee->role;
             $attendeeFound = true;

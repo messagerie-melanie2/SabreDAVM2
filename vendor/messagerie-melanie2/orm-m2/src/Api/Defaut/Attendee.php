@@ -199,6 +199,9 @@ class Attendee extends MceObject {
 	const TYPE_GROUP = DefaultConfig::GROUP;
 	const TYPE_RESOURCE = DefaultConfig::RESOURCE;
 	const TYPE_ROOM = DefaultConfig::ROOM;
+  const TYPE_CAR = DefaultConfig::CAR;
+  const TYPE_FLEX_OFFICE = DefaultConfig::FLEX_OFFICE;
+  const TYPE_HARDWARE = DefaultConfig::HARDWARE;
 	const TYPE_UNKNOWN = DefaultConfig::UNKNOWN;
   
   /**
@@ -707,6 +710,8 @@ class Attendee extends MceObject {
       if (!$this->_is_list) {
         $this->_uid = $this->_user->uid;
       }
+      // MANTIS 0008706: Dans le cas d'un participant avec plusieurs adresses remettre l'adresse email principale comme email de participation
+      $this->_email = $this->_user->email;
       $this->_name = $this->_user->fullname;
       $this->_is_ressource = $this->_user->is_ressource;
       $this->_is_individuelle = $this->_user->is_individuelle || $this->_user->is_applicative;

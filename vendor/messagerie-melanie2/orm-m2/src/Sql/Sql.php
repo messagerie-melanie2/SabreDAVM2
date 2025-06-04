@@ -28,6 +28,7 @@ use LibMelanie\Lib\Selaforme;
 use LibMelanie\Exceptions;
 use LibMelanie\Config\Config;
 use LibMelanie\Config\MappingMce;
+use LibMelanie\Config\ConfigSQL;
 
 /**
  * Gestion de la connexion Sql
@@ -154,23 +155,28 @@ class Sql {
    */
   public static function GetInstance($server = null) {
     if (!isset($server)) {
-      $server = \LibMelanie\Config\ConfigSQL::$SGBD_SERVER;
+      if (!empty(ConfigSQL::$CURRENT_BACKEND) && isset(ConfigSQL::$SERVERS[ConfigSQL::$CURRENT_BACKEND])) {
+        $server = ConfigSQL::$CURRENT_BACKEND;
+      }
+      else {
+        $server = ConfigSQL::$SGBD_SERVER;
+      }
     }
     if (!isset(self::$instances[$server])) {
-      if (!isset(\LibMelanie\Config\ConfigSQL::$SERVERS[$server])) {
+      if (!isset(ConfigSQL::$SERVERS[$server])) {
         M2Log::Log(M2Log::LEVEL_ERROR, "Sql->GetInstance() Erreur la configuration du serveur '$server' n'existe pas");
         return false;
       }
-      $conf = \LibMelanie\Config\ConfigSQL::$SERVERS[$server];
+      $conf = ConfigSQL::$SERVERS[$server];
       // Lecture du read
       $conf_read = null;
-      if (isset(\LibMelanie\Config\ConfigSQL::$SERVERS[$server."_read"])) {
-        $conf_read = \LibMelanie\Config\ConfigSQL::$SERVERS[$server."_read"];
+      if (isset(ConfigSQL::$SERVERS[$server."_read"])) {
+        $conf_read = ConfigSQL::$SERVERS[$server."_read"];
       }
       else if (isset($conf['read'])) {
         $conf_read = $conf['read'];
       }
-      self::$instances[$server] = new self($server === \LibMelanie\Config\ConfigSQL::$SGBD_SERVER, $conf, $conf_read);
+      self::$instances[$server] = new self($server === ConfigSQL::$SGBD_SERVER, $conf, $conf_read);
     }
     return self::$instances[$server];
   }
@@ -182,7 +188,7 @@ class Sql {
    */
   public function ForceDisconnectAllInstances() {
     // Rechercher toutes les instances existantes
-    foreach (\LibMelanie\Config\ConfigSQL::$SERVERS as $server => $conf) {
+    foreach (ConfigSQL::$SERVERS as $server => $conf) {
       // si l'instance existe, on la déconnecte
       if (isset(self::$instances[$server])) {
         self::$instances[$server]->disconnect();
@@ -678,6 +684,37 @@ class Sql {
       $orderby_clause .= " ORDER BY $orderby" . ($asc ? " ASC" : " DESC");
     }
     return $orderby_clause;
+  }
+
+  /**
+   * Récupérer la clause de order by
+   * 
+   * @param string $objectType Type d'objet pour le mapping
+   * 
+   * @param string $groupby Nom du champ pour le group by
+   * 
+   * @return string $groupby_clause
+   */
+  public static function GetGroupByClause($objectType = null, $groupby = [], $join = null) {
+    $groupby_clause = '';
+    // Tri
+		if (!empty($groupby)) {
+      $group = [];
+      foreach ($groupby as $value) {
+        // Récupèration des données de mapping
+        if (isset(MappingMce::$Data_Mapping[$objectType])
+            && isset(MappingMce::$Data_Mapping[$objectType][$value])) {
+          if (isset($join) && MappingMce::$Table_Name[$objectType] == MappingMce::$Table_Name[$join]) {
+            $group[] = "table1." . MappingMce::$Data_Mapping[$objectType][$value][MappingMce::name];
+          }
+          else {
+            $group[] = MappingMce::$Table_Name[$objectType] . "." . MappingMce::$Data_Mapping[$objectType][$value][MappingMce::name];
+          }
+        }
+      }
+      $groupby_clause .= " GROUP BY " . implode(", ", $group);
+    }
+    return $groupby_clause;
   }
 }
 ?>

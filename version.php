@@ -1,4 +1,4 @@
-<?php
+<?php 
 
 /**
  * Cette classe permet d'avoir le numéro de version de SabreDAV MCE
@@ -11,10 +11,10 @@ class Version {
     /**
      * Numéro de version
      */
-    const VERSION = '0.7.4';
+    const VERSION = '0.8';
    
     /**
      * Build
      */
-    const BUILD = '20230818120552';
+    const BUILD = '20250109101852';
 }

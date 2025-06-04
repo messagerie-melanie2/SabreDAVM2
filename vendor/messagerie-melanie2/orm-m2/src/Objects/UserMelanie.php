@@ -45,19 +45,19 @@ class UserMelanie extends MagicObject implements IObjectMelanie {
    * 
    * @var string
    */
-  private $server;
+  protected $server;
   /**
    * Mapping des données
    * 
    * @var array
    */
-  private $mapping;
+  protected $mapping;
   /**
    * Liste des propriétés qui ne peuvent pas être modifiées
    * 
    * @var array Valeur static
    */
-  private static $unchangeableProperties = [
+  protected static $unchangeableProperties = [
       'dn',
       'uid',
   ];
@@ -67,13 +67,14 @@ class UserMelanie extends MagicObject implements IObjectMelanie {
    * @var array Valeur non static
    * @ignore
    */
-  private $_unchangeableProperties;
+  protected $_unchangeableProperties;
+  
   /**
    * Est-ce que l'objet a déjà été initialisé
    * 
    * @var boolean
    */
-  private static $isInit = false;
+  protected static $isInit = false;
 
   /**
    * Supporter la création d'un objet ?
@@ -81,7 +82,7 @@ class UserMelanie extends MagicObject implements IObjectMelanie {
    * @var boolean
    * @ignore
    */
-  private $_supportCreation = false;
+  protected $_supportCreation = false;
 
   /**
    * Configuration de l'objet dans le ldap
@@ -89,7 +90,7 @@ class UserMelanie extends MagicObject implements IObjectMelanie {
    * @var array
    * @ignore
    */
-  private $_itemConfiguration;
+  protected $_itemConfiguration;
 
   /**
    * Nom de l'item chargé en conf
@@ -97,17 +98,36 @@ class UserMelanie extends MagicObject implements IObjectMelanie {
    * @var string
    * @ignore
    */
-  private $_itemName;
+  protected $_itemName;
+
+  /**
+   * Base DN de l'objet
+   * 
+   * @var string
+   * @ignore
+   */
+  protected $_baseDN;
+
+  /**
+   * Nom de la configuration du mapping dans les preferences serveur
+   */
+  const SERVER_MAPPING_PREF = 'mapping';
+
+  /**
+   * Type d'objet pour la gestion du mapping
+   */
+  const OBJECT_TYPE = 'UserMelanie';
   
   /**
    * Constructeur de la class
    * 
-   * @param string $server Serveur d'annuaire a utiliser en fonction de la configuration
-   * @param array $unchangeableProperties Liste des propriétés qui ne peut pas être modifiées
-   * @param array $mapping Données de mapping
-   * @param string $itemName Nom de l'objet associé dans la configuration LDAP
+   * @param string  $server                   Serveur d'annuaire a utiliser en fonction de la configuration
+   * @param array   $unchangeableProperties   Liste des propriétés qui ne peut pas être modifiées
+   * @param array   $mapping                  Données de mapping
+   * @param string  $itemName                 Nom de l'objet associé dans la configuration LDAP
+   * @param string  $baseDN                   Base DN de l'objet
    */
-  public function __construct($server = null, $unchangeableProperties = null, $mapping = null, $itemName = null) {
+  public function __construct($server = null, $unchangeableProperties = null, $mapping = null, $itemName = null, $baseDN = null) {
     // Défini la classe courante
     $this->get_class = get_class($this);
     
@@ -150,6 +170,9 @@ class UserMelanie extends MagicObject implements IObjectMelanie {
     $server = $server ?: Config\Ldap::$SEARCH_LDAP;
     if (isset($itemName)) {
       $this->readItemConfiguration($itemName, $server);
+    }
+    if (isset($baseDN)) {
+      $this->_baseDN = $baseDN;
     }
   }
 
@@ -201,12 +224,12 @@ class UserMelanie extends MagicObject implements IObjectMelanie {
    * @return boolean
    */
   protected static function Init($mapping = [], $server = null) {
-    if (!self::$isInit) {
-      if (isset($server) && isset(Config\Ldap::$SERVERS[$server]['mapping'])) {
-        $mapping = array_merge($mapping, Config\Ldap::$SERVERS[$server]['mapping']);
+    if (!static::$isInit) {
+      if (isset($server) && isset(Config\Ldap::$SERVERS[$server][static::SERVER_MAPPING_PREF])) {
+        $mapping = array_merge($mapping, Config\Ldap::$SERVERS[$server][static::SERVER_MAPPING_PREF]);
       }
-      else if (isset(Config\Ldap::$SERVERS[Config\Ldap::$SEARCH_LDAP]['mapping'])) {
-        $mapping = array_merge($mapping, Config\Ldap::$SERVERS[Config\Ldap::$SEARCH_LDAP]['mapping']);
+      else if (isset(Config\Ldap::$SERVERS[Config\Ldap::$SEARCH_LDAP][static::SERVER_MAPPING_PREF])) {
+        $mapping = array_merge($mapping, Config\Ldap::$SERVERS[Config\Ldap::$SEARCH_LDAP][static::SERVER_MAPPING_PREF]);
       }
       // Traitement du mapping
       foreach ($mapping as $key => $map) {
@@ -223,9 +246,9 @@ class UserMelanie extends MagicObject implements IObjectMelanie {
           $mapping[$key] = [MappingMce::name => $map, MappingMce::type => MappingMce::stringLdap];
         }
       }
-      self::$isInit = MappingMce::UpdateDataMapping('UserMelanie', $mapping);
+      static::$isInit = MappingMce::UpdateDataMapping(static::OBJECT_TYPE, $mapping);
     }
-    return self::$isInit;
+    return static::$isInit;
   }
   
   /**
@@ -254,38 +277,33 @@ class UserMelanie extends MagicObject implements IObjectMelanie {
     if (is_bool($this->isExist) && $this->isLoaded && !isset($attributes)) {
       return $this->isExist;
     }
+    
     // Mapping pour les champs
 		$attributesmapping = [];
 		if (is_array($attributes)) {
-    		// Recherche l'attribut dans la conf de mapping
-    		foreach ($attributes as $key) {
-    			// Récupèration des données de mapping
-    			if (isset(MappingMce::$Data_Mapping[$this->objectType])
-    					&& isset(MappingMce::$Data_Mapping[$this->objectType][$key])) {
-    				$key = MappingMce::$Data_Mapping[$this->objectType][$key][MappingMce::name];
-          }
-          if (is_array($key)) {
-            foreach ($key as $k) {
-              if (!isset($this->data[$k]) && !in_array($k, $attributesmapping)) {
-                $attributesmapping[] = $k;
-              }
-            }
-          }
-          else {
-            if (!isset($this->data[$key]) && !in_array($key, $attributesmapping)) {
-              $attributesmapping[] = $key;
-            }
-          }
-        }
-        if (!empty($attributes) && empty($attributesmapping)) {
-          return true;
-        }
+      $attributesmapping = $this->get_mapping_attributes($attributes);
 		}
+
+    // Vérifier si les attributs ne sont pas déjà chargés ?
+    if (is_bool($this->isExist) && $this->isLoaded && !empty($attributesmapping)) {
+      $loaded = true;
+      // Est-ce que les attributs sont dejà dans data ?
+      foreach ($attributesmapping as $attr) {
+        if (!isset($this->data[$attr])) {
+          $loaded = false;
+          break;
+        }
+      }
+      // Si on est déjà chargé ?
+      if ($loaded) {
+        return $this->isExist;
+      }
+    }
     // Récupération des données depuis le LDAP avec le dn, l'uid ou l'email
     if (isset($this->dn)) {
       $data = Ldap::GetUserInfosFromDn($this->dn, $attributesmapping, $this->server);
     } else if (isset($this->uid)) {
-      $data = Ldap::GetUserInfos($this->uid, $this->generateFilter($filter), $attributesmapping, $this->server);
+      $data = Ldap::GetUserInfos($this->uid, $this->generateFilter($filter), $attributesmapping, $this->server, $this->_baseDN);
     } else if (isset($this->email)) {
       $data = Ldap::GetUserInfosFromEmail($this->email, $this->generateFilter($filterFromEmail), $attributesmapping, $this->server);
     }
@@ -325,7 +343,7 @@ class UserMelanie extends MagicObject implements IObjectMelanie {
     // Mapping pour les champs
 		$attributesmapping = [];
 		if (is_array($attributes)) {
-    	$attributesmapping = $this->_get_mapping_attributes($attributes);
+    	$attributesmapping = $this->get_mapping_attributes($attributes);
 		}
     // Récupération des données depuis le LDAP avec le dn, l'uid ou l'email
     if (isset($this->dn)) {
@@ -351,6 +369,7 @@ class UserMelanie extends MagicObject implements IObjectMelanie {
     static::Init($this->mapping, $this->server);
     // Est-ce que le dn est bien défini ?
     if (!isset($this->dn)) {
+      M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class."->save() dn is null");
       return null;
     }
     // MANTIS 0006136: Gérer la création d'un objet LDAP
@@ -553,7 +572,7 @@ class UserMelanie extends MagicObject implements IObjectMelanie {
     // Mapping pour les champs
 		$attributesmapping = [];
 		if (is_array($attributes)) {
-    	$attributesmapping = $this->_get_mapping_attributes($attributes);
+    	$attributesmapping = $this->get_mapping_attributes($attributes);
 		}
     // Récupération des Balp depuis le LDAP
     $result = Ldap::GetUserBalPartagees(null, $this->generateFilter($filter), $attributesmapping, $this->server);
@@ -589,7 +608,7 @@ class UserMelanie extends MagicObject implements IObjectMelanie {
     // Mapping pour les champs
 		$attributesmapping = [];
 		if (is_array($attributes)) {
-    	$attributesmapping = $this->_get_mapping_attributes($attributes);
+    	$attributesmapping = $this->get_mapping_attributes($attributes);
 		}
     // Récupération des Balp depuis le LDAP
     $result = Ldap::GetUserBalEmission(null, $this->generateFilter($filter), $attributesmapping, $this->server);
@@ -625,7 +644,7 @@ class UserMelanie extends MagicObject implements IObjectMelanie {
     // Mapping pour les champs
 		$attributesmapping = [];
 		if (is_array($attributes)) {
-      $attributesmapping = $this->_get_mapping_attributes($attributes);
+      $attributesmapping = $this->get_mapping_attributes($attributes);
 		}
     // Récupération des Balp depuis le LDAP
     $result = Ldap::GetUserBalGestionnaire(null, $this->generateFilter($filter), $attributesmapping, $this->server);
@@ -661,7 +680,7 @@ class UserMelanie extends MagicObject implements IObjectMelanie {
     // Mapping pour les champs
 		$attributesmapping = [];
 		if (is_array($attributes)) {
-    	$attributesmapping = $this->_get_mapping_attributes($attributes);
+    	$attributesmapping = $this->get_mapping_attributes($attributes);
 		}
     // Récupération des Balp depuis le LDAP
     $result = Ldap::GetUserGroups(null, $this->generateFilter($filter), $attributesmapping, $this->server);
@@ -697,7 +716,7 @@ class UserMelanie extends MagicObject implements IObjectMelanie {
     // Mapping pour les champs
 		$attributesmapping = [];
 		if (is_array($attributes)) {
-    	$attributesmapping = $this->_get_mapping_attributes($attributes);
+    	$attributesmapping = $this->get_mapping_attributes($attributes);
 		}
     // Récupération des Balp depuis le LDAP
     $result = Ldap::GetGroupsUserIsMember(null, $this->generateFilter($filter), $attributesmapping, $this->server);
@@ -730,7 +749,7 @@ class UserMelanie extends MagicObject implements IObjectMelanie {
     // Mapping pour les champs
 		$attributesmapping = [];
 		if (is_array($attributes)) {
-      $attributesmapping = $this->_get_mapping_attributes($attributes);
+      $attributesmapping = $this->get_mapping_attributes($attributes);
 		}
     // Récupération des Balp depuis le LDAP
     $result = Ldap::GetListsUserIsMember(null, $this->generateFilter($filter), $attributesmapping, $this->server);
@@ -802,6 +821,58 @@ class UserMelanie extends MagicObject implements IObjectMelanie {
     ];
     // Liste les calendriers de l'utilisateur
     return Sql\Sql::GetInstance()->executeQuery($query, $params, 'LibMelanie\\Objects\\WorkspaceMelanie', 'Workspace');
+  }
+
+  /**
+   * Est-ce que l'utilisateur est admin de l'espace de travail
+   * 
+   * @param string|WorkspaceMelanie $workspace Espace de travail à tester
+   * 
+   * @return boolean
+   */
+  public function isWorkspaceOwner($workspace) {
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->isWorkspaceOwner()");
+    // Gestion du mapping global
+    static::Init($this->mapping, $this->server);
+    if (!isset($this->uid)) {
+      return false;
+    }
+    $query = Sql\SqlWorkspaceRequests::isWorkspaceOwner;
+    // Params
+    $params = [
+        "user_uid"      => $this->uid,
+        "workspace_uid" => is_string($workspace) ? $workspace : $workspace->uid,
+    ];
+    // Liste les calendriers de l'utilisateur
+    $result = Sql\Sql::GetInstance()->executeQuery($query, $params);
+
+    return count($result) && isset($result[0]['count']) && $result[0]['count'] >= 1;
+  }
+
+  /**
+   * Est-ce que l'utilisateur est membre de l'espace de travail
+   * 
+   * @param string|WorkspaceMelanie $workspace Espace de travail à tester
+   * 
+   * @return boolean
+   */
+  public function isWorkspaceMember($workspace) {
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->isWorkspaceMember()");
+    // Gestion du mapping global
+    static::Init($this->mapping, $this->server);
+    if (!isset($this->uid)) {
+      return false;
+    }
+    $query = Sql\SqlWorkspaceRequests::isWorkspaceMember;
+    // Params
+    $params = [
+        "user_uid"      => $this->uid,
+        "workspace_uid" => is_string($workspace) ? $workspace : $workspace->uid,
+    ];
+    // Liste les calendriers de l'utilisateur
+    $result = Sql\Sql::GetInstance()->executeQuery($query, $params);
+
+    return count($result) && isset($result[0]['count']) && $result[0]['count'] >= 1;
   }
   
   // -- CALENDAR
@@ -1237,25 +1308,28 @@ class UserMelanie extends MagicObject implements IObjectMelanie {
    * 
    * @return array $attributesmapping
    */
-  private function _get_mapping_attributes($attributes) {
+  public function get_mapping_attributes($attributes) {
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->get_mapping_attributes()");
     // Mapping pour les champs
 		$attributesmapping = [];
-    // Recherche l'attribut dans la conf de mapping
-    foreach ($attributes as $key) {
-      // Récupèration des données de mapping
-      if (isset(MappingMce::$Data_Mapping[$this->objectType])
-          && isset(MappingMce::$Data_Mapping[$this->objectType][$key])) {
-        $key = MappingMce::$Data_Mapping[$this->objectType][$key][MappingMce::name];
-      }
-      if (is_array($key)) {
-        foreach ($key as $k) {
-          if (!in_array($k, $attributesmapping)) {
-            $attributesmapping[] = $k;
+    if (isset($attributes)) {
+      // Recherche l'attribut dans la conf de mapping
+      foreach ($attributes as $key) {
+        // Récupèration des données de mapping
+        if (isset(MappingMce::$Data_Mapping[$this->objectType])
+            && isset(MappingMce::$Data_Mapping[$this->objectType][$key])) {
+          $key = MappingMce::$Data_Mapping[$this->objectType][$key][MappingMce::name];
+        }
+        if (is_array($key)) {
+          foreach ($key as $k) {
+            if (!in_array($k, $attributesmapping)) {
+              $attributesmapping[] = $k;
+            }
           }
         }
-      }
-      else if (!in_array($key, $attributesmapping)) {
-        $attributesmapping[] = $key;
+        else if (!in_array($key, $attributesmapping)) {
+          $attributesmapping[] = $key;
+        }
       }
     }
     return $attributesmapping;

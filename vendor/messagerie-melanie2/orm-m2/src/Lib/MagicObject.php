@@ -121,22 +121,68 @@ abstract class MagicObject implements Serializable {
 	}
 
   /**
+	 * Initialise le haschanged à partir des data
+	 * @ignore
+	 */
+	protected function initializeHasChangedFromData() {
+		foreach ($this->haschanged as $key => $value) {
+      $this->haschanged[$key] = false;
+    }
+    foreach ($this->data as $key => $value) {
+      $this->haschanged[$key] = true;
+    }
+	}
+
+  /**
+   * Retourne le nom du champ dans le mapping
+   * 
+   * @param string $name
+   * 
+   * @return string
+   */
+  protected function getMappingName($name) {
+    $lname = strtolower($name);
+    // Récupèration des données de mapping
+    if (isset(MappingMce::$Data_Mapping[$this->objectType])
+        && isset(MappingMce::$Data_Mapping[$this->objectType][$lname])) {
+      $lname = MappingMce::$Data_Mapping[$this->objectType][$lname][MappingMce::name];
+    }
+    return $lname;
+  }
+
+  /**
    * Retourne les données avant la modification
    * 
    * @param string $name
    * @return mixed
    */
   public function getOldData($name) {
-    $lname = strtolower($name);
-	  // Récupèration des données de mapping
-	  if (isset(MappingMce::$Data_Mapping[$this->objectType])
-        && isset(MappingMce::$Data_Mapping[$this->objectType][$lname])) {
-      $lname = MappingMce::$Data_Mapping[$this->objectType][$lname][MappingMce::name];
-    }
+    $lname = $this->getMappingName($name);
     if (isset($this->oldData[$lname])) {
       return $this->oldData[$lname];
     }
 	  return null;
+  }
+
+  /**
+   * Retourne la liste de tous les champs qui ont changé
+   * 
+   * @return array
+   */
+  public function fieldsHasChanged() {
+    $fields = [];
+    foreach ($this->haschanged as $field => $value) {
+      if ($value) {
+        foreach (MappingMce::$Data_Mapping[$this->objectType] as $key => $mapping) {
+          if ($mapping[MappingMce::name] == $field) {
+            $field = $key;
+            break;
+          }
+        }
+        $fields[] = $field;
+      }
+    }
+    return $fields;
   }
 	
 	/**
@@ -146,12 +192,7 @@ abstract class MagicObject implements Serializable {
 	 * @return boolean
 	 */
 	public function fieldHasChanged($name) {
-	  $lname = strtolower($name);
-	  // Récupèration des données de mapping
-	  if (isset(MappingMce::$Data_Mapping[$this->objectType])
-        && isset(MappingMce::$Data_Mapping[$this->objectType][$lname])) {
-      $lname = MappingMce::$Data_Mapping[$this->objectType][$lname][MappingMce::name];
-    }
+	  $lname = $this->getMappingName($name);
     if (isset($this->haschanged[$lname])) {
       return $this->haschanged[$lname];
     }
@@ -165,12 +206,7 @@ abstract class MagicObject implements Serializable {
    * @param boolean $haschanged
 	 */
 	public function setFieldHasChanged($name, $haschanged = true) {
-	  $lname = strtolower($name);
-	  // Récupèration des données de mapping
-	  if (isset(MappingMce::$Data_Mapping[$this->objectType])
-        && isset(MappingMce::$Data_Mapping[$this->objectType][$lname])) {
-      $lname = MappingMce::$Data_Mapping[$this->objectType][$lname][MappingMce::name];
-    }
+	  $lname = $this->getMappingName($name);
     $this->haschanged[$lname] = $haschanged;
   }
   
@@ -197,12 +233,7 @@ abstract class MagicObject implements Serializable {
 	 * @return mixed
 	 */
 	public function getFieldValueFromData($name) {
-	  $lname = strtolower($name);
-	  // Récupèration des données de mapping
-	  if (isset(MappingMce::$Data_Mapping[$this->objectType])
-	      && isset(MappingMce::$Data_Mapping[$this->objectType][$lname])) {
-      $lname = MappingMce::$Data_Mapping[$this->objectType][$lname][MappingMce::name];
-    }
+	  $lname = $this->getMappingName($name);
     if (isset($this->data[$lname])) {
       return $this->data[$lname];
     }
@@ -216,12 +247,7 @@ abstract class MagicObject implements Serializable {
    * @param string $value
 	 */
 	public function setFieldValueToData($name, $value) {
-	  $lname = strtolower($name);
-	  // Récupèration des données de mapping
-	  if (isset(MappingMce::$Data_Mapping[$this->objectType])
-	      && isset(MappingMce::$Data_Mapping[$this->objectType][$lname])) {
-      $lname = MappingMce::$Data_Mapping[$this->objectType][$lname][MappingMce::name];
-    }
+	  $lname = $this->getMappingName($name);
     if (isset($this->data[$lname]) && !$this->haschanged[$lname]) {
       $this->oldData[$lname] = $this->data[$lname];
     }
@@ -281,12 +307,30 @@ abstract class MagicObject implements Serializable {
 	/**
 	 * Copy l'objet depuis un autre
 	 * @param MagicObject $object
+   * @param boolean $initilizeHasChanged
+   * @param array $ignores
 	 * @return boolean
 	 */
-	public function __copy_from($object) {
+	public function __copy_from($object, $initilizeHasChanged = false, $ignores = []) {
 	    if (method_exists($object, "__get_data")) {
-	        $this->data = $object->__get_data();
-	        return true;
+
+        $map_ignores = [];
+        foreach ($ignores as $value) {
+          $map_ignores[] = $this->getMappingName($value);
+        }
+
+        foreach ($object->__get_data() as $key => $value) {
+          if (in_array($key, $map_ignores)) {
+            continue;
+          }
+          $this->data[$key] = $value;
+
+          if ($initilizeHasChanged) {
+            $this->haschanged[$key] = true;  
+          }
+        }
+        
+        return true;
 	    }
 	    return false;
 	}
@@ -326,6 +370,12 @@ abstract class MagicObject implements Serializable {
                       $value = doubleval($value);
                     }
                     break;
+                // JSON
+                case MappingMce::json:
+                  if (is_array($value)) { 
+                    $value = json_encode($value);
+                  }
+                  break;
                 // STRING LDAP
                 case MappingMce::stringLdap:
                     // Gestion d'un prefix ?
@@ -439,6 +489,28 @@ abstract class MagicObject implements Serializable {
                         $value = "1970-01-01 00:00:00";
                     }
                     break;
+                // DATE LDAP
+                case MappingMce::dateLdap:
+                  try {
+                      if ($value instanceof \DateTime) {
+                          $value->setTimezone(new \DateTimeZone('GMT'));
+                          if (isset(MappingMce::$Data_Mapping[$this->objectType][$name][MappingMce::format]))
+                              $value = $value->format(MappingMce::$Data_Mapping[$this->objectType][$name][MappingMce::format]) . 'Z';
+                          else
+                              $value = $value->format('YmdHis')  . 'Z';
+                      } else if (!is_array($value)) {
+                          if (isset(MappingMce::$Data_Mapping[$this->objectType][$name][MappingMce::format]))
+                              $value = date(MappingMce::$Data_Mapping[$this->objectType][$name][MappingMce::format], strtotime($value)) . 'Z';
+                          else
+                              $value = date('YmdHis', strtotime($value)) . 'Z';
+                      }
+                  }
+                  catch (\Exception $ex) {
+                      M2Log::Log(M2Log::LEVEL_ERROR, "MagicObject->__set($name, $value) : Exception dans le format de dateLdap, utilisation de la valeur par defaut");
+                      // Une erreur s'est produite, on met une valeur par défaut pour le pas bloquer la lecture des données
+                      $value = "19700101000000Z";
+                  }
+                  break;
                 // TIMESTAMP
                 case MappingMce::timestamp:
                     if ($value instanceof \DateTime) {
@@ -457,14 +529,18 @@ abstract class MagicObject implements Serializable {
             }
         }        
     }
-    if (isset($this->data[$lname]) && is_scalar($value) && !is_array($value) && $this->data[$lname] === $value) {
+    if (isset($this->data[$lname]) 
+        && is_scalar($value) 
+        && !is_array($value) 
+        && ($this->data[$lname] === $value 
+          || empty($this->data[$lname]) && empty($value))) {
       return false;
     }
     if (isset($this->data[$lname]) && !$this->haschanged[$lname]) {
       $this->oldData[$lname] = $this->data[$lname];
     }
     $this->data[$lname] = $value;
-    $this->haschanged[$lname] = true;
+    $this->haschanged[$lname] = isset($this->oldData[$lname]) ? $this->oldData[$lname] != $value : true;
     $this->isLoaded = false;
 	}
 
@@ -491,6 +567,10 @@ abstract class MagicObject implements Serializable {
 		      && isset(MappingMce::$Data_Mapping[$this->objectType][$name])
 		      && isset(MappingMce::$Data_Mapping[$this->objectType][$name][MappingMce::type])) {
         switch (MappingMce::$Data_Mapping[$this->objectType][$name][MappingMce::type]) {
+          // JSON
+          case MappingMce::json:
+            $value = json_decode($value, true);
+            break;
 		      // STRING LDAP
 		      case MappingMce::stringLdap:
 		        if (is_array($value)) {
@@ -536,6 +616,41 @@ abstract class MagicObject implements Serializable {
 		        else {
 		          $value = [$value];
 		        }
+            break;
+          // DATE LDAP
+          case MappingMce::dateLdap:
+            // Gestion d'un prefix
+            if (isset(MappingMce::$Data_Mapping[$this->objectType][$name][MappingMce::prefixLdap])) {
+              $_prefix = MappingMce::$Data_Mapping[$this->objectType][$name][MappingMce::prefixLdap];
+              $_found = false;
+              foreach ($value as $val) {
+                if (strpos($val, $_prefix) === 0) {
+                  $value = trim(str_replace($_prefix, '', $val));
+                  $_found = true;
+                  break;
+                }
+              }
+              // Valeur par défaut
+              if (!$_found) {
+                if (isset(MappingMce::$Data_Mapping[$this->objectType][$name][MappingMce::defaut])) {
+                  $value = MappingMce::$Data_Mapping[$this->objectType][$name][MappingMce::defaut];
+                }
+                else {
+                  $value = "";
+                }
+              }
+            }
+
+            if (is_string($value)) {
+              // Remove the Z
+              if (substr($value, -1) == 'Z') {
+                $value = substr($value, 0, -1);
+                $value = \DateTime::createFromFormat('YmdHis', $value, new \DateTimeZone('GMT'));
+              }
+              else {
+                $value = \DateTime::createFromFormat('YmdHis', $value);
+              }
+            }
             break;
           // BOOLEAN LDAP
           case MappingMce::booleanLdap:
@@ -632,6 +747,12 @@ abstract class MagicObject implements Serializable {
         && isset(MappingMce::$Data_Mapping[$this->objectType][$name])
         && isset(MappingMce::$Data_Mapping[$this->objectType][$name][MappingMce::type])
         && MappingMce::$Data_Mapping[$this->objectType][$name][MappingMce::type] == MappingMce::booleanLdap) {
+      $isset = true;
+    }
+    else if (isset(MappingMce::$Data_Mapping[$this->objectType])
+        && isset(MappingMce::$Data_Mapping[$this->objectType][$name])
+        && isset(MappingMce::$Data_Mapping[$this->objectType][$name][MappingMce::type])
+        && MappingMce::$Data_Mapping[$this->objectType][$name][MappingMce::type] == MappingMce::json) {
       $isset = true;
     }
     else {

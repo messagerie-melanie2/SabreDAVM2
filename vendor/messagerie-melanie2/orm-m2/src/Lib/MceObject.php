@@ -34,12 +34,16 @@ use Serializable;
 abstract class MceObject implements Serializable {
 	/**
 	 * Objet Mel
+	 * 
+	 * @ignore
 	 */
 	protected $objectmelanie;
 	
 	/**
 	 * Classe courante
 	 * @var string
+	 * 
+	 * @ignore
 	 */
 	protected $get_class;
 
@@ -47,16 +51,22 @@ abstract class MceObject implements Serializable {
 	 * Namespace de la classe courante
 	 * 
 	 * @var string
+	 * 
+	 * @ignore
 	 */
 	private $_namespace;
 
 	/**
 	 * Liste des callback enregistrés pour le cache
+	 * 
+	 * @ignore
 	 */
 	private $_cacheCallbacks;
 
 	/**
 	 * Liste des propriétés à sérialiser pour le cache
+	 * 
+	 * @ignore
 	 */
 	protected $serializedProperties = [];
 
@@ -64,13 +74,20 @@ abstract class MceObject implements Serializable {
 	 * Récupère le namespace de la classe courante en fonction du get_class
 	 * L'utilisateur de __NAMESPACE__ n'est pas possible pour un héritage
 	 * 
+	 * @param boolean $parent Récupère le namespace du parent
+	 * 
 	 * @return string Namespace courant
+	 * 
+	 * @ignore
 	 */
-	public function __getNamespace() {
+	public function __getNamespace($parent = false) {
 		if (!isset($this->_namespace)) {
 			$class = $this->get_class;
 			$class = explode('\\', $class);
 			array_pop($class);
+			if ($parent) {
+				array_pop($class);
+			}
 			$this->_namespace = implode('\\', $class);
 		}
 		return $this->_namespace;
@@ -79,7 +96,7 @@ abstract class MceObject implements Serializable {
 	/**
 	 * Défini l'objet Melanie
 	 * 
-	 * @param ObjectMelanie $objectmelanie
+	 * @param \LibMelanie\Objects\ObjectMelanie $objectmelanie
 	 * 
 	 * @ignore
 	 */
@@ -110,6 +127,8 @@ abstract class MceObject implements Serializable {
 	 * Détermine si l'objet a changé
 	 * 
 	 * @return boolean true si au moins un champ de l'objet a changé, false sinon
+	 * 
+	 * @ignore
 	 */
 	public function hasChanged() {
 		return $this->objectmelanie->anyFieldHasChanged();
@@ -122,6 +141,7 @@ abstract class MceObject implements Serializable {
 	 * @param mixed $value Valeur de la propriété
 	 * @access public
 	 * @return
+	 * 
 	 * @ignore
 	 */
 	public function __set($name, $value) {
@@ -142,6 +162,7 @@ abstract class MceObject implements Serializable {
 	 * @param string $name Nom de la propriété
 	 * @access public
 	 * @return
+	 * 
 	 * @ignore
 	 */
 	public function __get($name) {
@@ -163,6 +184,7 @@ abstract class MceObject implements Serializable {
 	 * @param string $name Nom de la propriété
 	 * @access public
 	 * @return
+	 * 
 	 * @ignore
 	 */
 	public function __isset($name) {
@@ -182,6 +204,7 @@ abstract class MceObject implements Serializable {
 	 * @param string $name Nom de la propriété
 	 * @access public
 	 * @return
+	 * 
 	 * @ignore
 	 */
 	public function __unset($name) {
@@ -200,6 +223,7 @@ abstract class MceObject implements Serializable {
 	 * @param array $arguments Arguments de la methode
 	 * @access public
 	 * @return mixed
+	 * 
 	 * @ignore
 	 */
 	public function __call($name, $arguments) {
@@ -216,6 +240,8 @@ abstract class MceObject implements Serializable {
 	 * Méthode toString pour afficher le contenu des données de la classe
 	 * 
 	 * @return string
+	 * 
+	 * @ignore
 	 */
 	public function __toString() {
 		return $this->get_class . ": {\r\n\tobjectmelanie: " . str_replace("\n", "\n\t", $this->objectmelanie) . "\r\n}\r\n";
@@ -225,6 +251,8 @@ abstract class MceObject implements Serializable {
 	 * String representation of object
 	 *
 	 * @return string
+	 * 
+	 * @ignore
 	 */
 	public function serialize() {
 		$array = [];
@@ -243,6 +271,8 @@ abstract class MceObject implements Serializable {
 	 * @param string $serialized
 	 * 
 	 * @return void
+	 * 
+	 * @ignore
 	 */
 	public function unserialize($serialized) {
 		$array = unserialize($serialized);
@@ -299,11 +329,12 @@ abstract class MceObject implements Serializable {
 	 *          Offset de début pour les résultats (utile pour la pagination)
 	 * @param String[] $case_unsensitive_fields
 	 *          Liste des champs pour lesquels on ne sera pas sensible à la casse
-	 * @return Contact[] Array
+	 * 
+	 * @return MceObject[] Array
 	 */
-	public function getList($fields = [], $filter = "", $operators = [], $orderby = "", $asc = true, $limit = null, $offset = null, $case_unsensitive_fields = []) {
+	public function getList($fields = [], $filter = "", $operators = [], $orderby = "", $asc = true, $limit = null, $offset = null, $case_unsensitive_fields = [], $join = null, $type_join = 'INNER', $using = null, $prefix = null, $groupby = [], $groupby_count = null, $subqueries = []) {
 		M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class . "->getList()");
-		$_objects = $this->objectmelanie->getList($fields, $filter, $operators, $orderby, $asc, $limit, $offset, $case_unsensitive_fields);
+		$_objects = $this->objectmelanie->getList($fields, $filter, $operators, $orderby, $asc, $limit, $offset, $case_unsensitive_fields, $join, $type_join, $using, $prefix, $groupby, $groupby_count, $subqueries);
 		if (!isset($_objects)) {
 			return null;
 		}

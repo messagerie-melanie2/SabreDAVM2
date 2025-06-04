@@ -77,6 +77,13 @@ abstract class User extends MceObject {
   protected $objectshare;
 
   /**
+   * Groupe a l'utilisateur courant si nécessaire
+   * 
+   * @var Group
+   */
+  protected $group;
+
+  /**
    * UserMelanie provenant d'un autre annuaire
    * 
    * @var UserMelanie
@@ -391,7 +398,7 @@ abstract class User extends MceObject {
    * 
    * @ignore
    */
-  const LOAD_ATTRIBUTES = ['fullname', 'uid', 'name', 'email', 'email_list', 'email_send', 'email_send_list', 'server_routage', 'shares', 'type'];
+  const LOAD_ATTRIBUTES = ['fullname', 'uid', 'name', 'email', 'email_list', 'email_send', 'email_send_list', 'server_host', 'shares', 'type'];
   /**
    * Filtre pour la méthode load() si c'est un objet de partage
    * 
@@ -1268,6 +1275,97 @@ abstract class User extends MceObject {
       }
     }
     return $this->_sharedWorkspaces;
+  }
+
+  /**
+   * Est-ce que l'utilisateur est admin de l'espace de travail
+   * 
+   * @param string|WorkspaceMelanie $workspace Espace de travail à tester
+   * @param boolean $force_reload_cache [Optionnel] Forcer le rechargement des données
+   * 
+   * @return boolean
+   */
+  public function isWorkspaceOwner($workspace, $force_reload_cache = false) {
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->isWorkspaceOwner($workspace, $force_reload_cache)");
+
+    $ret = false;
+
+    // Recharger le cache avant de chercher le membre
+    if ($force_reload_cache) {
+      $this->cleanWorkspaces();
+      $this->getUserWorkspaces();
+    }
+
+    // Si la liste des workspaces n'est pas encore chargée
+    if (isset($this->_userWorkspaces)) {
+      if (is_string($workspace)) {
+        $ret = false;
+        foreach ($this->_userWorkspaces as $_work) {
+          if ($_work->uid == $workspace) {
+            $ret = true;
+            break;
+          }
+        }
+      }
+      else {
+        $ret = isset($this->_userWorkspaces[$workspace->id]);
+      }
+    }
+    else {
+      $ret = $this->objectmelanie->isWorkspaceOwner($workspace);
+    }
+
+    // Redemander sans le cache au cas où
+    if (!$ret && !$force_reload_cache) {
+      $ret = $this->isWorkspaceOwner($workspace, true);
+    }
+
+    return $ret;
+  }
+
+  /**
+   * Est-ce que l'utilisateur est membre de l'espace de travail
+   * 
+   * @param string|WorkspaceMelanie $workspace Espace de travail à tester
+   * @param boolean $force_reload_cache [Optionnel] Forcer le rechargement des données
+   * 
+   * @return boolean
+   */
+  public function isWorkspaceMember($workspace, $force_reload_cache = false) {
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->isWorkspaceMember($workspace, $force_reload_cache)");
+
+    $ret = false;
+
+    // Recharger le cache avant de chercher le membre
+    if ($force_reload_cache) {
+      $this->cleanWorkspaces();
+      $this->getSharedWorkspaces();
+    }
+
+    // Si la liste des workspaces n'est pas encore chargée
+    if (isset($this->_sharedWorkspaces)) {
+      if (is_string($workspace)) {
+        foreach ($this->_sharedWorkspaces as $_work) {
+          if ($_work->uid == $workspace) {
+            $ret = true;
+            break;
+          }
+        }
+      }
+      else {
+        $ret = isset($this->_sharedWorkspaces[$workspace->id]);
+      }
+    }
+    else {
+      $ret = $this->objectmelanie->isWorkspaceOwner($workspace);
+    }
+
+    // Redemander depuis le cache au cas où
+    if (!$ret && !$force_reload_cache) {
+      $ret = $this->isWorkspaceMember($workspace, true);
+    }
+
+    return $ret;
   }
 
   /**
@@ -2393,6 +2491,24 @@ abstract class User extends MceObject {
    */
   protected function getMapIs_list() {
     return $this->objectmelanie->type == Config::get(Config::LDAP_TYPE_LIST);
+  }
+
+  /**
+   * Récupère l'objet de partage associé à l'utilisateur courant
+   * si celui ci est bien un objet de partage
+   * 
+   * @return Group Groupe associé, null si pas une liste
+   */
+  protected function getMapList() {
+    M2Log::Log(M2Log::LEVEL_TRACE, $this->get_class . "->getMapList()");
+
+    if ($this->getMapIs_list()) {
+      $class = $this->__getNamespace() . '\\Group';
+      $this->group = new $class($this->_server, $this->_itemName);
+      $this->group->dn = $this->objectmelanie->dn;
+      $this->group->load();
+    }
+    return $this->group;
   }
 
   /**

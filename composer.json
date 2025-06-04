@@ -2,12 +2,6 @@
     "name": "messagerie-melanie2/sabredavm2",
     "description": "Mél version of SabreDAV (for Mél backend)",
     "license": "GPL-3.0+",
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/messagerie-melanie2/orm-m2.git"
-        }
-    ],
     "require": {
     	"sabre/vobject": "3.5.1",
         "sabre/event" : "2.0.2",
@@ -15,7 +9,7 @@
         "sabre/http" : "4.2.1",
         "sabre/uri" : "1.1.0",
     	"sabre/dav": "3.0.9",
-        "messagerie-melanie2/orm-m2": "~0.6.5.0"
+        "messagerie-melanie2/orm-m2": "~0.6.13"
     },
     "minimum-stability": "stable"
 }

@@ -78,6 +78,13 @@ class User extends Mce\User {
    * @ignore
    */
   const GET_BALP_GESTIONNAIRE_FILTER = "(mcedelegation=%%uid%%:G)";
+
+  /**
+   * Attributs par défauts pour la méthode load()
+   * 
+   * @ignore
+   */
+  const LOAD_ATTRIBUTES = ['fullname', 'uid', 'name', 'email', 'email_list', 'email_send', 'email_send_list', 'server_routage', 'shares', 'type'];
   
   /**
    * Configuration du mapping qui surcharge la conf
@@ -87,12 +94,14 @@ class User extends Mce\User {
     "uid"                     => 'uid',                           // Identifiant de l'utilisateur
     "fullname"                => 'cn',                            // Nom complet de l'utilisateur
     "name"                    => 'cn',                            // Nom court de l'utilisateur
+    "email_local"             => 'maillocaladdress',              // Adresse e-mail locale
     "email"                   => 'mail',                          // Adresse e-mail principale de l'utilisateur en reception
     "email_list"              => [MappingMce::name => 'mailalternateaddress', MappingMce::type => MappingMce::arrayLdap], // Liste d'adresses e-mail en reception pour l'utilisateur
     "email_send"              => 'mail',                          // Adresse e-mail principale de l'utilisateur en emission
     "email_send_list"         => [MappingMce::name => 'mailalternateaddress', MappingMce::type => MappingMce::arrayLdap], // Liste d'adresses e-mail en émission pour l'utilisateur
     "shares"                  => [MappingMce::name => 'mcedelegation', MappingMce::type => MappingMce::arrayLdap], // Liste des partages pour cette boite
     "server_routage"          => 'mailhost',                      // Champ utilisé pour le routage des messages
+    "server_host"             => 'mailhost',                      // Champ utilisé pour le routage des messages
     "type"                    => 'mcetypecompte',                 // Type d'entrée (boite individuelle, partagée, ressource, ...)
     "postaladdress"           => 'postaladdress',                 // Postal address
     "street"                  => 'street',                        // Rue

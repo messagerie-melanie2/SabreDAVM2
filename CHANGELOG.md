@@ -12,10 +12,10 @@ Fonctionnalités
  - Gestion des COPY/MOVE par le serveur CalDAV.
  - Gestion des authentifications via les boites partagées (modification de l'organisateur)
  - Ajouter dans la description le creator id s'il est différent du propriétaire du calendrier
+ - Synchronisation des contacts et des listes de contacts
 
 A faire
 =======
- - Synchronisation des contacts via CardDAV
  - Support de la création/suppression des Carnets d'adresses, Calendriers et Listes de tâches
  - Supporter l'abonnement aux calendriers, carnets d'adresses depuis M2Web
  - Mettre en place une synchronisation spécifique pour les listes de tâches
@@ -24,6 +24,24 @@ A faire
 CalDAV - Liste des changements
 ==============================
 
+CalDAV - 0.8
+============
+- 0008695: Ne pas envoyer les listes pour un TB128
+
+CalDAV - 0.7.7
+==============
+- Issue #24 Mce erreur d'ICS : Le traitement du message a échoué. État : 80004005.
+- Issue #23 [WEBMAIL et COURRIELLEUR] [AGENDA] : Droit privé
+
+CalDAV - 0.7.6
+==============
+- Correctifs sur les changements de calendrier pour les réunions
+- Gestion des récurrences plus longuent que la durée de répétition
+
+CalDAV - 0.7.5
+==============
+- 0008051: Ajouter le support de read-only dans les carnets d'adresse
+ 
 CalDAV - 0.7.4
 ==============
 - MR 3 fix server ldap for auth 

@@ -196,7 +196,7 @@ class LibM2 extends AbstractBackend implements Melanie2Support {
 
     foreach ($this->addressbooks as $_addressbook) {
 
-      $addressBooks[] = [
+      $addressBook = [
           'id' => $_addressbook->id,
           'uri' => $_addressbook->id,
           'principaluri' => $principalUri,
@@ -204,6 +204,11 @@ class LibM2 extends AbstractBackend implements Melanie2Support {
           '{' . CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' => $_addressbook->name,
           '{http://calendarserver.org/ns/}getctag' => $this->getAddressBookCTag($principalUri, $_addressbook->id)
       ];
+      if (!$_addressbook->asRight(\LibMelanie\Config\ConfigMelanie::WRITE)) {
+        $addressBook['{http://sabredav.org/ns}read-only'] = 1;
+      }
+
+      $addressBooks[] = $addressBook;
     }
 
     return $addressBooks;
@@ -242,7 +247,7 @@ class LibM2 extends AbstractBackend implements Melanie2Support {
         // MANTIS 0004469: Générer des messages d'erreur quand l'utilisateur n'a pas les droits
         throw new \Sabre\DAV\Exception\Forbidden();
       }
-      return [
+      $result = [
           'id' => $this->addressbooks[$addressBookId]->id,
           'uri' => $this->addressbooks[$addressBookId]->id,
           'principaluri' => $principalUri,
@@ -250,6 +255,10 @@ class LibM2 extends AbstractBackend implements Melanie2Support {
           '{' . CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' => $this->addressbooks[$addressBookId]->name,
           '{http://calendarserver.org/ns/}getctag' => $this->getAddressBookCTag($principalUri, $addressBookId)
       ];
+      if (!$this->addressbooks[$addressBookId]->asRight(\LibMelanie\Config\ConfigMelanie::WRITE)) {
+        $result['{http://sabredav.org/ns}read-only'] = 1;
+      }
+      return $result;
     }
     return null;
   }
@@ -334,6 +343,19 @@ class LibM2 extends AbstractBackend implements Melanie2Support {
   }
 
   /**
+   * Check if the client is Thunderbird
+   * 
+   * @param string $version Version of Thunderbird
+   * 
+   * @return boolean
+   */
+  protected function isThunderbird($version = null) {
+    $userAgent = $this->server->httpRequest->getHeader('User-Agent');
+    $search = 'Thunderbird' . isset($version) ? '/' . $version : '';
+    return (strpos($userAgent, $search) !== false);
+  }
+
+  /**
    * Returns all cards for a specific addressbook id.
    * This method should return the following properties for each card:
    * * carddata - raw vcard data
@@ -373,7 +395,12 @@ class LibM2 extends AbstractBackend implements Melanie2Support {
         // MANTIS 0004469: Générer des messages d'erreur quand l'utilisateur n'a pas les droits
         throw new \Sabre\DAV\Exception\Forbidden();
       }
-      $this->cache_contacts = $this->addressbooks[$addressBookId]->getAllGroupsAndContacts();
+      // MANTIS 0008695: Ne pas envoyer les listes pour un TB128
+      if ($this->isThunderbird('128')) {
+        $this->cache_contacts = $this->addressbooks[$addressBookId]->getAllContacts();
+      } else {
+        $this->cache_contacts = $this->addressbooks[$addressBookId]->getAllGroupsAndContacts();
+      }
       foreach ($this->cache_contacts as $_contact) {
         $contact = [
             'id' => $_contact->uid,

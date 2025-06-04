@@ -37,6 +37,12 @@ class MappingMce {
 	public static $Table_Name = [];
 
 	/**
+	 * Jointures associées aux objets
+	 * @var array
+	 */
+	public static $Joins = [];
+
+	/**
 	 * Clés primaires des tables Melanie2
 	 * @var array
 	*/
@@ -78,10 +84,23 @@ class MappingMce {
 		  "Rss"					=> "dwp_rss",
 		  "NewsShare"			=> "dwp_news_share",
 		  "Notification"		=> "dwp_notifications",
+		  "Post"				=> "dwp_posts",
+		  "Post/Image"			=> "dwp_posts_images",
+		  "Post/Comment"		=> "dwp_posts_comments",
+		  "Post/Comment/Like"	=> "dwp_posts_comments_like",
+		  "Post/Reaction"		=> "dwp_posts_reactions",
+		  "Post/Tag"			=> "dwp_posts_tags",
+		  "Post/TagByPost" 		=> "dwp_posts_tagbypost",
+		  "Post/PostsByTag" 	=> "dwp_posts",
+		  "Post/TagsByPost" 	=> "dwp_posts_tags",
+	  ];
+	  // Init Inner Joins
+	  self::$Joins = [
+		  "Post/PostsByTag" 	=> [self::table_join => "dwp_posts_tagbypost", self::using => "post_id", self::prefix => "dwp_posts"],
+		  "Post/TagsByPost" 	=> [self::table_join => "dwp_posts_tagbypost", self::using => "tag_id", self::prefix => "dwp_posts_tags"],
 	  ];
 	  // Init Primary Keys
 	  self::$Primary_Keys = [
-	      "UserMelanie" 		=> ["uid", "email"],
 	      "EventMelanie" 		=> ["uid", "calendar"],
 	      "HistoryMelanie" 		=> ["uid", "action"],
 	      "TaskMelanie" 		=> ["uid", "taskslist"],
@@ -105,30 +124,18 @@ class MappingMce {
 		  "Rss"					=> ["uid"],
 		  "NewsShare"			=> ["user", "service"],
 		  "Notification"		=> ["uid", "owner"],
+		  "Post"				=> ["uid"],
+		  "Post/Image"			=> ["uid"],
+		  "Post/Comment"		=> ["uid"],
+		  "Post/Comment/Like"	=> ["comment", "type", "creator"],
+		  "Post/Reaction"		=> ["post", "type", "creator"],
+		  "Post/Tag"			=> ["workspace", "name"],
+		  "Post/TagByPost" 		=> ["post", "tag"],
+		  "Post/PostsByTag" 	=> ["uid"],
+		  "Post/TagsByPost" 	=> ["workspace", "name"],
 	  ];
 	  // Init Data Mapping
 	  self::$Data_Mapping = [
-	      // Gestion de l'utilisateur : objet UserMelanie
-	      "UserMelanie" => [
-	          "dn"                     => [self::name => "dn", 			self::type => self::stringLdap],
-	          "uid"                    => [self::name => "uid", 		self::type => self::stringLdap],
-	          "fullname"               => [self::name => "cn", 			self::type => self::stringLdap],
-	          "name"                   => [self::name => "displayname", self::type => self::stringLdap],
-	          "email"                  => [self::name => "mail", 		self::type => self::stringLdap],
-	          "email_list"             => [self::name => "mail", 		self::type => self::arrayLdap],
-	          "email_send"             => [self::name => "mail", 		self::type => self::stringLdap],
-	          "email_send_list"        => [self::name => "mail", 		self::type => self::arrayLdap],
-		  ],
-		  // Gestion des groupes : objet GroupMelanie
-	      "GroupMelanie" => [
-			"dn"                     => [self::name => "dn", self::type => self::stringLdap],
-			"fullname"               => [self::name => "cn", self::type => self::stringLdap],
-			"name"                   => [self::name => "displayname", self::type => self::stringLdap],
-			"email"                  => [self::name => "mail", 		self::type => self::stringLdap],
-			"email_list"             => [self::name => "mail", 		self::type => self::arrayLdap],
-			"email_send"             => [self::name => "mail", 		self::type => self::stringLdap],
-			"email_send_list"        => [self::name => "mail", 		self::type => self::arrayLdap],
-		  ],
 	      // Gestion des préférences de l'utilisateur : objet UserPrefs
 	      "UserPrefs" => [
 	          "user" 	=> [self::name => "pref_uid", self::type => self::string, self::size => 255],
@@ -211,6 +218,7 @@ class MappingMce {
 	          "transparency" 	=> [self::name => "event_transparency", self::type => self::string, self::size => 10, self::defaut => 'OPAQUE'],
 	          "properties" 	  	=> [self::name => "event_properties_json"],
 			  "attachments" 	=> [self::name => "event_attachments_json"],
+			  "source" 			=> [self::name => "event_source", self::defaut => ''],
 	          
 	          // ATTENDEES
 	          "attendees" 	           => [self::name => "event_attendees"],
@@ -450,6 +458,83 @@ class MappingMce {
 				"isread"		=> [self::name => "notification_isread", self::type => self::integer],
 				"isdeleted"		=> [self::name => "notification_isdeleted", self::type => self::integer],
 		  ],
+		  // Gestion des posts dans le bureau numérique
+		  "Post"				=> [
+				"id" 			=> [self::name => "post_id", self::type => self::integer],
+				"uid" 			=> [self::name => "post_uid", self::size => 64],
+				"title" 		=> [self::name => "post_title"],
+				"summary" 		=> [self::name => "post_summary"],
+				"content" 		=> [self::name => "post_content"],
+				"created" 	    => [self::name => "created", self::type => self::date, self::prefix => "dwp_posts"],
+				"modified" 	    => [self::name => "updated", self::type => self::date, self::prefix => "dwp_posts"],
+				"isdraft"		=> [self::name => "post_isdraft", self::type => self::integer, self::defaut => 0],
+				"workspace" 	=> [self::name => "workspace_uid", self::size => 40],
+				"creator" 		=> [self::name => "user_uid", self::size => 64, self::prefix => "dwp_posts"],
+				"settings" 		=> [self::name => "post_settings", self::type => self::json, self::defaut => []],
+				"history" 		=> [self::name => "post_history", self::type => self::json, self::defaut => []],
+		  ],
+		  // Gestion des posts dans le bureau numérique
+		  "Post/PostsByTag"				=> [
+			"id" 			=> [self::name => "post_id", self::type => self::integer],
+			"tag" 			=> [self::name => "tag_id", self::type => self::integer],
+	      ],
+		  // Gestion des posts dans le bureau numérique
+		  "Post/TagsByPost"				=> [
+			"id" 			=> [self::name => "tag_id", self::type => self::integer],
+			"post" 			=> [self::name => "post_id", self::type => self::integer],
+	      ],
+		  // Gestion des images dans les posts dans le bureau numérique
+		  "Post/Image"			=> [
+				"id" 			=> [self::name => "image_id", self::type => self::integer],
+				"post" 			=> [self::name => "post_id", self::type => self::integer],
+				"uid" 			=> [self::name => "image_uid", self::size => 64],
+				"data" 			=> [self::name => "image_data"],
+		  ],
+		  // Gestion des commentaires dans les posts dans le bureau numérique
+		  "Post/Comment"		=> [
+				"id" 			=> [self::name => "comment_id", self::type => self::integer],
+				"post" 			=> [self::name => "post_id", self::type => self::integer],
+				"uid" 			=> [self::name => "comment_uid", self::size => 64],
+				"content" 		=> [self::name => "comment_content"],
+				"creator" 		=> [self::name => "user_uid", self::size => 64],
+				"created" 	    => [self::name => "created", self::type => self::date],
+				"modified" 	    => [self::name => "updated", self::type => self::date],
+				"parent"		=> [self::name => "parent_comment_id", self::type => self::integer],
+		  ],
+		  // Gestion des likes dans les commentaires de posts dans le bureau numérique
+		  "Post/Comment/Like"	=> [
+				"id" 			=> [self::name => "like_id", self::type => self::integer],
+				"type" 			=> [self::name => "like_type"],
+				"creator" 		=> [self::name => "user_uid", self::size => 64],
+				"modified" 	    => [self::name => "updated", self::type => self::date],
+				"comment" 		=> [self::name => "comment_id", self::type => self::integer],
+		  ],
+		  // Gestion des réactions dans les posts dans le bureau numérique
+		  "Post/Reaction"		=> [
+				"id" 			=> [self::name => "reaction_id", self::type => self::integer],
+				"type" 			=> [self::name => "reaction_type"],
+				"creator" 		=> [self::name => "user_uid", self::size => 64],
+				"modified" 	    => [self::name => "updated", self::type => self::date],
+				"post" 			=> [self::name => "post_id", self::type => self::integer],
+		  ],
+		  // Gestion du lien entre un tag et un post
+		  "Post/TagByPost" 		=> [
+				"post" 			=> [self::name => "post_id", self::type => self::integer],
+				"tag" 			=> [self::name => "tag_id", self::type => self::integer],
+		  ],
+		  // Gestion des tags dans les posts dans le bureau numérique
+		  "Post/Tag"			=> [
+				"id" 			=> [self::name => "tag_id", self::type => self::integer],
+				"name" 			=> [self::name => "tag_name"],
+				"workspace" 	=> [self::name => "workspace_uid", self::size => 40],
+		  ],
+		  // Gestion des tags dans les posts dans le bureau numérique
+		  "Post/TagsByPost"			=> [
+				"id" 			=> [self::name => "tag_id", self::type => self::integer, self::prefix => "dwp_posts_tags"],
+				"name" 			=> [self::name => "tag_name", self::prefix => "dwp_posts_tags"],
+				"workspace" 	=> [self::name => "workspace_uid", self::size => 40, self::prefix => "dwp_posts_tags"],
+				"post" 			=> [self::name => "post_id", self::type => self::integer, self::prefix => "dwp_posts_tagbypost"],
+	  	  ],
 	  ];
 	}
 
@@ -463,48 +548,54 @@ class MappingMce {
 	 * @return boolean true si les valeurs sont OK, false sinon
 	 */
 	public static function UpdateDataMapping($object, $dataMapping) {
-		if (isset(self::$Data_Mapping[$object])) {
-			self::$Data_Mapping[$object] = array_merge(self::$Data_Mapping[$object], $dataMapping);
-			return true;
+		if (!isset(self::$Data_Mapping[$object])) {
+			self::$Data_Mapping[$object] = [];
 		}
-		return false;
+
+		self::$Data_Mapping[$object] = array_merge(self::$Data_Mapping[$object], $dataMapping);
+		return true;
 	}
 
 	// Mapping constants
-	const name = "name";
-	const type = "type";
-	const size = "size";
-	const format = "format";
-	const string = "string";
-	const integer = "integer";
-	const double = "double";
-	const date = "date";
-	const prefixLdap = "prefixLdap";
-	const arrayLdap = "arrayLdap";
-	const stringLdap = "stringLdap";
-	const booleanLdap = "booleanLdap";
-	const trueLdapValue = "trueLdapValue";
-	const falseLdapValue = "falseLdapValue";
-	const emptyLdapValue = "emptyLdapValue";
-	const timestamp = "timestamp";
-	const defaut = "defaut";
-	const sup = ">";
-	const supeq = ">=";
-	const inf = "<";
-	const infeq = "<=";
-	const diff = "<>";
-	const like = "LIKE";
-	const eq = "=";
-	const in = "IN";
-	const notin = "NOT IN";
-	const between = "BETWEEN";
-	const notbetween = "NOT BETWEEN";
+	const table_join		= "table_join";
+	const using				= "using";
+	const name 				= "name";
+	const prefix 			= "prefix";
+	const type 				= "type";
+	const size 				= "size";
+	const format 			= "format";
+	const json	 			= "json";
+	const string 			= "string";
+	const integer 			= "integer";
+	const double 			= "double";
+	const date 				= "date";
+	const prefixLdap 		= "prefixLdap";
+	const arrayLdap 		= "arrayLdap";
+	const stringLdap 		= "stringLdap";
+	const booleanLdap 		= "booleanLdap";
+	const dateLdap 			= "dateLdap";
+	const trueLdapValue 	= "trueLdapValue";
+	const falseLdapValue 	= "falseLdapValue";
+	const emptyLdapValue 	= "emptyLdapValue";
+	const timestamp 		= "timestamp";
+	const defaut 			= "defaut";
+	const sup 				= ">";
+	const supeq 			= ">=";
+	const inf 				= "<";
+	const infeq 			= "<=";
+	const diff 				= "<>";
+	const like 				= "LIKE";
+	const eq 				= "=";
+	const in 				= "IN";
+	const notin 			= "NOT IN";
+	const between 			= "BETWEEN";
+	const notbetween 		= "NOT BETWEEN";
 
 	// DATA MAPPING
 	// Class
-	const PRIV = 1;
-	const PUB = 0;
-	const CONF = 2;
+	const PRIV 	= 1;
+	const PUB 	= 0;
+	const CONF 	= 2;
 	/**
 	 * Class mapping object to MCE
 	 */
@@ -527,6 +618,7 @@ class MappingMce {
 	const TENTATIVE = 1;
 	const CONFIRMED = 2;
 	const CANCELLED = 3;
+	const VACATION = 6;
 	/**
 	 * Status mapping object to MCE
 	 */
@@ -536,6 +628,7 @@ class MappingMce {
 		DefaultConfig::TELEWORK => self::TELEWORK,
 	    DefaultConfig::CONFIRMED => self::CONFIRMED,
 	    DefaultConfig::CANCELLED => self::CANCELLED,
+		DefaultConfig::VACATION => self::VACATION,
 	];
 	/**
 	 * Status mapping MCE to object
@@ -545,7 +638,8 @@ class MappingMce {
 	    self::CONFIRMED => DefaultConfig::CONFIRMED,
 	    self::NONE => DefaultConfig::NONE,
 		self::TELEWORK => DefaultConfig::TELEWORK,
-	    self::CANCELLED => DefaultConfig::CANCELLED
+	    self::CANCELLED => DefaultConfig::CANCELLED,
+		self::VACATION => DefaultConfig::VACATION,
 	];
 
 	// Recurrence days
@@ -623,25 +717,34 @@ class MappingMce {
 	const ATT_TYPE_RESOURCE = 3;
 	const ATT_TYPE_ROOM = 4;
 	const ATT_TYPE_UNKNOWN = 5;
+	const ATT_TYPE_FLEX_OFFICE = 6;
+	const ATT_TYPE_HARDWARE = 7;
+	const ATT_TYPE_CAR = 8;
 	/**
 	 * Attendee type mapping object to MCE
 	 */
 	public static $MapAttendeeTypeObjectToMce = [
-	    DefaultConfig::INDIVIDUAL => self::ATT_TYPE_INDIVIDUAL,
-	    DefaultConfig::GROUP => self::ATT_TYPE_GROUP,
-	    DefaultConfig::RESOURCE => self::ATT_TYPE_RESOURCE,
-	    DefaultConfig::ROOM => self::ATT_TYPE_ROOM,
-	    DefaultConfig::UNKNOWN => self::ATT_TYPE_UNKNOWN,
+	    DefaultConfig::INDIVIDUAL 	=> self::ATT_TYPE_INDIVIDUAL,
+	    DefaultConfig::GROUP 		=> self::ATT_TYPE_GROUP,
+	    DefaultConfig::RESOURCE 	=> self::ATT_TYPE_RESOURCE,
+	    DefaultConfig::ROOM 		=> self::ATT_TYPE_ROOM,
+	    DefaultConfig::UNKNOWN 		=> self::ATT_TYPE_UNKNOWN,
+		DefaultConfig::FLEX_OFFICE 	=> self::ATT_TYPE_FLEX_OFFICE,
+		DefaultConfig::HARDWARE 	=> self::ATT_TYPE_HARDWARE,
+		DefaultConfig::CAR 			=> self::ATT_TYPE_CAR,
 	];
 	/**
 	 * Attendee type mapping MCE to object
 	 */
 	public static $MapAttendeeTypeMceToObject = [
-	    self::ATT_TYPE_INDIVIDUAL => DefaultConfig::INDIVIDUAL,
-	    self::ATT_TYPE_GROUP => DefaultConfig::GROUP,
-	    self::ATT_TYPE_RESOURCE => DefaultConfig::RESOURCE,
-	    self::ATT_TYPE_ROOM => DefaultConfig::ROOM,
-		self::ATT_TYPE_UNKNOWN => DefaultConfig::UNKNOWN,
+	    self::ATT_TYPE_INDIVIDUAL 	=> DefaultConfig::INDIVIDUAL,
+	    self::ATT_TYPE_GROUP 		=> DefaultConfig::GROUP,
+	    self::ATT_TYPE_RESOURCE 	=> DefaultConfig::RESOURCE,
+	    self::ATT_TYPE_ROOM 		=> DefaultConfig::ROOM,
+		self::ATT_TYPE_UNKNOWN 		=> DefaultConfig::UNKNOWN,
+		self::ATT_TYPE_FLEX_OFFICE 	=> DefaultConfig::FLEX_OFFICE,
+		self::ATT_TYPE_HARDWARE 	=> DefaultConfig::HARDWARE,
+		self::ATT_TYPE_CAR 			=> DefaultConfig::CAR,
 	];
 
 	// Attendee status

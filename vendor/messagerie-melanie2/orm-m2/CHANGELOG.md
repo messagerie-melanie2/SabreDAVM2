@@ -1,3 +1,163 @@
+ORM m2 - 0.6.18
+------
+- 0008910: Ajouter dans le filtre email la recherche pour les listes
+
+ORM M2 - 0.6.17
+------
+- 0008879: Pouvoir récupérer la liste de tout les tags de l'espace
+- 0008881: Modifier le filtre de recherche sur mail pour un User Mel
+- 0008880: Ajouter un champ email_extern mappé sur info
+- 0008889: Ajouter un filtre sur objectClass=calEntry dans le load
+
+ORM M2 - 0.6.16
+------
+- 0008870: Régression sur getList et merge
+
+ORM M2 - 0.6.15
+------
+- 0008797: Support des brouillons pour les articles
+- 0008834: Pour une ressource, supprimer l'événement via le en attente, peu importe le statut
+
+ORM M2 - 0.6.14
+------
+- 0008786: Lorsqu'un participant modifie sa réponse pour une seule occurrence, l'occurrence est supprimé pour les autres participants
+- 0008823: Problème de compte pour les réactions après un listReactions
+- 0008825: [ObjectMelanie] Pouvoir faire un load par id
+- 0008824: Bloquer la création de doublons d'événement
+
+ORM M2 - 0.6.13
+------
+- 0008714: Pouvoir charger les data depuis firstImage ou listImages
+- 0008773: Problème avec les updates dans ObjectMelanie
+
+ORM M2 - 0.6.12
+------
+- 0008708: Ajouter les uid de posts épinglés dans listPosts()
+- 0008707: Problème d'utilisation du workspace dans listPosts
+- 0008706: Dans le cas d'un participant avec plusieurs adresses remettre l'adresse email principale comme email de participation
+- 0008694: Support VCard4
+
+ORM M2 - 0.6.11
+------
+- 0008623: Méthodes pour connaitre les accès d'un user sur un workspace
+
+ORM M2 - 0.6.10
+------
+- Fix sur la version du composer.json
+
+ORM M2 - 0.6.9
+------
+- 0008549: [ICS] Problème avec DURATION sans DTEND
+- 0008601: Propager la confidentialité via le en attente
+- 0008585: Problème d'utilisation des bases J-1 et J-2
+- 0008571: Rendre le mapping non obligatoire pour un objet ldap
+
+ORM M2 - 0.6.8
+------
+- 0008507: [ICS] DTSTART sans DTEND
+- 0008509: [Mel] Pouvoir determiner si un groupe est de l'agriculture
+- 0008397: Backend pour les communautés dans le Bnum
+- 0008511: Compter les réactions de commentaire par type
+- 0008535: Trier les commentaires enfants
+
+ORM M2 - 0.6.7.8
+------
+- 0008386: [MI] Attributs par défaut
+- 0008385: Optimisation du chargement des attributs LDAP
+
+ORM M2 - 0.6.7.7
+------
+- password pour le User Mél
+
+ORM M2 - 0.6.7.6
+------
+- UUID pour le User Mél
+
+ORM M2 - 0.6.7.5
+------
+- 0008366: Alléger la méthode listEventsByUid
+
+ORM M2 - 0.6.7.4
+------
+- 0008336: Ajouter un type flex office et un type materiel pour les participants
+- 0008337: Rechercher les ressources par uids ou emails
+- 0008341: Automatiser la récupération du type pour un participant de type ressource Bnum
+
+ORM M2 - 0.6.7.3
+------
+- 0008321: Ne pas nettoyer les delete et add dans l'historique
+- 0008322: L'invitation vers une BALR avec le en attente doit créer l'agenda s'il n'existe pas
+- 0008282: Ajouter un objet Ressource
+- 0008326: Pouvoir configurer la base DN en fonction de l'objet
+- 0008323: Ajouter un objet Locality dédié aux ressources
+- 0008296: Ajouter une propriété is_external sur l'objet User
+
+ORM M2 - 0.6.7.2
+------
+- 0008275: [ICS] Ajout des statuts Télétravail et Congés dans les freebusy
+
+ORM M2 - 0.6.7.1
+------
+- 0008264: Ajouter le support des pj iCalendar
+- Mise à jour du schéma pg initial
+
+ORM M2 - 0.6.7
+------
+- 0008176: Ajouter le support de l'envoi de mails depuis l'ORM
+
+ORM M2 - 0.6.6
+------
+- 0008158: Traitement du save particulier pour les événements d'agenda externe
+- 0008157: Ajout d'un champ source pour les événements de calendriers externes
+
+ORM M2 - 0.6.5.29
+------
+- 0008143: Sur le modèle de getCTag, ajoute un getSyncToken
+- 0008142: Proposer lors de getCTag de ne pas charger le ctag en cache
+
+ORM M2 - 0.6.5.28
+------
+- 0008106: Supporter un statut "En congé" dans les événements
+- 0008100: Si un user est is_list pouvoir directement récupérer la liste
+
+ORM M2 - 0.6.5.27
+------
+- fix: ne pas incrémenter la séquence pour les participants
+
+ORM M2 - 0.6.5.26
+------
+- 0008073: Intégrer l'interval dans la validation de la recurrence
+- 0008069: [ICS] Nettoyer le participant qui est aussi le propriétaire de l'agenda organisateur
+- 0008063: Gestion du move depuis un ICS
+- 0008062: Gérer l'incrémentation de la séquence au moment du save
+- 0008072: [En attente] Ne plus supprimer les événements des participants
+
+ORM M2 - 0.6.5.25
+------
+- 0007990: [Mel/User/] Ajout de la date de grâce pour la double authentification
+
+ORM M2 - 0.6.5.24
+------
+- 0007918: [MagicObject] Ajouter une fonction fieldsHasChanged
+- 0007919: [MagicObject] Ajouter un type dateLdap
+- 0007904: [Mel/User] état de la double authentification
+- 0007911: [Mel/User] champs token_otp et token_otp_expire
+- 0007906: [Mel/User] adresse de récupération pour la double authentification
+
+ORM M2 - 0.6.5.23
+------
+- 0007917: Enrichir les logs pour les save()
+
+ORM M2 - 0.6.5.22
+------
+- 0007897: [Mel/Outofoffice] Gérer des timezone locaux autres que Europe/Paris
+- Fonction PL/SQL pour purger les événements
+- Fonction PL/SQL pour nettoyer les pièces jointes inutiles
+
+ORM M2 - 0.6.5.21
+------
+- 0007856: Déplacer le read_version.php à la racine
+
 ORM M2 - 0.6.5.20
 ------
 - 0007846: [ICS] Nettoyer le @visio: dans la location

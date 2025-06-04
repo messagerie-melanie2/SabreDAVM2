@@ -337,6 +337,7 @@ class EventToICS {
       switch ($event->status) {
         default :
         case Event::STATUS_CONFIRMED :
+        case Event::STATUS_VACATION :
           $vevent->STATUS = ICS::STATUS_CONFIRMED;
           break;
         case Event::STATUS_NONE :
@@ -548,6 +549,15 @@ class EventToICS {
               case Attendee::TYPE_UNKNOWN:
                 $params[ICS::CUTYPE] = ICS::CUTYPE_UNKNOWN;
                 break;
+              case Attendee::TYPE_CAR:
+                $params[ICS::CUTYPE] = ICS::CUTYPE_CAR;
+                break;
+              case Attendee::TYPE_FLEX_OFFICE:
+                $params[ICS::CUTYPE] = ICS::CUTYPE_FLEX_OFFICE;
+                break;
+              case Attendee::TYPE_HARDWARE:
+                $params[ICS::CUTYPE] = ICS::CUTYPE_HARDWARE;
+                break;
             }
           }
           // 0006294: Ajouter l'information dans un participant quand il a été enregistré en attente
@@ -758,6 +768,8 @@ class EventToICS {
         'confirmed' => 'Confirmé',
         'tentative' => 'Provisoire',
         'cancelled' => 'Annulé',
+        'telework'  => 'Libre',
+        'vacation'  => 'Confirmé',
         'default'   => 'Libre'
     );
     if (isset($convert[$status])) {

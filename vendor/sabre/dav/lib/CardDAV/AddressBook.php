@@ -263,19 +263,23 @@ class AddressBook extends DAV\Collection implements IAddressBook, DAV\IPropertie
      */
     function getACL() {
 
-        return [
+        $acl = [
             [
                 'privilege' => '{DAV:}read',
                 'principal' => $this->getOwner(),
                 'protected' => true,
             ],
-            [
+        ];
+
+        if (empty($this->addressBookInfo['{http://sabredav.org/ns}read-only'])) {
+            $acl[] = [
                 'privilege' => '{DAV:}write',
                 'principal' => $this->getOwner(),
                 'protected' => true,
-            ],
+            ];
+        }
 
-        ];
+        return $acl;
 
     }
 
@@ -288,18 +292,23 @@ class AddressBook extends DAV\Collection implements IAddressBook, DAV\IPropertie
      */
     function getChildACL() {
 
-        return [
+        $acl = [
             [
                 'privilege' => '{DAV:}read',
                 'principal' => $this->getOwner(),
                 'protected' => true,
             ],
-            [
+        ];
+
+        if (empty($this->addressBookInfo['{http://sabredav.org/ns}read-only'])) {
+            $acl[] = [
                 'privilege' => '{DAV:}write',
                 'principal' => $this->getOwner(),
                 'protected' => true,
-            ],
-        ];
+            ];
+        }
+
+        return $acl;
 
     }
 

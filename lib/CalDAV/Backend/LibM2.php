@@ -1168,6 +1168,15 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
           $event->uid = $event_uid;
         }
         if ($event->load()) {
+          // MANTIS 0008115: Un utilisateur peut modifier un événement privé
+          if ($event->class == \driver::const('Event', 'CLASS_PRIVATE')
+              && $event->owner != $this->_user->uid
+              && $this->calendars[$calendarId]->owner != $this->_user->uid
+              && !$this->calendars[$calendarId]->asRight(\LibMelanie\Config\ConfigMelanie::PRIV)) {
+            // MANTIS 0004469: Générer des messages d'erreur quand l'utilisateur n'a pas les droits
+            throw new \Sabre\DAV\Exception\Forbidden();
+          }
+
           if (!isset($event->owner)) {
             $event->owner = $this->_user->uid;
           }
@@ -1226,6 +1235,15 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
       $event->uid = str_replace('.ics', '', $this->uiddecode($objectUri));
       $res = false;
       if ($event->load()) {
+        // MANTIS 0008115: Un utilisateur peut modifier un événement privé
+        if ($event->class == \driver::const('Event', 'CLASS_PRIVATE')
+            && $event->owner != $this->_user->uid
+            && $this->calendars[$calendarId]->owner != $this->_user->uid
+            && !$this->calendars[$calendarId]->asRight(\LibMelanie\Config\ConfigMelanie::PRIV)) {
+          // MANTIS 0004469: Générer des messages d'erreur quand l'utilisateur n'a pas les droits
+          throw new \Sabre\DAV\Exception\Forbidden();
+        }
+        
         $exceptions = $event->exceptions;
         // Suppression de l'évènement
         $res = $event->delete();
@@ -1745,6 +1763,7 @@ class LibM2 extends AbstractBackend implements SchedulingSupport, Melanie2Suppor
   private function uiddecode($uid) {
     if (strpos($uid, '%25') !== false) {
       $uid = preg_replace('/%[25]+40/', '%40', $uid);
+      $uid = preg_replace('/%[25]+2F/', '%2F', $uid);
     }
     $search = ['%2F', '%40', '%3A'];
     $replace = ['/', '@', ':'];

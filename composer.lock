@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3e451fe6f4b4a74894468ecc22d80eae",
+    "content-hash": "1cf984e60f532814c692d5086a8c8e5f",
     "packages": [
         {
             "name": "messagerie-melanie2/orm-m2",
-            "version": "0.6.5.20",
+            "version": "0.6.18",
             "source": {
                 "type": "git",
                 "url": "https://github.com/messagerie-melanie2/ORM-M2.git",
-                "reference": "8b670cba17e340c0c5dd7ca1625e0dca929f8c08"
+                "reference": "475f1610eed40d38d2231eee1a4092b811dae55d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/messagerie-melanie2/ORM-M2/zipball/8b670cba17e340c0c5dd7ca1625e0dca929f8c08",
-                "reference": "8b670cba17e340c0c5dd7ca1625e0dca929f8c08",
+                "url": "https://api.github.com/repos/messagerie-melanie2/ORM-M2/zipball/475f1610eed40d38d2231eee1a4092b811dae55d",
+                "reference": "475f1610eed40d38d2231eee1a4092b811dae55d",
                 "shasum": ""
             },
             "require": {
@@ -37,8 +37,9 @@
                     "LibMelanie\\": "src/"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "GPLv3"
+                "GPL-3.0-or-later"
             ],
             "authors": [
                 {
@@ -51,18 +52,18 @@
             "description": "ORM pour l'accès aux données Mél",
             "homepage": "https://github.com/messagerie-melanie2/orm-m2",
             "keywords": [
-                "Addressbook",
-                "Calendar",
-                "LDAP",
-                "ORM",
-                "SQL",
-                "Tasks"
+                "Tasks",
+                "addressbook",
+                "calendar",
+                "ldap",
+                "orm",
+                "sql"
             ],
             "support": {
-                "source": "https://github.com/messagerie-melanie2/ORM-M2/tree/0.6.5.20",
-                "issues": "https://github.com/messagerie-melanie2/ORM-M2/issues"
+                "issues": "https://github.com/messagerie-melanie2/ORM-M2/issues",
+                "source": "https://github.com/messagerie-melanie2/ORM-M2/tree/0.6.18"
             },
-            "time": "2023-08-16T14:38:14+00:00"
+            "time": "2025-04-08T07:40:37+00:00"
         },
         {
             "name": "sabre/dav",
@@ -465,10 +466,10 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": [],
-    "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "platform": {},
+    "platform-dev": {},
+    "plugin-api-version": "2.6.0"
 }

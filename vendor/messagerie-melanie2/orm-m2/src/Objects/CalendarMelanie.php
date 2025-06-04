@@ -173,7 +173,10 @@ class CalendarMelanie extends MagicObject implements IObjectMelanie {
 		M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class."->save()");
 		$insert = false;
 		// Si les clés primaires ne sont pas définis, impossible de charger l'objet
-		if (!isset($this->primaryKeys)) return null;
+		if (!isset($this->primaryKeys)) {
+			M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class."->save() No primaryKeys");
+			return null;
+		}
 
 		// Ne rien sauvegarder si rien n'a changé
 		$haschanged = false;
@@ -181,7 +184,10 @@ class CalendarMelanie extends MagicObject implements IObjectMelanie {
 			$haschanged = $haschanged || $value;
 			if ($haschanged) break;
 		}
-		if (!$haschanged) return null;
+		if (!$haschanged) {
+			M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class."->save() Nothing has changed");
+			return null;
+		}
 		// Si isExist est à null c'est qu'on n'a pas encore testé
 		if (!is_bool($this->isExist)) {
 		  $this->isExist = $this->exists();
@@ -220,6 +226,7 @@ class CalendarMelanie extends MagicObject implements IObjectMelanie {
 				];
 			    if (!Sql\Sql::GetInstance()->executeQuery($query, $params)) {
 			        Sql\Sql::GetInstance()->rollBack();
+					M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class."->save() Error on insert attribute name");
 			        return null;
 				}
 				// owner
@@ -232,6 +239,7 @@ class CalendarMelanie extends MagicObject implements IObjectMelanie {
 				];
 			    if (!Sql\Sql::GetInstance()->executeQuery($query, $params)) {
 			        Sql\Sql::GetInstance()->rollBack();
+					M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class."->save() Error on insert attribute owner");
 			        return null;
 				}
 				// perm
@@ -244,11 +252,13 @@ class CalendarMelanie extends MagicObject implements IObjectMelanie {
 				];
 			    if (!Sql\Sql::GetInstance()->executeQuery($query, $params)) {
 			        Sql\Sql::GetInstance()->rollBack();
+					M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class."->save() Error on insert attribute perm");
 			        return null;
 				}
 				Sql\Sql::GetInstance()->commit();
 			} else {
 			    Sql\Sql::GetInstance()->rollBack();
+				M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class."->save() Error on insert object");
 			    return null;
 			}
 		}
@@ -438,13 +448,16 @@ class CalendarMelanie extends MagicObject implements IObjectMelanie {
 	/**
 	 * Recupère le Tag associé à l'agenda
 	 * need: $this->calendar_id
+	 * 
+	 * @param boolean $cache Utilisation du ctag en cache ?
+	 * 
 	 * @return string
 	 */
-	public function getCTag() {
+	public function getCTag($cache = true) {
 		M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class."->getCTag()");
 		if (!isset($this->id)) return false;
 
-		if (!isset($this->ctag)) {
+		if (!isset($this->ctag) || !$cache) {
 			// Params
 			$params = [MappingMce::$Data_Mapping[$this->objectType]['id'][MappingMce::name] => $this->id];
 
@@ -454,6 +467,30 @@ class CalendarMelanie extends MagicObject implements IObjectMelanie {
 			M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class."->getCTag() this->ctag: " . $this->ctag);
 		}
 		return $this->ctag;
+	}
+
+	/**
+	 * Recupère le SyncToken associé à l'agenda
+	 * need: $this->calendar_id
+	 * 
+	 * @param boolean $cache Utilisation du synctoken en cache ?
+	 * 
+	 * @return string
+	 */
+	public function getSyncToken($cache = true) {
+		M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class."->getSyncToken()");
+		if (!isset($this->id)) return false;
+
+		if (!isset($this->synctoken) || !$cache) {
+			// Params
+			$params = [MappingMce::$Data_Mapping[$this->objectType]['id'][MappingMce::name] => $this->id];
+
+			// Récupération du tag
+			Sql\Sql::GetInstance()->executeQueryToObject(Sql\SqlCalendarRequests::getSyncToken, $params, $this);
+			if (!isset($this->synctoken)) $this->synctoken = 0;
+			M2Log::Log(M2Log::LEVEL_DEBUG, $this->get_class."->getSyncToken() this->synctoken: " . $this->synctoken);
+		}
+		return $this->synctoken;
 	}
 
 	/**
