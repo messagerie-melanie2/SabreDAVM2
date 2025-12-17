@@ -24,6 +24,11 @@ A faire
 CalDAV - Liste des changements
 ==============================
 
+CalDAV - 0.8.1
+==============
+- Mise à jour ORM 0.6.28
+- Support du plugin Imip pour envoyer des mails
+
 CalDAV - 0.8
 ============
 - 0008695: Ne pas envoyer les listes pour un TB128
