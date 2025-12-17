@@ -207,6 +207,14 @@ class CalDAV {
     self::$server->addPlugin(
         new Sabre\CalDAV\Schedule\PluginM2()
     );
+
+    /* iMip support */
+    if (\Config\Config::plugin_imip_enable) {
+      self::$server->addPlugin(
+        new Sabre\CalDAV\Schedule\IMipPlugin()
+      );
+    }
+
     if (\Config\Config::enableWebDavSync) {
     	/* Calendar WebDAV-Sync */
     	self::$server->addPlugin(

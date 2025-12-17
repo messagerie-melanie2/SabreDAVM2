@@ -75,6 +75,8 @@ class Broker {
         'RDATE',
         'EXDATE',
         'STATUS',
+        'DESCRIPTION',
+        'SUMMARY',
     );
 
     /**
