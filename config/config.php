@@ -117,4 +117,19 @@ class Config {
    * @var array
    */
   static $blockedUrl = null;
+
+  /**
+   * Configuration du plugin IMipPlugin
+   */
+  // si true plugin actif, sinon false
+  const plugin_imip_enable = false;
+
+  // si true génère un message au format texte + calendar (ics)
+  const plugin_imip_ics_texte = false;
+
+  // si true, encode les entetes
+  const plugin_imip_encode = false;
+
+  // le nom du fichier de langue à inclure
+  const plugin_imip_langues = 'IMipPlugin_fr.php';
 }
