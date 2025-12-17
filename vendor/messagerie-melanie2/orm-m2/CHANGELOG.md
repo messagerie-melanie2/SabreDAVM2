@@ -1,3 +1,56 @@
+ORM m2 - 0.6.28
+------
+- 0009285: Il manque la gestion des vroom dans MappingMCE
+
+ORM m2 - 0.6.27
+------
+- 0009265: Ajouter le cutype VRoom pour les participants
+
+ORM m2 - 0.6.26
+------
+- 0009257: Ajouter un type de ressource VRoom
+- 0009221: Problème de composer
+
+ORM m2 - 0.6.25
+------
+- 0009155: Fix [En attente] re-Supprimer les événements des participants
+
+ORM m2 - 0.6.24
+------
+- 0009221: Problème de composer
+
+ORM m2 - 0.6.23
+------
+- 0009155: [En attente] re-Supprimer les événements des participants
+- 0009220: Corriger l'erreur getList dans les logs
+
+ORM m2 - 0.6.22
+------
+- 0009123: [ICS] Ne pas ajouter l'email s'il est dans sentby ou orgmail
+
+ORM m2 - 0.6.21
+------
+- 0009119: [Calendar] Ajouter deux propriétés owner_email et owner_fullname en lecture seule
+- 0009120: [ICS] Ajouter l'email du propriétaire de l'agenda en tant que participant
+
+ORM m2 - 0.6.20
+------
+- 0009105: [Locality] Ajouter le code postal dans les load attributes
+- 0009108: Avoir une configuration pour utiliser les emails de BALF plutôt que les objets de partage
+- 0009107: [ICS] Pour une réunion, si l'utilisateur n'est ni organisateur ni participant, l'ajouté en tant que participant
+
+ORM m2 - 0.6.19
+------
+- 0009052: Gestion du X-CM2V3-ACTION: COPY dans un FAKED-MASTER
+- 0009018: Ajouter une lib HTTPRequest pour faire des appels http
+- 0008994: Ajouter une classe ZoomApi
+- 0008993: [Event] Nouvelle propriété jsonzoom
+- 0008991: Ajouter une classe EventToJsonZoom
+- 0009058: [Event] Nouvelle propriété zoom_meeting_id
+- 0009054: Ajouter une lib ZoomMeeting
+- 0009072: [Event] Nouvelle propriété zoom_meeting_url
+- 0009084: [Locality] Ajouter le code postal
+
 ORM m2 - 0.6.18
 ------
 - 0008910: Ajouter dans le filtre email la recherche pour les listes

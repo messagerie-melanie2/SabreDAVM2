@@ -2,17 +2,17 @@
         "packages": [
                 {
                         "name": "messagerie-melanie2/orm-m2",
-                        "version": "0.6.18",
-                        "version_normalized": "0.6.18.0",
+                        "version": "0.6.28",
+                        "version_normalized": "0.6.28.0",
                         "source": {
                                 "type": "git",
                                 "url": "https://github.com/messagerie-melanie2/ORM-M2.git",
-                                "reference": "475f1610eed40d38d2231eee1a4092b811dae55d"
+                                "reference": "384dbbd0c57d8eefee332215dbcb7397aa21400f"
                         },
                         "dist": {
                                 "type": "zip",
-                                "url": "https://api.github.com/repos/messagerie-melanie2/ORM-M2/zipball/475f1610eed40d38d2231eee1a4092b811dae55d",
-                                "reference": "475f1610eed40d38d2231eee1a4092b811dae55d",
+                                "url": "https://api.github.com/repos/messagerie-melanie2/ORM-M2/zipball/384dbbd0c57d8eefee332215dbcb7397aa21400f",
+                                "reference": "384dbbd0c57d8eefee332215dbcb7397aa21400f",
                                 "shasum": ""
                         },
                         "require": {
@@ -23,7 +23,7 @@
                         "require-dev": {
                                 "composer/composer": "*"
                         },
-                        "time": "2025-04-08T07:40:37+00:00",
+                        "time": "2025-11-06T14:31:12+00:00",
                         "type": "library",
                         "installation-source": "dist",
                         "autoload": {
@@ -58,7 +58,7 @@
                         ],
                         "support": {
                                 "issues": "https://github.com/messagerie-melanie2/ORM-M2/issues",
-                                "source": "https://github.com/messagerie-melanie2/ORM-M2/tree/0.6.18"
+                                "source": "https://github.com/messagerie-melanie2/ORM-M2/tree/0.6.28"
                         },
                         "install-path": "../messagerie-melanie2/orm-m2"
                 },

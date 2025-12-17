@@ -123,6 +123,14 @@ class Attendee extends MceObject {
   protected $_is_ressource;
 
   /**
+   * Ressource associée a l'attendee
+   * 
+   * @var Resource
+   * @ignore
+   */
+  protected $_resource;
+
+  /**
    * Réponse du participant
    * 
    * @var string $response Attendee::RESPONSE_*
@@ -199,6 +207,7 @@ class Attendee extends MceObject {
 	const TYPE_GROUP = DefaultConfig::GROUP;
 	const TYPE_RESOURCE = DefaultConfig::RESOURCE;
 	const TYPE_ROOM = DefaultConfig::ROOM;
+  const TYPE_VROOM = DefaultConfig::VROOM;
   const TYPE_CAR = DefaultConfig::CAR;
   const TYPE_FLEX_OFFICE = DefaultConfig::FLEX_OFFICE;
   const TYPE_HARDWARE = DefaultConfig::HARDWARE;
@@ -598,6 +607,60 @@ class Attendee extends MceObject {
         }
     }
     return $this->_is_ressource;
+  }
+
+  /**
+   * Mapping is_resource field
+   * 
+   * @return boolean true si la boite est une ressource
+   */
+  protected function getMapIs_resource() {
+    return $this->getMapIs_ressource();
+  }
+
+  /**
+   * Mapping resource field
+   * 
+   * @return Resource|null
+   */
+  protected function getMapResource() {
+    if (isset($this->_resource)) {
+      return $this->_resource;
+    }
+
+    // Si l'email n'est pas set ou si c'est un externe ce n'est pas une ressource (en tout cas ça nous concerne pas)
+    if (!isset($this->_email) || isset($this->_is_external) && $this->_is_external) {
+      return null;
+    }
+
+    // Doit-on rechercher dans l'annuaire ?
+    if (!isset($this->_is_ressource)) {
+        $this->_setAttendeeFromUser();
+
+        if ($this->_is_external) {
+          return null;
+        }
+    }
+
+    // L'utilisateur n'est pas chargé (c'est du cache)
+    if (!isset($this->_user)) {
+      $this->_setAttendeeFromUser();
+    }
+
+    $Resource = $this->__getNamespace() . '\\Resource';
+    $this->_resource = new $Resource();
+    $this->_resource->getObjectMelanie()->__set_data($this->_user->getObjectMelanie()->__get_data());
+
+    return $this->_resource;
+  }
+
+  /**
+   * Mapping ressource field
+   * 
+   * @return Resource|null
+   */
+  protected function getMapRessource() {
+    return $this->getMapResource();
   }
 
   /**

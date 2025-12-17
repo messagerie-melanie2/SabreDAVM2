@@ -3,32 +3,30 @@
  * Ce fichier est développé pour la gestion de la librairie Mélanie2
  * Cette Librairie permet d'accèder aux données sans avoir à implémenter de couche SQL
  * Des objets génériques vont permettre d'accèder et de mettre à jour les données
- *
- * ORM M2 Copyright © 2017  PNE Annuaire et Messagerie/MEDDE
- *
+ * 
+ * ORM Mél Copyright © 2022 Groupe Messagerie/MTE
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 namespace LibMelanie\Config;
 
 /**
- * Configuration par défaut à surcharger dans 
- *
+ * Configuration de l'application pour Melanie2
+ * 
  * @author PNE Messagerie/Apitech
  * @package Librairie Mélanie2
  * @subpackage Config
  */
-class DefaultConfig {
+class ConfigMelanie {
   /**
    * Configuraton du mode ORM
    * false = Ancien schéma Horde
@@ -139,7 +137,7 @@ class DefaultConfig {
   const ATTRIBUTE_NAME_PERM = 'perm_users';
   const ATTRIBUTE_NAME_PERMGROUP = 'perm_usersfg';
   const PREF_SCOPE = 'horde';
-  const TZ_PREF_NAME = 'timezone';
+  const TZ_PREF_NAME = 'timezone'; 
   const GENERAL_PREF_SCOPE = "horde";
   
   /* Calendar config */
@@ -150,12 +148,12 @@ class DefaultConfig {
   /* Tasklist config */
   const TASKSLIST_PREF_SCOPE = "nag";
   const TASKSLIST_GROUP_UID = 'horde.shares.nag';
-  const TASKSLIST_PREF_DEFAULT_NAME = "default_tasklist";
+  const TASKSLIST_PREF_DEFAULT_NAME = "default_tasklist"; 
   
   /* Addressbook config */
   const ADDRESSBOOK_PREF_SCOPE = "turba";
   const ADDRESSBOOK_GROUP_UID = 'horde.shares.turba';
-  const ADDRESSBOOK_PREF_DEFAULT_NAME = "default_dir";
+  const ADDRESSBOOK_PREF_DEFAULT_NAME = "default_dir"; 
   
   /* History config */
   const HISTORY_ADD = "add";
@@ -179,8 +177,6 @@ class DefaultConfig {
   const CONFIRMED = "confirmed";
   const CANCELLED = "cancelled";
   const NONE = "none";
-  const TELEWORK = "telework";
-  const VACATION = "vacation";
   
   /* Recurrence days */
   const NODAY = "";
@@ -200,18 +196,6 @@ class DefaultConfig {
   const MONTHLY_BYDAY = "monthly_by_day";
   const YEARLY = "yearly";
   const YEARLY_BYDAY = "yearly_by_day";
-
-  /* Cutypes */
-  const CUTYPE = "cutype";
-  const INDIVIDUAL = 'individual';
-	const GROUP = 'group';
-	const RESOURCE = 'resource';
-	const ROOM = 'room';
-  const VROOM = 'vroom';
-  const CAR = 'car';
-  const FLEX_OFFICE = 'flex_office';
-  const HARDWARE = 'hardware';
-	const UNKNOWN = 'unknown';
   
   /* Attendee status */
   const RESPONSE = "response";
@@ -219,17 +203,6 @@ class DefaultConfig {
   const ACCEPTED = "accepted";
   const DECLINED = "declined";
   const IN_PROCESS = "in_process";
-  const DELEGATED = "delegated";
-  const SELF_INVITE_ATTENDEE = "self_invite";
-  const NEED_ACTION_ATTENDEE = "need_action";
-  const IS_SAVED_ATTENDEE = "is_saved";
-  const IS_LIST_ATTENDEE = "is_list";
-  const IS_INDIVIDUELLE_ATTENDEE = "is_ind";
-  const IS_RESSOURCE_ATTENDEE = "is_res";
-  const IS_EXTERNAL_ATTENDEE = "is_ext";
-  const UID_ATTENDEE = "uid";
-  const DELEGATED_FROM = "delegated-from";
-  const DELEGATED_TO = "delegated-to";
   // const TENTATIVE = "tentative"; // -> see Status
   
   /* Attendee role */
@@ -256,47 +229,15 @@ class DefaultConfig {
   const COMPLETED = "completed";
   const NOTCOMPLETED = "notcompleted";
   
-  /* Content type par défaut */
+  /* Content type par défaut */  
   const DEFAULT_ATTACHMENT_CONTENTTYPE = "application/binary";
   
   /* Défini si le timezone doit être ajouté à l'ICS */
   const ICS_ADD_TIMEZONE = true;
-
-  /* Défini si le mode invitation partagée (via) est activé */
-  const USE_SHARED_INVITATION = true;
-
-  /* Quel caractère est remplacé dans le nom utilisateur pour le via */
-	const SHARED_INVITATION_REPLACE_CHAR = ' - ';
-
-  /* Quel texte utilisé pour le via, mots clés : %%creator_name%%, %%creator_fullname%%, %%owner_name%%, %%owner_fullname%% */
-	const SHARED_INVITATION_TEXT = ' (via %%creator_name%%) - ';
-
-  /**
-   * Toujours afficher le créateur de l'événement même si ce n'est pas un événement partagé ?
-   */
-  const ALWAYS_SHOW_EVENT_CREATOR = false;
-
-  /* Quel texte afficher dans la description ICS si le créateur de l'événement n'est pas le propriétaire du calendrier ?
-      Si null rien ne sera affiché
-      mots clés : %%name%%, %%uid%%, %%email%%, %%date%%
-  */
-  const SHARED_EVENT_CREATOR = "Créé le %%date%% par %%name%%";
-
-  /* Quel texte afficher dans la description ICS si le créateur de l'événement n'est pas le propriétaire du calendrier ?
-      Cas ou le créateur est l'utilisateur courant
-      Si null rien ne sera affiché
-      mots clés : %%name%%, %%uid%%, %%email%%, %%date%%
-  */
-  const SHARED_EVENT_CREATOR_SELF = "Créé le %%date%% par vous";
-
-  /**
-   * Format à utiliser pour la date de création de l'événement
-   */
-  const SHARED_EVENT_CREATION_DATE_FORMAT = 'd/m/Y à H\hi';
   
   /**
    * Droits sur les objets Melanie2
-   *
+   * 
    * @var array
    */
   public static $PERMS = array(
@@ -317,100 +258,32 @@ class DefaultConfig {
   /** Gestion des selaformes */
   /**
    * Utiliser les selaformes pour protéger les connexions SQL
-   *
+   * 
    * @var boolean
    */
   const SEL_ENABLED = false;
   /**
    * Nombre maximum de lock simultanés
-   *
+   * 
    * @var integer
    */
   const SEL_MAX_ACQUIRE = 40;
   /**
    * Nombre d'essais avant de retourner false
-   *
+   * 
    * @var integer
    */
   const SEL_NB_ESSAI = 8;
   /**
    * Durée en millisecondes entre chaque essai
-   *
+   * 
    * @var integer
    */
   const SEL_TEMPS_ATTENTE = 8000;
   /**
    * Nom du fichier et chemin pour les selaformes
-   *
+   * 
    * @var string
    */
   const SEL_FILE_NAME = '/tmp/_ORM_SQL_SeLaFoRmE_';
-
-  /*** LDAP */
-  /**
-   * Boite individuelle
-   */
-  const LDAP_TYPE_INDIVIDUELLE = 'BALI';
-  /**
-   * Boite partagée
-   */
-  const LDAP_TYPE_PARTAGEE = 'BALP';
-  /**
-   * Boite fonctionnelle
-   */
-  const LDAP_TYPE_FONCTIONNELLE = 'BALF';
-  /**
-   * Boite de ressource
-   */
-  const LDAP_TYPE_RESSOURCE = 'BALR';
-  /**
-   * Boite d'unité
-   */
-  const LDAP_TYPE_UNITE = 'BALU';
-  /**
-   * Boite de service
-   */
-  const LDAP_TYPE_SERVICE = 'BALS';
-  /**
-   * Boite applicative
-   */
-  const LDAP_TYPE_APPLICATIVE = 'BALA';
-  /**
-   * Personne sans boite
-   */
-  const LDAP_TYPE_PERSONNE = 'PERS';
-  /**
-   * Liste serveur de DIStribution
-   */
-  const LDAP_TYPE_LIST = 'LDIS';
-  /**
-   * Liste serveur de Distribution à ABonnement
-   */
-  const LDAP_TYPE_LISTAB = 'LDAB';
-
-  /**
-   * Est-ce que le en attente est activé ou désactivé par défaut ?
-   */
-  const NEED_ACTION_ENABLE = true;
-  /**
-   * Si le en attente est désactivé, filtre les utilisateurs qui l'on activé
-   * Format : ['<champ>' => '<valeur>'] 
-   * Exemple : ['info' => 'en attente : oui'] 
-   * si le le champ de l'utilisateur matche la valeur c'est activé
-   */
-  const NEED_ACTION_ENABLE_FILTER = null;
-  /**
-   * Si le en attente est activé, filtre les utilisateurs qui l'on désactivé
-   * Format : ['<champ>' => '<valeur>'] 
-   * Exemple : ['info' => 'en attente : oui'] 
-   * si le le champ de l'utilisateur matche la valeur c'est désactivé
-   */
-  const NEED_ACTION_DISABLE_FILTER = null;
-
-  /**
-   * Utiliser les fonctions PL/SQL à la place des requêtes directes pour améliorer les performances
-   * 
-   * @var boolean
-   */
-  const USE_SQL_FUNCTIONS_INSTEAD_OF_QUERIES = false;
 }
